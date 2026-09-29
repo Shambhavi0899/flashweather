@@ -1,0 +1,9 @@
+Flash Weather AI: fact sheet
+============================
+
+- 99.6% lightning prediction accuracy on the one-hour window
+- Up to 60 min lightning · up to 55 min hail · 1km × 1km grid · refreshed every 2 minutes
+- 15+ prediction products · over 100 parameters · forecasts out to 180 hours
+- Customers and partners include Troon, the Big 12 Conference, Syngenta and the NAIA
+
+Press contact: support@flashweather.ai

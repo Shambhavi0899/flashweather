@@ -1,0 +1,19 @@
+/*
+ * agent — global styles for this area of the site.
+ *
+ * Components use these class names; no component carries inline style={...}.
+ * Classes sit in @layer components so a Tailwind utility on the same element
+ * still wins.
+ */
+
+@layer components {
+  /* Hero: navy grade, darkest behind the copy (left), photo showing through on the right. */
+  .agent-hero-grade {
+    background-image: linear-gradient(
+      in oklab 90deg,
+      oklab(17.1% -0.0005 -0.052 / 97%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 88%) 46%,
+      oklab(17.1% -0.0005 -0.052 / 42%) 100%
+    );
+  }
+}

@@ -1,0 +1,444 @@
+/*
+ * Lightning "How accurate is 99.6%, really?"
+ * (components/products/lightning/accuracy.tsx, accuracy-scoring.tsx).
+ *
+ * Three <Motion> groups reveal in reading order: the head (label, heading,
+ * the counted-up 99.6%, the sentence), the method steps, then the scoring
+ * visual. Blocks that scroll in together are 220ms apart instead of the
+ * default 100ms, and the steps and the visual also wait a fixed beat after
+ * they arrive, so the three read as steps whichever reaches the screen first.
+ *
+ * Phones stack them as number, visual, steps, button. From 1024px the text
+ * (head, steps, button) is the left column and the visual is the right one,
+ * stretched to the same height. The section keeps hard edges: no fade in or
+ * out.
+ */
+@layer components {
+  .la {
+    display: grid;
+    gap: 40px;
+  }
+  .motion.la-block {
+    --motion-stagger: 220ms;
+  }
+  /* The order also holds when the blocks do not arrive in the same frame:
+     fixed offsets after the head. */
+  .motion.la-method[data-delay] {
+    --motion-delay: 320ms;
+  }
+  .motion.la-visual[data-delay] {
+    --motion-delay: 720ms;
+  }
+
+  /* ------------------------------------------------------------ Head */
+  .la-head {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .la-badge {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  .la-badge-seal {
+    fill: var(--color-brand-blue);
+  }
+  .la-badge-check {
+    fill: none;
+    stroke: var(--color-neutral-0);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .la-figure-value {
+    font-variant-numeric: tabular-nums;
+  }
+  .la-head[data-anim]:not([data-anim='reset']) > * {
+    animation: motion-rise 0.7s var(--motion-ease) calc(var(--motion-delay) + var(--i, 0) * 90ms) both;
+  }
+  .la-head > :nth-child(2) {
+    --i: 1;
+  }
+  .la-head > :nth-child(3) {
+    --i: 2;
+  }
+  .la-head > :nth-child(4) {
+    --i: 3;
+  }
+  .la-head[data-anim]:not([data-anim='reset']) .la-badge {
+    animation: motion-pop-in 0.5s var(--motion-ease) calc(var(--motion-delay) + 0.5s) both;
+  }
+  /* The number counts up with the figure's rise, a beat after the heading. */
+  .la-head {
+    --motion-count-delay: 180ms;
+  }
+
+  /*
+   * ------------------------------------------------------------ Method steps
+   *
+   * One step per stage of the scoring run. accuracy-scoring.tsx sets
+   * data-stage on the list while the run plays and aria-current on the
+   * stage's step: that step is at full strength with a gold number and the
+   * line filled down to it; the others step back to 40%. Without data-stage
+   * (no JavaScript, reduced motion, or before the first run) it is the
+   * finished method: every step at full strength, every number gold, the
+   * line filled.
+   */
+  .la-method {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .la-steps {
+    --la-num: 28px;
+    --la-pad: 8px;
+    --la-gap: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--la-gap);
+  }
+  .la-step {
+    position: relative;
+  }
+  /* The thin line from each number down to the next: a track, and its fill. */
+  .la-step:not(:last-child)::before,
+  .la-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: calc(var(--la-pad) + var(--la-num) + 4px);
+    bottom: calc(4px - var(--la-pad) - var(--la-gap));
+    left: calc(var(--la-num) / 2 - 0.5px);
+    width: 1px;
+    pointer-events: none;
+  }
+  .la-step::before {
+    background-color: var(--color-border-strong);
+  }
+  .la-step::after {
+    background-color: var(--color-gold-on-light);
+    transform-origin: 50% 0;
+    transition: transform 0.5s var(--motion-ease);
+  }
+  .la-step-button {
+    display: flex;
+    width: 100%;
+    align-items: flex-start;
+    gap: 16px;
+    padding-block: var(--la-pad);
+    border-radius: var(--radius-sm);
+    text-align: left;
+    cursor: pointer;
+    transition: opacity 0.4s ease-out;
+  }
+  .la-step-button:focus-visible {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: 4px;
+  }
+  .la-step-number {
+    display: grid;
+    width: var(--la-num);
+    height: var(--la-num);
+    flex-shrink: 0;
+    place-items: center;
+    border: 1px solid var(--color-gold-on-light);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-surface);
+    color: var(--color-gold-on-light);
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    transition:
+      color 0.4s ease-out,
+      border-color 0.4s ease-out;
+  }
+
+  .la-steps[data-stage] .la-step-button:not([aria-current]) {
+    opacity: 0.4;
+  }
+  .la-steps[data-stage] .la-step-button:not([aria-current]) .la-step-number {
+    border-color: var(--color-border-strong);
+    color: var(--color-text-muted);
+  }
+  .la-steps[data-stage] .la-step::after {
+    transform: scaleY(0);
+  }
+  .la-steps[data-stage='1'] .la-step:nth-child(1)::after,
+  .la-steps[data-stage='2'] .la-step:nth-child(-n + 2)::after {
+    transform: none;
+  }
+  @media (hover: hover) {
+    .la-steps[data-stage] .la-step-button:not([aria-current]):hover {
+      opacity: 0.7;
+    }
+  }
+
+  /* The label, then the steps one after another. */
+  .la-method[data-anim]:not([data-anim='reset']) :is(.la-method > p, .la-step) {
+    animation: motion-rise 0.7s var(--motion-ease) calc(var(--motion-delay) + var(--i, 0) * 140ms) both;
+  }
+  .la-step:nth-child(1) {
+    --i: 1;
+  }
+  .la-step:nth-child(2) {
+    --i: 2;
+  }
+  .la-step:nth-child(3) {
+    --i: 3;
+  }
+
+  /* ------------------------------------------------------------ Scoring visual */
+  .la-visual[data-anim]:not([data-anim='reset']) > figure {
+    animation: motion-rise 0.8s var(--motion-ease) var(--motion-delay) both;
+  }
+  .la-figure {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .la-score {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    overflow: clip;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-brand-navy);
+  }
+  /* The storm photo stays as a very dim ground: the basemap (map-layers.tsx)
+     lets a tenth of it through. */
+  .la-photo {
+    opacity: 0.5;
+  }
+  .la-map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  /* Holds the tally and the line under it clear of the map. */
+  .la-scrim {
+    position: absolute;
+    inset: auto 0 0;
+    height: 40%;
+    background-image: linear-gradient(
+      to bottom,
+      transparent,
+      color-mix(in srgb, var(--color-brand-navy) 88%, transparent)
+    );
+    pointer-events: none;
+  }
+
+  /* The forecast area: the hero's bands, with a soft glow round them. */
+  .la-forecast {
+    filter: drop-shadow(0 0 14px rgb(222 122 20 / 0.35));
+    transition: opacity 1.2s ease-out;
+  }
+  .la-strike {
+    transition: opacity 0.5s ease-out;
+  }
+  .la-bolt {
+    transform-box: fill-box;
+    transform-origin: center;
+    fill: var(--color-neutral-0);
+    filter: drop-shadow(0 0 3px rgb(255 255 255 / 0.9));
+  }
+  .la-strike-flash {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  /* Score: a green ring for a strike inside the forecast, grey for the one outside. */
+  .la-ring {
+    fill: none;
+    stroke-width: 1.6;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .la-hit .la-ring {
+    stroke: color-mix(in oklab, var(--color-alert-clear), var(--color-neutral-0) 25%);
+  }
+  .la-miss .la-ring {
+    stroke: var(--color-neutral-500);
+    stroke-dasharray: 3 2.5;
+  }
+  .la-check-disc {
+    fill: color-mix(in oklab, var(--color-alert-clear), var(--color-neutral-0) 12%);
+    stroke: var(--color-brand-navy);
+    stroke-width: 1.5;
+  }
+  .la-check-mark {
+    fill: none;
+    stroke: var(--color-neutral-0);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .la-check {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .la-tag,
+  .la-illustrative {
+    position: absolute;
+    top: 16px;
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+  .la-tag {
+    left: 20px;
+    color: var(--color-viz-gold);
+  }
+  .la-illustrative {
+    top: 12px;
+    right: 16px;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--color-brand-navy) 70%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-neutral-0) 22%, transparent);
+    color: var(--color-text-on-dark-muted);
+  }
+  .la-bottom {
+    position: absolute;
+    right: 20px;
+    bottom: 18px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .la-tally {
+    color: var(--color-text-on-dark-muted);
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+  .la-tally-value {
+    color: var(--color-neutral-0);
+  }
+  /* The clear green, lifted to read on the dark map. */
+  .la-tally-inside {
+    color: color-mix(in oklab, var(--color-alert-clear), var(--color-neutral-0) 40%);
+  }
+  .la-overlay {
+    color: var(--color-neutral-0);
+    font-size: var(--text-body);
+    line-height: 24px;
+    font-weight: 800;
+    letter-spacing: var(--tracking-heading);
+    text-wrap: pretty;
+  }
+
+  /*
+   * The loop (accuracy-scoring.tsx sets data-live while it runs). Without it
+   * (no JavaScript, reduced motion, or paused off screen) the markup is the
+   * final tally: the forecast area shown, every strike landed and ringed.
+   */
+  .la-score[data-live] :is(.la-forecast, .la-strike):not([data-on]) {
+    opacity: 0;
+  }
+  .la-score[data-live][data-fading] :is(.la-forecast, .la-strike) {
+    opacity: 0;
+    transition-duration: 0.8s;
+  }
+  /* Observe: the bolt drops in with a burst of light. */
+  .la-score[data-live] .la-strike[data-on] .la-bolt {
+    animation: la-land 0.4s var(--motion-ease) both;
+  }
+  .la-score[data-live] .la-strike[data-on] .la-strike-flash {
+    animation: la-flash 0.7s ease-out both;
+  }
+  /* Score: the ring (and a hit's check) come with data-scored. */
+  .la-score[data-live] .la-strike:not([data-scored]) :is(.la-ring, .la-check) {
+    opacity: 0;
+  }
+  .la-score[data-live] .la-strike[data-scored] :is(.la-ring, .la-check) {
+    animation: motion-pop-in 0.4s var(--motion-ease) both;
+  }
+  /* A step's jump: what it skipped past is simply there. */
+  .la-score[data-live] .la-strike[data-still] :is(.la-bolt, .la-strike-flash) {
+    animation: none;
+  }
+
+  @media (width >= 640px) {
+    .la-score {
+      aspect-ratio: 4 / 3;
+    }
+    .la-overlay {
+      font-size: var(--text-body-l);
+      line-height: var(--leading-body);
+    }
+  }
+
+  @media (width >= 1024px) {
+    .la {
+      grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
+      grid-template-rows: auto auto 1fr;
+      grid-template-areas:
+        'head visual'
+        'method visual'
+        'cta visual';
+      column-gap: 64px;
+      row-gap: 40px;
+    }
+    /* Named here only: without the template, named areas would stack all
+       the blocks in one implicit cell. */
+    .la-head {
+      grid-area: head;
+    }
+    .la-method {
+      grid-area: method;
+    }
+    .la-cta {
+      grid-area: cta;
+    }
+    /* As tall as the text column: the frame takes whatever the caption
+       leaves, and the map fills it (slice). */
+    .la-visual {
+      display: flex;
+      grid-area: visual;
+    }
+    .la-figure {
+      flex: 1;
+    }
+    .la-score {
+      flex: 1;
+      aspect-ratio: auto;
+      min-height: 520px;
+    }
+  }
+  @media (width >= 1280px) {
+    .la {
+      grid-template-columns: minmax(0, 520px) minmax(0, 1fr);
+    }
+  }
+}
+
+@keyframes la-flash {
+  from {
+    opacity: 1;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+
+@keyframes la-land {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

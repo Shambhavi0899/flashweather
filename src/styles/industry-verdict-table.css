@@ -1,0 +1,331 @@
+/*
+ * Schools & Athletics' "Heat monitoring for schools: what your sensor
+ * measures and what Flash forecasts" (components/industries/verdict-table.tsx).
+ *
+ * A YES / NO comparison that fills in once, the first time it scrolls into
+ * view, in about two seconds:
+ *   1. the rows fade in with their questions only,
+ *   2. the sensor column fills its marks, top to bottom,
+ *   3. the Flash column fills, and each row where Flash answers what the
+ *      sensor cannot takes a soft gold wash,
+ *   4. the closing line fades in, its last sentence underlined in gold.
+ * Hovering a row lays a soft highlight across it.
+ *
+ * Below 768px each row is a small card: the question, then the two answers
+ * side by side under their column names. Cards play one by one as each
+ * scrolls in, since a phone shows two or three at a time.
+ *
+ * The script only sets `data-anim` (idle → run, then removes it): on the
+ * table for the column sequence, on each row and the closing line for the
+ * cards. The markup is the final frame, which is what reduced motion and a
+ * browser without JavaScript get. No grid, no seam.
+ */
+@layer components {
+  .vt {
+    --vt-gold: color-mix(in srgb, var(--color-viz-gold) 11%, var(--color-neutral-0));
+    --vt-gold-hover: color-mix(in srgb, var(--color-viz-gold) 20%, var(--color-neutral-0));
+    --vt-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    /* The column sequence: when each step starts, and the gap between rows. */
+    --vt-step: 80ms;
+    --vt-sensor-at: 550ms;
+    --vt-flash-at: 1050ms;
+    --vt-say-at: 1650ms;
+  }
+
+  .vt-row {
+    --vt-i: 0;
+    border-top: 1px solid var(--color-border);
+    vertical-align: top;
+    transition: background-color 0.2s ease-out;
+  }
+  .vt-row:nth-child(2) {
+    --vt-i: 1;
+  }
+  .vt-row:nth-child(3) {
+    --vt-i: 2;
+  }
+  .vt-row:nth-child(4) {
+    --vt-i: 3;
+  }
+  .vt-row:nth-child(5) {
+    --vt-i: 4;
+  }
+  .vt-row:nth-child(6) {
+    --vt-i: 5;
+  }
+  .vt-row:nth-child(7) {
+    --vt-i: 6;
+  }
+  .vt-row:nth-child(8) {
+    --vt-i: 7;
+  }
+  /* Flash covers what the sensor cannot. */
+  .vt-row[data-gold] {
+    background-color: var(--vt-gold);
+  }
+  @media (hover: hover) {
+    .vt-row:hover {
+      background-color: var(--color-surface-sunken);
+    }
+    .vt-row[data-gold]:hover {
+      background-color: var(--vt-gold-hover);
+    }
+  }
+
+  .vt-head,
+  .vt-cell {
+    padding: 18px 24px;
+  }
+  .vt-head {
+    text-align: left;
+    font-size: var(--text-body);
+    line-height: 24px;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  .vt-cell {
+    color: var(--color-text-muted);
+  }
+
+  .vt-answer {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .vt-mark {
+    flex-shrink: 0;
+    width: 36px;
+    font-size: var(--text-micro);
+    line-height: 24px;
+    font-weight: 700;
+    color: var(--color-text-muted);
+  }
+  .vt-mark[data-yes] {
+    color: var(--color-alert-clear);
+  }
+  /* On the mark's 24px line, so YES / NO sits on the first line of text. */
+  .vt-text {
+    font-size: var(--text-body-s);
+    line-height: 24px;
+  }
+
+  /* ---------- The closing line ---------- */
+
+  .vt-summary {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.3em;
+    padding: 16px 24px;
+    background-color: var(--color-brand-navy);
+    font-size: var(--text-body);
+    line-height: 24px;
+    font-weight: 600;
+    color: var(--color-neutral-0);
+  }
+  .vt-say-strong {
+    position: relative;
+  }
+  .vt-say-strong::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -3px;
+    height: 2px;
+    border-radius: 1px;
+    background-color: var(--color-viz-gold);
+    transform-origin: 0 50%;
+  }
+
+  /* ---------- Cards, below 768px ---------- */
+
+  @media (width < 768px) {
+    .vt-frame {
+      overflow: visible;
+      border: 0;
+      border-radius: 0;
+      background-color: transparent;
+    }
+    .vt-table,
+    .vt-table tbody {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0;
+    }
+    /* The column names are on every answer, so the header row is for screen readers only. */
+    .vt-table thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .vt-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 14px 0;
+      padding: 16px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background-color: var(--color-neutral-0);
+    }
+    .vt-row[data-gold] {
+      border-color: color-mix(in srgb, var(--color-viz-gold) 38%, var(--color-border));
+    }
+    .vt-head,
+    .vt-cell {
+      display: block;
+      padding: 0;
+    }
+    .vt-head {
+      grid-column: 1 / -1;
+    }
+    .vt-cell {
+      padding-right: 12px;
+    }
+    .vt-cell + .vt-cell {
+      padding: 0 0 0 12px;
+      border-left: 1px solid var(--color-border);
+    }
+    .vt-row[data-gold] .vt-cell + .vt-cell {
+      border-left-color: color-mix(in srgb, var(--color-viz-gold) 38%, var(--color-border));
+    }
+    /* The column's name over each answer. */
+    .vt-cell::before {
+      content: attr(data-label);
+      display: block;
+      margin-bottom: 6px;
+      font-size: 11px;
+      line-height: 16px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--color-text-muted);
+    }
+    .vt-cell[data-flash]::before {
+      color: var(--color-brand-blue);
+    }
+    .vt-answer {
+      flex-direction: column;
+      gap: 0;
+    }
+    .vt-mark {
+      width: auto;
+      line-height: 20px;
+    }
+    .vt-text {
+      line-height: 22px;
+    }
+    .vt-summary {
+      margin-top: 12px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+    }
+  }
+
+  /* ---------- The fill ---------- */
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Columns, from 768px: one sequence for the whole table. `backwards`, so
+       a finished row is back on its own styles and the hover can change them. */
+    @media (width >= 768px) {
+      .vt[data-anim] .vt-row {
+        animation:
+          vt-line 0.4s ease-out calc(var(--vt-i) * 60ms) backwards,
+          vt-wash 0.5s ease-out calc(var(--vt-flash-at) + var(--vt-i) * var(--vt-step) + 120ms) backwards;
+      }
+      .vt[data-anim] .vt-head {
+        animation: vt-rise 0.4s var(--vt-ease) calc(var(--vt-i) * 60ms) backwards;
+      }
+      .vt[data-anim] .vt-cell {
+        --vt-at: calc(var(--vt-sensor-at) + var(--vt-i) * var(--vt-step));
+      }
+      .vt[data-anim] .vt-cell[data-flash] {
+        --vt-at: calc(var(--vt-flash-at) + var(--vt-i) * var(--vt-step));
+      }
+      .vt[data-anim] .vt-mark {
+        animation: vt-mark 0.3s var(--vt-ease) var(--vt-at) backwards;
+      }
+      .vt[data-anim] .vt-text {
+        animation: motion-fade 0.35s ease-out calc(var(--vt-at) + 60ms) backwards;
+      }
+      .vt[data-anim] .vt-say {
+        animation: vt-rise 0.5s var(--vt-ease) var(--vt-say-at) backwards;
+      }
+      .vt[data-anim] .vt-say-strong {
+        animation-delay: calc(var(--vt-say-at) + 140ms);
+      }
+      .vt[data-anim] .vt-say-strong::after {
+        animation: motion-grow-x 0.45s var(--vt-ease) calc(var(--vt-say-at) + 380ms) backwards;
+      }
+      .vt[data-anim='idle'] :is(.vt-row, .vt-head, .vt-mark, .vt-text, .vt-say, .vt-say-strong::after) {
+        animation-play-state: paused;
+      }
+    }
+
+    /* Cards: each plays its own short sequence as it scrolls in. */
+    @media (width < 768px) {
+      .vt-row[data-anim] {
+        animation:
+          motion-fade 0.4s ease-out backwards,
+          vt-wash-card 0.5s ease-out 0.62s backwards;
+      }
+      .vt-row[data-anim] .vt-head {
+        animation: vt-rise 0.4s var(--vt-ease) backwards;
+      }
+      .vt-row[data-anim] .vt-cell {
+        --vt-at: 0.25s;
+        animation: motion-fade 0.3s ease-out var(--vt-at) backwards;
+      }
+      .vt-row[data-anim] .vt-cell[data-flash] {
+        --vt-at: 0.5s;
+      }
+      .vt-row[data-anim] .vt-mark {
+        animation: vt-mark 0.3s var(--vt-ease) calc(var(--vt-at) + 80ms) backwards;
+      }
+      .vt-summary[data-anim] .vt-say {
+        animation: vt-rise 0.5s var(--vt-ease) backwards;
+      }
+      .vt-summary[data-anim] .vt-say-strong {
+        animation-delay: 140ms;
+      }
+      .vt-summary[data-anim] .vt-say-strong::after {
+        animation: motion-grow-x 0.45s var(--vt-ease) 380ms backwards;
+      }
+      .vt-row[data-anim='idle'],
+      .vt-row[data-anim='idle'] :is(.vt-head, .vt-cell, .vt-mark),
+      .vt-summary[data-anim='idle'] :is(.vt-say, .vt-say-strong::after) {
+        animation-play-state: paused;
+      }
+    }
+  }
+}
+
+/* Implicit to-frames resolve to the element's own final state. */
+@keyframes vt-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes vt-mark {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+}
+@keyframes vt-line {
+  from {
+    border-top-color: transparent;
+  }
+}
+@keyframes vt-wash {
+  from {
+    background-color: transparent;
+  }
+}
+@keyframes vt-wash-card {
+  from {
+    border-color: var(--color-border);
+    background-color: var(--color-neutral-0);
+  }
+}

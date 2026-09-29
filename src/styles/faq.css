@@ -1,0 +1,185 @@
+/*
+ * faq — global styles for this area of the site.
+ *
+ * Components use these class names; no component carries inline style={...}.
+ * Classes sit in @layer components so a Tailwind utility on the same element
+ * still wins.
+ */
+
+@layer components {
+  /* Hero: navy wash from the headline side (left) across the lightning photo. */
+  .faq-hero-grade-left {
+    background-image: linear-gradient(
+      in oklab 90deg,
+      oklab(17.1% -0.0005 -0.052 / 95%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 78%) 42%,
+      oklab(17.1% -0.0005 -0.052 / 12%) 100%
+    );
+  }
+
+  /* Hero: top-to-bottom grade that darkens at the foot of the section. */
+  .faq-hero-grade-bottom {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 20%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 0%) 40%,
+      oklab(17.1% -0.0005 -0.052 / 92%) 100%
+    );
+  }
+
+  /* Objection-group header photo: clear top, navy under the caption. */
+  .faq-group-header-grade {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 15%) 40%,
+      oklab(17.1% -0.0005 -0.052 / 88%) 100%
+    );
+  }
+}
+
+@layer components {
+  /*
+   * The accordion every FAQ on the site uses (components/faq/faq-accordion.tsx).
+   * A row with `data-open` is the open
+   * one. The answer's height runs on a 0fr -> 1fr grid row, so it eases
+   * between two real heights with nothing measured. A closed answer is also
+   * `visibility: hidden`, which keeps its links out of the tab order.
+   */
+  .motion.faq-item {
+    --motion-stagger: 80ms;
+  }
+  .motion[data-anim]:not([data-anim='reset']) > .faq-row {
+    animation: motion-rise 0.5s var(--motion-ease) var(--motion-delay) both;
+  }
+
+  /* Hover: the ground lightens behind the row, without moving its rule. */
+  .faq-row {
+    position: relative;
+    isolation: isolate;
+  }
+  .faq-row::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 10px -16px;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-neutral-0);
+    opacity: 0;
+    transition: opacity 0.25s var(--motion-ease);
+  }
+  .faq-row-first::before {
+    top: -18px;
+  }
+  .faq-row-last::before {
+    bottom: -18px;
+  }
+  .faq-question {
+    transition:
+      color 0.25s var(--motion-ease),
+      transform 0.25s var(--motion-ease);
+  }
+  /* 20px wide and one line of its question tall, so it sits centred on the
+     first line whatever the question's size. */
+  .faq-icon {
+    width: 20px;
+    height: 1lh;
+    color: var(--color-text-muted);
+    transition: color 0.25s var(--motion-ease);
+  }
+  .faq-mark {
+    margin-top: calc((1lh - 24px) / 2);
+    border-color: var(--color-border-strong);
+    color: var(--color-text-muted);
+    transition:
+      color 0.25s var(--motion-ease),
+      border-color 0.25s var(--motion-ease);
+  }
+  .faq-mark > svg {
+    transition: transform 0.3s var(--motion-ease);
+  }
+  @media (hover: hover) {
+    .faq-row:hover::before {
+      opacity: 1;
+    }
+    .faq-row:hover .faq-question {
+      transform: translateX(4px);
+    }
+  }
+
+  /* Open: the question in brand blue, its icon gold, + turned to a cross. */
+  .faq-row[data-open] .faq-question {
+    color: var(--color-brand-blue);
+  }
+  .faq-row[data-open] .faq-icon {
+    color: var(--color-gold-on-light);
+  }
+  .faq-row[data-open] .faq-mark {
+    border-color: var(--color-brand-blue);
+    color: var(--color-brand-blue);
+  }
+  .faq-row[data-open] .faq-mark > svg {
+    transform: rotate(45deg);
+  }
+
+  .faq-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s var(--motion-ease);
+  }
+  .faq-answer {
+    min-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.3s var(--motion-ease),
+      visibility 0s 0.3s;
+  }
+  .faq-row[data-open] .faq-panel {
+    grid-template-rows: 1fr;
+  }
+  .faq-row[data-open] .faq-answer {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity 0.3s var(--motion-ease) 80ms,
+      visibility 0s;
+  }
+
+  /* Nothing to open them with: show every answer. */
+  @media (scripting: none) {
+    .faq-panel {
+      grid-template-rows: 1fr;
+    }
+    .faq-answer {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .faq-row::before,
+    .faq-question,
+    .faq-icon,
+    .faq-mark,
+    .faq-mark > svg,
+    .faq-panel,
+    .faq-answer,
+    .faq-row[data-open] .faq-answer {
+      transition: none;
+    }
+    .faq-row:hover .faq-question {
+      transform: none;
+    }
+  }
+}
+
+/*
+ * Links in an answer take the site's link hover, the underline. A link that
+ * is already underlined in the text thickens its line instead, so hovering
+ * it still answers. Outside the layers, so it holds over a link's utilities.
+ */
+.faq-answer a:hover {
+  color: var(--color-brand-blue-hover);
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+}

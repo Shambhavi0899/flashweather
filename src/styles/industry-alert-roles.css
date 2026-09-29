@@ -1,0 +1,247 @@
+/*
+ * Schools & Athletics "Who gets the alert, and on which channel"
+ * (components/industries/alert-roles.tsx).
+ *
+ * Five role cards. Each carries the alert that role receives as a message
+ * bubble labelled with its channel, and the card's chip for that channel is
+ * highlighted while the bubble shows.
+ *
+ * The markup is the finished state: every bubble visible and every matching
+ * chip highlighted, which is what no JavaScript and reduced motion get. Under
+ * 768px the bubble sits under the photo and is always visible. From 768px the
+ * bubble sits on the photo, between the eyebrow and the role, and under
+ * `data-armed` (JavaScript, motion welcome) it is hidden until its card is
+ * `data-on`: hovered, tapped, focused, or reached by the one idle run.
+ */
+@layer components {
+  .arl {
+    display: grid;
+    gap: 24px;
+    margin-top: 40px;
+  }
+  @media (width >= 640px) {
+    .arl {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (width >= 1024px) {
+    .arl {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  @media (width >= 1280px) {
+    .arl {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      margin-top: 48px;
+    }
+  }
+
+  .arl-item {
+    display: flex;
+  }
+  .arl-card {
+    position: relative;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-neutral-0);
+  }
+
+  /* ---------- Photo and bubble ---------- */
+
+  .arl-stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .arl-photo {
+    position: relative;
+    height: 140px;
+    flex-shrink: 0;
+    overflow: hidden;
+    background-color: var(--color-brand-navy);
+  }
+  .arl-eyebrow {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    left: 14px;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    color: var(--color-viz-gold);
+  }
+  .arl-title {
+    position: absolute;
+    right: 14px;
+    bottom: 12px;
+    left: 14px;
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 800;
+    letter-spacing: var(--tracking-display);
+    color: var(--color-neutral-0);
+  }
+
+  /* One button over the whole card, so the card is one target. It only exists
+     once the bubbles can hide. */
+  .arl-hit {
+    display: none;
+  }
+
+  .arl-bubble {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin: 12px 16px 0;
+    border: 1px solid var(--color-border);
+    border-radius: 12px 12px 12px 4px;
+    padding: 8px 12px 9px;
+    background-color: var(--color-neutral-50);
+  }
+  .arl-label {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--color-text-muted);
+  }
+  .arl-channel {
+    color: var(--color-gold-on-light);
+  }
+  .arl-text {
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    color: var(--color-brand-navy);
+  }
+
+  /* ---------- Copy and chips ---------- */
+
+  .arl-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 16px 20px;
+  }
+  .arl-body {
+    font-size: var(--text-body-s);
+    line-height: var(--leading-body-s);
+    text-wrap: pretty;
+    color: var(--color-text-muted);
+  }
+  .arl-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .arl-chip {
+    display: flex;
+    height: 24px;
+    align-items: center;
+    border-radius: var(--radius-xs);
+    padding-inline: 10px;
+    background-color: var(--color-surface-raised);
+    box-shadow: inset 0 0 0 1px transparent;
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--color-neutral-700);
+  }
+  /* The channel the bubble is labelled with. */
+  .arl-chip[data-match] {
+    background-color: color-mix(in oklab, var(--color-gold-on-light) 14%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-gold-on-light) 45%, transparent);
+    color: var(--color-brand-navy);
+  }
+
+  /* ---------- From 768px: the bubble sits on the photo ---------- */
+
+  @media (width >= 768px) {
+    .arl-photo {
+      height: 176px;
+    }
+    .arl-eyebrow {
+      top: 16px;
+    }
+    .arl-title {
+      bottom: 16px;
+    }
+    .arl-bubble {
+      position: absolute;
+      right: 12px;
+      bottom: 48px;
+      left: 12px;
+      margin: 0;
+      border-color: transparent;
+      padding: 7px 10px 8px;
+      background-color: var(--color-neutral-0);
+      box-shadow: 0 6px 18px rgb(4 8 24 / 0.4);
+    }
+    .arl-text {
+      font-size: 12px;
+      line-height: 16px;
+    }
+
+    .arl[data-armed] .arl-hit {
+      position: absolute;
+      z-index: 1;
+      inset: 0;
+      display: block;
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+    }
+    .arl[data-armed] .arl-hit:focus-visible {
+      outline: 2px solid var(--color-brand-blue);
+      outline-offset: -2px;
+    }
+
+    .arl[data-armed] .arl-bubble {
+      opacity: 0;
+      transform: translateY(14px);
+      transition:
+        opacity 0.24s ease,
+        transform 0.24s ease;
+    }
+    .arl[data-armed] .arl-card[data-on] .arl-bubble {
+      opacity: 1;
+      transform: none;
+      transition:
+        opacity 0.28s ease,
+        transform 0.42s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .arl[data-armed] .arl-chip {
+      transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease,
+        color 0.2s ease;
+    }
+    .arl[data-armed] .arl-card:not([data-on]) .arl-chip[data-match] {
+      background-color: var(--color-surface-raised);
+      box-shadow: inset 0 0 0 1px transparent;
+      color: var(--color-neutral-700);
+    }
+  }
+
+  /* Reduced motion: bubbles visible, nothing moves. */
+  @media (prefers-reduced-motion: reduce) {
+    .arl .arl-bubble,
+    .arl .arl-chip {
+      transition: none;
+    }
+    .arl[data-armed] .arl-bubble {
+      opacity: 1;
+      transform: none;
+    }
+    .arl[data-armed] .arl-card:not([data-on]) .arl-chip[data-match] {
+      background-color: color-mix(in oklab, var(--color-gold-on-light) 14%, transparent);
+      box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-gold-on-light) 45%, transparent);
+      color: var(--color-brand-navy);
+    }
+  }
+}

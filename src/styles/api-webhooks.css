@@ -1,0 +1,204 @@
+/*
+ * Flash API page: "Which events can a webhook fire on?" — the events table
+ * beside a delivery log (components/products/api/webhook-log.tsx), whl-*.
+ *
+ * About a fifth in view, one storm plays through the log, a line every 700ms:
+ * watch → warning → hail → all clear, done in about 3s. As a line lands, its
+ * event's table row lights (`data-hot`): 200ms in on the row's transition,
+ * held 600ms, 200ms out. Clicking a row
+ * logs one delivery for that event. Replay appears once the storm is done.
+ *
+ * The log body is a fixed height that shows the latest lines (6 from 1280px,
+ * 3 below), so nothing below it moves as lines arrive. Server HTML, no
+ * JavaScript and reduced motion: the storm's four lines, complete and still,
+ * no row flashes.
+ */
+
+@layer components {
+  .whl {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    @media (width >= 1280px) {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 40px;
+    }
+  }
+  .whl-table {
+    position: relative;
+    min-width: 0;
+    overflow-x: auto;
+    @media (width >= 1280px) {
+      flex: 1 1 0;
+    }
+  }
+
+  /* ---------- Rows ---------- */
+
+  .whl-row {
+    cursor: pointer;
+    transition: background-color 200ms var(--motion-ease);
+  }
+  @media (hover: hover) {
+    .whl-row:hover {
+      background-color: var(--color-surface-sunken);
+    }
+  }
+  .whl-event {
+    display: inline-flex;
+    height: 28px;
+    align-items: center;
+    border-radius: 6px;
+    background-color: var(--color-surface-raised);
+    padding: 0 10px;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 13px;
+    line-height: 16px;
+    font-weight: 500;
+    color: var(--color-text);
+    cursor: pointer;
+    transition:
+      background-color 200ms var(--motion-ease),
+      box-shadow 200ms var(--motion-ease);
+  }
+  .whl-event:focus-visible {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: 2px;
+  }
+
+  /* ---------- The log ---------- */
+
+  .whl-log {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 20px;
+    border: 1px solid rgb(255 255 255 / 10%);
+    background-color: var(--color-brand-navy);
+    @media (width >= 1280px) {
+      width: 380px;
+      flex-shrink: 0;
+    }
+  }
+  .whl-bar {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+    padding: 0 18px;
+  }
+  .whl-live {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    background-color: var(--color-alert-clear);
+    box-shadow: 0 0 0 3px rgb(18 138 94 / 25%);
+  }
+  .whl-body {
+    display: flex;
+    height: 162px;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 10px;
+    overflow: hidden;
+    padding: 14px 18px;
+    /* Older lines slide up out of the top padding and fade, never peek. */
+    mask-image: linear-gradient(to bottom, transparent, #000 14px);
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 12px;
+    line-height: 18px;
+    @media (width >= 1280px) {
+      height: 306px;
+    }
+  }
+  .whl-line {
+    display: flex;
+    flex-shrink: 0;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 2px solid rgb(230 186 45 / 55%);
+    padding-left: 10px;
+  }
+  .whl-line[data-kind='clear'] {
+    border-left-color: rgb(127 209 168 / 60%);
+  }
+  .whl-empty {
+    margin: auto 0;
+    color: #6f7a99;
+  }
+  .whl-foot {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid rgb(255 255 255 / 8%);
+    padding: 0 18px;
+  }
+  .whl-replay {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 700;
+    color: var(--color-viz-gold);
+    cursor: pointer;
+  }
+  .whl-replay:hover {
+    text-decoration: underline;
+  }
+  .whl-replay:focus-visible {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .whl-replay {
+      display: none;
+    }
+  }
+
+  /* ---------- Motion ---------- */
+
+  @media (prefers-reduced-motion: no-preference) {
+    .whl-line {
+      animation: whl-in 200ms var(--motion-ease) both;
+    }
+    .whl-line[data-seed] {
+      animation: none;
+    }
+    .whl-row[data-hot] {
+      background-color: rgb(230 186 45 / 20%);
+    }
+    .whl-row[data-hot] .whl-event {
+      background-color: rgb(230 186 45 / 22%);
+      box-shadow: 0 0 0 1px rgb(127 98 12 / 35%);
+    }
+    .whl-live::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background-color: var(--color-alert-clear);
+      animation: motion-ping 2.2s ease-out infinite;
+    }
+    .whl:not([data-inview]) .whl-live::after {
+      animation-play-state: paused;
+    }
+  }
+}
+
+@keyframes whl-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}

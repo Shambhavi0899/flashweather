@@ -1,0 +1,59 @@
+/*
+ * contact — global styles for this area of the site.
+ *
+ * Components use these class names; no component carries inline style={...}.
+ * Classes sit in @layer components so a Tailwind utility on the same element
+ * still wins.
+ */
+
+@layer components {
+  /* Hero band: navy-to-blue diagonal behind the Command Center map photo. */
+  .contact-hero-band {
+    background-image: linear-gradient(
+      in oklab 135deg,
+      oklab(17.1% -0.0005 -0.052) 0%,
+      oklab(22.3% -0.005 -0.08) 55%,
+      oklab(28.4% -0.008 -0.111) 100%
+    );
+  }
+
+  /* Hero band: navy wash from the headline side (left) over the map. */
+  .contact-hero-grade-left {
+    background-image: linear-gradient(
+      in oklab 90deg,
+      oklab(17.1% -0.0005 -0.052 / 92%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 66%) 52%,
+      oklab(17.1% -0.0005 -0.052 / 24%) 100%
+    );
+  }
+
+  /* Hero band: top-to-bottom grade into the band's lower edge. */
+  .contact-hero-grade-bottom {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 10%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 0%) 45%,
+      oklab(17.1% -0.0005 -0.052 / 60%) 100%
+    );
+  }
+
+  /* "Where we are" photo (Canton, Georgia): navy under the caption. */
+  .contact-office-grade {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 10%) 45%,
+      oklab(17.1% -0.0005 -0.052 / 86%) 100%
+    );
+  }
+
+  /* The intro copy's own navy band on phones and tablets; from lg it sits on
+     the hero photo instead, so the band drops away. */
+  .contact-intro-band {
+    background-color: var(--color-brand-navy);
+    background-image: linear-gradient(135deg, #070d26 0%, #0b1a45 55%, #0f2766 100%);
+    @media (width >= 1024px) {
+      background-color: transparent;
+      background-image: none;
+    }
+  }
+}

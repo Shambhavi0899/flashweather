@@ -1,0 +1,240 @@
+/*
+ * api-agent-run — "Build with Flash Agent" on the API page, runnable
+ * (components/products/api/agent-run.tsx), prefix aar-.
+ *
+ * Inside the shared code window (code-block.tsx), top to bottom:
+ *   .aar-bar        the language tabs, which scroll sideways on a phone,
+ *                   and the Run button, which never scrolls away
+ *   .aar-panels     one request per language; only the selected one shows
+ *   .aar-response   the response, a line at a time (data-shown), the
+ *                   confirmation line lit gold (data-hl), and the note
+ *   .aar-status     in the header: Not sent yet → Sending… → Receiving… →
+ *                   200 OK · illustrative
+ * The code colours are CodeBody's. Motion is inside the no-preference
+ * query; without it the response is simply there.
+ */
+
+@layer components {
+  .aar-status {
+    flex-shrink: 0;
+    color: #8f9ab8;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 14px;
+  }
+  .aar-status[data-phase='done'] {
+    color: var(--color-alert-clear);
+  }
+
+  /* ------------------------------------------------ Tabs and Run button */
+
+  .aar-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px 0 8px;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+  }
+  .aar-tabs {
+    display: flex;
+    flex: 1 1 0;
+    gap: 4px;
+    min-width: 0;
+    margin-bottom: -1px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .aar-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .aar-tab {
+    flex: none;
+    min-height: 44px;
+    padding: 0 12px;
+    border-bottom: 2px solid transparent;
+    color: #8f9ab8;
+    font-size: var(--text-caption);
+    font-weight: 600;
+    line-height: 20px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .aar-tab:hover {
+    color: #dce2f0;
+  }
+  .aar-tab[aria-selected='true'] {
+    border-bottom-color: var(--color-viz-gold);
+    color: var(--color-text-on-dark);
+  }
+  .aar-tab:focus-visible,
+  .aar-run:focus-visible,
+  .aar-pre:focus-visible {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: -2px;
+  }
+
+  .aar-run {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 14px;
+    border: 1px solid rgb(230 186 45 / 60%);
+    border-radius: 6px;
+    background-color: rgb(230 186 45 / 16%);
+    color: var(--color-viz-gold);
+    font-size: var(--text-caption);
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+  }
+  /* A 44px target around the 32px button. */
+  .aar-run::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+  }
+  .aar-run:hover {
+    background-color: rgb(230 186 45 / 26%);
+  }
+  .aar-run[aria-disabled='true'] {
+    cursor: progress;
+  }
+  .aar-run-icon {
+    width: 11px;
+    height: 11px;
+    fill: currentColor;
+  }
+  .aar-run-icon .aar-again {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .aar-spinner {
+    width: 11px;
+    height: 11px;
+    border: 1.6px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+  }
+
+  /* ------------------------------------------------------------- Code */
+
+  .aar-pre {
+    overflow-x: auto;
+    color: #8f9ab8;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: var(--text-caption);
+    line-height: 20px;
+  }
+  .aar-panels {
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+  }
+  .aar-panel:not([data-on]) {
+    display: none;
+  }
+  .aar-panel .aar-pre {
+    padding: 16px 20px;
+  }
+
+  .aar-response {
+    padding: 16px 0 18px;
+  }
+  .aar-label {
+    padding: 0 20px 6px;
+    color: #8f9ab8;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    line-height: 14px;
+    text-transform: uppercase;
+  }
+  .aar-response .aar-pre {
+    padding: 0 20px;
+  }
+  /* Each line is a block as wide as the window (or its text), so the
+     confirmation line's band runs edge to edge. */
+  .aar-line {
+    display: block;
+    width: max-content;
+    min-width: calc(100% + 40px);
+    margin-inline: -20px;
+    padding-inline: 20px;
+    visibility: hidden;
+  }
+  .aar-line[data-shown] {
+    visibility: visible;
+  }
+  .aar-line[data-hl] {
+    background-color: rgb(230 186 45 / 12%);
+    box-shadow: inset 2px 0 var(--color-viz-gold);
+    color: var(--color-viz-gold);
+  }
+
+  .aar-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 20px 0;
+    color: #dce2f0;
+    font-size: var(--text-caption);
+    line-height: 18px;
+    visibility: hidden;
+  }
+  .aar-note[data-on] {
+    visibility: visible;
+  }
+  .aar-note-icon {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: var(--color-viz-gold);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  /* ----------------------------------------------------------- Motion */
+
+  @media (prefers-reduced-motion: no-preference) {
+    .aar-panel[data-on] {
+      animation: aar-fade 0.2s ease-out;
+    }
+    .aar-spinner {
+      animation: aar-spin 0.7s linear infinite;
+    }
+    .aar-line[data-shown] {
+      animation: aar-line 0.35s var(--motion-ease) backwards;
+    }
+    .aar-line {
+      transition:
+        background-color 0.5s var(--motion-ease),
+        box-shadow 0.5s var(--motion-ease),
+        color 0.5s var(--motion-ease);
+    }
+    .aar-note[data-on] {
+      animation: aar-line 0.5s var(--motion-ease) 0.15s backwards;
+    }
+  }
+}
+
+@keyframes aar-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+@keyframes aar-fade {
+  from {
+    opacity: 0.01;
+  }
+}
+@keyframes aar-line {
+  from {
+    opacity: 0.01;
+    translate: 0 4px;
+  }
+}

@@ -1,0 +1,476 @@
+/*
+ * Industry pages: a timeline row as swimlanes (components/industries/storm-lanes.tsx),
+ * classes swl-*. Roofing's "What a storm day looks like with a 55-minute hail
+ * warning".
+ *
+ * From 1024px: the times across the top, one lane per team under them (the
+ * lane name on its top rule, no vertical rules), each card in its lane under
+ * its time, and the `all` step a red marker down every lane. The "now" line
+ * and the axis fill follow --swl-p (0 → 1), set by the component from the
+ * scroll; a card pops in once the line reaches it. Under 1024px: one list,
+ * each card tagged with its lane, popping in as it scrolls into view.
+ * `data-mode` is set by the component: `lanes` and `list` animate, `still`
+ * (server HTML, reduced motion) shows everything and no line.
+ */
+@layer components {
+  .swl {
+    position: relative;
+    margin-top: 40px;
+  }
+  @media (width >= 1280px) {
+    .swl {
+      margin-top: 48px;
+    }
+  }
+
+  /* Lane colours: production blue, sales gold, office slate, all-lane red. */
+  .swl [data-lane='0'] {
+    --swl-color: var(--color-brand-blue);
+  }
+  .swl [data-lane='1'] {
+    --swl-color: var(--color-gold-on-light);
+  }
+  .swl [data-lane='2'] {
+    --swl-color: var(--color-neutral-700);
+  }
+  .swl [data-lane='all'] {
+    --swl-color: var(--color-alert-warning);
+  }
+
+  .swl-axis,
+  .swl-lane,
+  .swl-now {
+    display: none;
+  }
+
+  .swl-events {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ---------- Card ---------- */
+
+  .swl-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: inset 3px 0 0 var(--swl-color);
+    transition: border-color 0.25s var(--motion-ease);
+  }
+  .swl-event[data-lane='all'] .swl-card {
+    border-color: color-mix(in srgb, var(--color-alert-warning) 45%, transparent);
+    background: color-mix(in srgb, var(--color-alert-warning) 5%, var(--color-surface));
+  }
+
+  .swl-button {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 10px;
+    row-gap: 4px;
+    width: 100%;
+    padding: 12px 12px 12px 16px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .swl-button:focus-visible {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: -2px;
+    border-radius: var(--radius-md);
+  }
+
+  .swl-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+  }
+  .swl-time {
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 700;
+    letter-spacing: var(--tracking-display);
+    color: var(--color-text);
+  }
+  .swl-event[data-lane='all'] .swl-time {
+    color: var(--color-alert-warning);
+  }
+  .swl-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--swl-color);
+  }
+  .swl-tag-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: var(--swl-color);
+  }
+
+  .swl-title {
+    grid-column: 1;
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 600;
+    color: var(--color-text);
+    transition: color 0.25s var(--motion-ease);
+  }
+
+  .swl-mark {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+    display: flex;
+    width: 22px;
+    height: 22px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 9999px;
+    color: var(--color-text-muted);
+    transition:
+      color 0.25s var(--motion-ease),
+      border-color 0.25s var(--motion-ease);
+  }
+  .swl-mark > svg {
+    transition: transform 0.3s var(--motion-ease);
+  }
+
+  @media (hover: hover) {
+    .swl-card:hover {
+      border-color: var(--color-border-strong);
+    }
+    .swl-card:hover .swl-title {
+      color: var(--color-brand-blue);
+    }
+  }
+
+  /* Open: the title in brand blue, + turned to a cross, the copy slides down. */
+  .swl-event[data-open] .swl-card {
+    border-color: var(--color-brand-blue);
+  }
+  .swl-event[data-open] .swl-title {
+    color: var(--color-brand-blue);
+  }
+  .swl-event[data-open] .swl-mark {
+    border-color: var(--color-brand-blue);
+    color: var(--color-brand-blue);
+  }
+  .swl-event[data-open] .swl-mark > svg {
+    transform: rotate(45deg);
+  }
+
+  .swl-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s var(--motion-ease);
+  }
+  .swl-body {
+    min-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.2s var(--motion-ease),
+      visibility 0s linear 0.3s;
+  }
+  .swl-body > p {
+    padding: 0 14px 14px 16px;
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--color-text-muted);
+  }
+  .swl-event[data-open] .swl-panel {
+    grid-template-rows: 1fr;
+  }
+  .swl-event[data-open] .swl-body {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.25s var(--motion-ease) 0.08s;
+  }
+  /* Without JavaScript the buttons do nothing, so every card is open. */
+  @media (scripting: none) {
+    .swl-panel {
+      grid-template-rows: 1fr;
+    }
+    .swl-body {
+      opacity: 1;
+      visibility: visible;
+    }
+    .swl-mark {
+      display: none;
+    }
+  }
+
+  /* ---------- Pop-in (lanes and list modes) ---------- */
+
+  .swl[data-mode='lanes'] .swl-event,
+  .swl[data-mode='list'] .swl-event {
+    transition: opacity 0.45s var(--motion-ease) var(--swl-delay, 0ms);
+  }
+  .swl[data-mode='lanes'] .swl-card,
+  .swl[data-mode='list'] .swl-card {
+    transform-origin: left center;
+    transition:
+      border-color 0.25s var(--motion-ease),
+      transform 0.5s var(--motion-ease) var(--swl-delay, 0ms);
+  }
+  /* A card the keyboard reaches first shows at once. */
+  .swl[data-mode='lanes'] .swl-event:not([data-on]):not(:focus-within),
+  .swl[data-mode='list'] .swl-event:not([data-on]):not(:focus-within) {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .swl[data-mode='lanes'] .swl-event:not([data-on]):not(:focus-within) .swl-card,
+  .swl[data-mode='list'] .swl-event:not([data-on]):not(:focus-within) .swl-card {
+    transform: scale(0.94);
+  }
+
+  /* ---------- Lanes, from 1024px ---------- */
+
+  @media (width >= 1024px) {
+    .swl {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      /* The axis, then up to three lanes. */
+      grid-template-rows: auto repeat(3, auto);
+      column-gap: 16px;
+      container-type: inline-size;
+    }
+
+    /* Time axis: each time over its column, a dot on one shared rule. */
+    .swl-axis {
+      position: relative;
+      display: grid;
+      grid-column: 1 / -1;
+      grid-row: 1;
+      grid-template-columns: subgrid;
+      padding-bottom: 20px;
+    }
+    .swl-axis::before,
+    .swl-axis::after {
+      content: '';
+      position: absolute;
+      top: 43px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--color-border-strong);
+    }
+    .swl-axis::after {
+      display: none;
+      background: var(--color-brand-blue);
+      transform-origin: left;
+      transform: scaleX(var(--swl-p, 0));
+    }
+    .swl[data-mode='lanes'] .swl-axis::after {
+      display: block;
+    }
+
+    .swl-tick {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .swl-tick-time {
+      font-size: 22px;
+      line-height: 26px;
+      font-weight: 700;
+      letter-spacing: var(--tracking-display);
+      color: var(--color-text);
+      transition: color 0.3s var(--motion-ease);
+    }
+    .swl-tick-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 9999px;
+      background: var(--color-brand-blue);
+      transition: background-color 0.3s var(--motion-ease);
+    }
+    .swl-tick[data-warn] .swl-tick-time {
+      color: var(--color-alert-warning);
+    }
+    .swl-tick[data-warn] .swl-tick-dot {
+      background: var(--color-alert-warning);
+    }
+    /* Times the line has not reached yet wait in grey. */
+    .swl[data-mode='lanes'] .swl-tick:not([data-past]) .swl-tick-time {
+      color: var(--color-text-subtle);
+    }
+    .swl[data-mode='lanes'] .swl-tick:not([data-past]) .swl-tick-dot {
+      background: var(--color-neutral-300);
+    }
+
+    /* Lanes: a top rule with the team's name on it, no vertical rules. */
+    .swl-lane {
+      display: flex;
+      grid-column: 1 / -1;
+      gap: 8px;
+      align-self: stretch;
+      padding-top: 14px;
+      border-top: 1px solid var(--color-border-strong);
+      font-size: 11px;
+      line-height: 14px;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--swl-color);
+      align-items: start;
+    }
+    .swl-lane[data-lane='0'] {
+      grid-row: 2;
+    }
+    .swl-lane[data-lane='1'] {
+      grid-row: 3;
+    }
+    .swl-lane[data-lane='2'] {
+      grid-row: 4;
+      border-bottom: 1px solid var(--color-border-strong);
+    }
+    .swl-lane-dot {
+      width: 8px;
+      height: 8px;
+      margin-top: 3px;
+      border-radius: 9999px;
+      background: var(--swl-color);
+    }
+
+    .swl-events {
+      display: grid;
+      grid-column: 1 / -1;
+      grid-row: 2 / -1;
+      grid-template-columns: subgrid;
+      grid-template-rows: subgrid;
+      gap: 0 16px;
+    }
+    .swl-event {
+      position: relative;
+      z-index: 2;
+      align-self: start;
+      margin-block: 42px 20px;
+    }
+    .swl-event[data-col='1'] {
+      grid-column: 1;
+    }
+    .swl-event[data-col='2'] {
+      grid-column: 2;
+    }
+    .swl-event[data-col='3'] {
+      grid-column: 3;
+    }
+    .swl-event[data-col='4'] {
+      grid-column: 4;
+    }
+    .swl-event[data-col='5'] {
+      grid-column: 5;
+    }
+    .swl-event[data-col='6'] {
+      grid-column: 6;
+    }
+    .swl-event[data-lane='0'] {
+      grid-row: 1;
+    }
+    .swl-event[data-lane='1'] {
+      grid-row: 2;
+    }
+    .swl-event[data-lane='2'] {
+      grid-row: 3;
+    }
+
+    /* The lane is named on its rule, so the card's tag is for screen readers
+       only; the all-lane card keeps its "All teams" beside the time. */
+    .swl-event:not([data-lane='all']) .swl-tag {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .swl-time,
+    .swl-tag {
+      font-size: 12px;
+      line-height: 16px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .swl-time {
+      color: var(--color-text-muted);
+    }
+
+    /* The all-lane step: a red rule from its axis dot down every lane, its card on it. */
+    .swl-event[data-lane='all'] {
+      display: flex;
+      grid-row: 1 / -1;
+      flex-direction: column;
+      justify-content: center;
+      align-self: stretch;
+      margin-block: 0;
+      padding-block: 42px 20px;
+    }
+    .swl-event[data-lane='all']::before {
+      content: '';
+      position: absolute;
+      top: -26px;
+      bottom: 0;
+      left: 5px;
+      width: 2px;
+      background: var(--color-alert-warning);
+      transform-origin: top;
+      transition: transform 0.6s var(--motion-ease);
+    }
+    .swl[data-mode='lanes'] .swl-event[data-lane='all']:not([data-on])::before {
+      transform: scaleY(0);
+    }
+
+    /* The now line: from the axis rule to the foot of the last lane. */
+    .swl[data-mode='lanes'] .swl-now {
+      position: absolute;
+      top: 44px;
+      bottom: 0;
+      left: -1px;
+      z-index: 1;
+      display: block;
+      width: 2px;
+      background: var(--color-brand-blue);
+      pointer-events: none;
+      transform: translateX(calc(var(--swl-p, 0) * 100cqw));
+    }
+    .swl-now-pill {
+      position: absolute;
+      top: 0;
+      left: 1px;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: var(--color-brand-blue);
+      font-size: 10px;
+      line-height: 12px;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--color-neutral-0);
+      transform: translate(-50%, -50%);
+      white-space: nowrap;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .swl-card,
+    .swl-title,
+    .swl-mark,
+    .swl-mark > svg,
+    .swl-panel,
+    .swl-body {
+      transition: none;
+    }
+  }
+}

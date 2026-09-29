@@ -1,0 +1,364 @@
+/*
+ * Heat "Ask Flash about Thursday's practice." (components/products/heat/
+ * agent-rule.tsx). One <Motion> block: when the card scrolls in it plays
+ * once, and the Replay button runs it again. Every piece is laid out from
+ * the start and only fades, slides, clips or changes colour, so the card
+ * keeps its height throughout. Outside the no-preference query, or without
+ * a run, the markup is the final state: the rule triggered, the line drawn,
+ * the answer and every chip shown.
+ *
+ *    200ms  a light sweeps the question
+ *    450ms  the rule chip slides out of it, armed (gold outline)
+ *    900ms  the armed outline pulses once
+ *   1200ms  the Thursday line draws left to right, 2s, linear
+ *   1870ms  it crosses 87 (2:20 pm, a third of the way): the chip flashes to
+ *           Triggered, the crossing pulses, the answer and its detail fade in
+ *   3400ms  the chips, 180ms apart: Action (with the moved practice slot on
+ *           the chart), SMS, Source, Confirmed
+ *   4300ms  Replay
+ *
+ * --hag-cross is where the line meets the 87 line: line-at + line-ms × the
+ * crossing's share of the x axis (content.ts `agentExample.chart`). Keep the
+ * three in step. No grid behind the chart; no section transitions.
+ */
+@layer components {
+  .hag {
+    --hag-line-at: 1200ms;
+    --hag-line-ms: 2000ms;
+    --hag-cross: 1870ms;
+    --hag-chips-at: 3400ms;
+    --hag-chip-gap: 180ms;
+  }
+
+  /* ------------------------------------------------------------ The rule chip */
+  .hag-question {
+    position: relative;
+  }
+  .hag-rule {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 10px;
+    padding: 6px 8px 6px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid color-mix(in srgb, var(--color-alert-watch) 70%, transparent);
+    background-color: color-mix(in srgb, var(--color-alert-watch) 14%, transparent);
+    color: var(--color-neutral-0);
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  /* The armed state: a gold outline over the chip, gone once it triggers. */
+  .hag-rule::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    border: 1px solid var(--color-viz-gold);
+    background-color: #0a1130;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .hag-rule-text {
+    position: relative;
+  }
+  /* Armed and Triggered share one cell, so the chip keeps its width. */
+  .hag-status {
+    position: relative;
+    display: grid;
+    padding: 2px 8px;
+    border-radius: var(--radius-xs);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .hag-status > * {
+    grid-area: 1 / 1;
+    text-align: center;
+  }
+  .hag-armed {
+    color: var(--color-viz-gold);
+    opacity: 0;
+  }
+  .hag-triggered {
+    border-radius: var(--radius-xs);
+    background-color: var(--color-alert-watch);
+    color: var(--color-neutral-0);
+  }
+
+  /* ------------------------------------------------------------ Thursday chart */
+  .hag-chart {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .hag-axis {
+    fill: #8f9ab8;
+    font-size: 10px;
+  }
+  .hag-threshold {
+    stroke: var(--color-alert-watch);
+    stroke-width: 1;
+    stroke-dasharray: 4 4;
+  }
+  .hag-threshold-label {
+    fill: var(--color-alert-watch);
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .hag-line {
+    fill: none;
+    stroke: var(--color-viz-gold);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  .hag-line-hot {
+    stroke: var(--color-alert-watch);
+  }
+  .hag-peak {
+    fill: var(--color-neutral-0);
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .hag-cross-dot {
+    fill: var(--color-alert-watch);
+    stroke: var(--color-brand-navy-deep);
+    stroke-width: 2;
+  }
+  .hag-cross-ring {
+    fill: none;
+    stroke: var(--color-alert-watch);
+    stroke-width: 1.5;
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .hag-slot {
+    fill: #7fd1a8;
+  }
+  .hag-slot-label {
+    fill: #7fd1a8;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  /* ------------------------------------------------------------ Replay */
+  .hag-replay {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    min-height: 32px;
+    padding-inline: 10px;
+    border-radius: var(--radius-pill);
+    color: #8f9ab8;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .hag-replay:hover {
+    color: var(--color-neutral-0);
+    background-color: rgb(255 255 255 / 0.06);
+  }
+  .hag-replay:focus-visible {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+    .hag-replay {
+      display: inline-flex;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hag[data-anim]:not([data-anim='reset']) {
+      /* 200ms: a light sweeps the question. */
+      .hag-question::after {
+        content: '';
+        position: absolute;
+        inset: -2px -6px;
+        border-radius: var(--radius-sm);
+        background-image: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--color-viz-gold) 22%, transparent),
+          transparent
+        );
+        background-size: 40% 100%;
+        background-repeat: no-repeat;
+        pointer-events: none;
+        animation: hag-sweep 0.7s ease-in-out calc(var(--motion-delay) + 200ms) both;
+      }
+      /* 450ms: the chip slides out of the question, armed; 900ms: the armed pulse; then it triggers. */
+      .hag-rule {
+        animation:
+          hag-emerge 0.5s var(--motion-ease) calc(var(--motion-delay) + 450ms) backwards,
+          hag-flash 0.9s ease-out calc(var(--motion-delay) + var(--hag-cross)) backwards;
+      }
+      .hag-rule::before {
+        animation:
+          hag-arm 0.9s ease-out calc(var(--motion-delay) + 900ms) backwards,
+          hag-disarm 0.25s linear calc(var(--motion-delay) + var(--hag-cross)) backwards;
+      }
+      .hag-armed {
+        animation: hag-disarm 0.25s linear calc(var(--motion-delay) + var(--hag-cross)) backwards;
+      }
+      .hag-triggered {
+        animation: hag-trigger 0.35s var(--motion-ease) calc(var(--motion-delay) + var(--hag-cross)) backwards;
+      }
+
+      /* 1200ms: the line draws left to right, the axes a little before it. */
+      .hag-chart {
+        animation: motion-fade 0.5s ease-out calc(var(--motion-delay) + 900ms) backwards;
+      }
+      .hag-draw {
+        animation: hag-draw var(--hag-line-ms) linear calc(var(--motion-delay) + var(--hag-line-at)) backwards;
+      }
+      .hag-peak {
+        animation: motion-fade 0.4s ease-out calc(var(--motion-delay) + var(--hag-line-at) + 1300ms) backwards;
+      }
+      /* 1870ms: the crossing pulses; the answer and its detail fade in. */
+      .hag-cross-dot {
+        animation: motion-pop-in 0.4s var(--motion-ease) calc(var(--motion-delay) + var(--hag-cross)) backwards;
+      }
+      .hag-cross-ring {
+        animation: hag-ping 1.2s ease-out calc(var(--motion-delay) + var(--hag-cross)) 2;
+      }
+      .hag-answer {
+        animation: hag-rise 0.6s var(--motion-ease) calc(var(--motion-delay) + var(--hag-cross) + 80ms) backwards;
+      }
+      .hag-detail {
+        animation: hag-rise 0.6s var(--motion-ease) calc(var(--motion-delay) + var(--hag-cross) + 280ms) backwards;
+      }
+
+      /* 3400ms: the chips, one after another; the moved slot lands with the Action. */
+      .hag-chip {
+        animation: hag-chip 0.45s var(--motion-ease)
+          calc(var(--motion-delay) + var(--hag-chips-at) + var(--i, 0) * var(--hag-chip-gap)) backwards;
+      }
+      .hag-chip:nth-child(2) {
+        --i: 1;
+      }
+      .hag-chip:nth-child(3) {
+        --i: 2;
+      }
+      .hag-chip:nth-child(4) {
+        --i: 3;
+      }
+      .hag-slot-group {
+        animation: hag-slot 0.5s var(--motion-ease) calc(var(--motion-delay) + var(--hag-chips-at)) backwards;
+      }
+      .hag-replay {
+        animation: motion-fade 0.4s ease-out calc(var(--motion-delay) + 4300ms) backwards;
+      }
+    }
+  }
+}
+
+@keyframes hag-sweep {
+  from {
+    background-position: -60% 0;
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  to {
+    background-position: 160% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes hag-emerge {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.96);
+  }
+}
+
+@keyframes hag-arm {
+  0% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-viz-gold) 55%, transparent);
+  }
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 8px transparent;
+  }
+}
+
+@keyframes hag-disarm {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes hag-trigger {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes hag-flash {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-alert-watch) 70%, transparent);
+    background-color: color-mix(in srgb, var(--color-alert-watch) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+@keyframes hag-draw {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes hag-ping {
+  from {
+    opacity: 0.9;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+@keyframes hag-rise {
+  from {
+    opacity: 0.01;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes hag-chip {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+}
+
+@keyframes hag-slot {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+}

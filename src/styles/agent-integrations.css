@@ -1,0 +1,320 @@
+/*
+ * agent-integrations — the Flash Agent page's "Which tools does Flash Agent
+ * work in?" (components/agent/agent-integrations.tsx).
+ *
+ * The ruled list of connectors, each with a "Connected" switch and a
+ * permissions popover. The base rules are the still frame: every switch on,
+ * every row shown. That is what reduced motion and no JavaScript get. With
+ * motion, rows fade up row by row as they scroll in and each row's switch
+ * flips on as it lands. Items are single <Motion> blocks; the component
+ * numbers the items that start together by their visual row (data-row), so
+ * the steps follow rows at any column count.
+ */
+
+@layer components {
+  .agi-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    @media (width >= 480px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (width >= 1024px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .agi-tool {
+    position: relative;
+    width: 100%;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* The soft highlight, drawn into the gap so the text keeps its lane. */
+  .agi-tool::before {
+    content: '';
+    position: absolute;
+    inset: 0 -12px -12px;
+    z-index: -1;
+    border-radius: 0 0 10px 10px;
+    background: var(--color-surface-sunken);
+    opacity: 0;
+  }
+  /* Above the rows after it, so its popover is not painted under them. */
+  .agi-tool[data-open] {
+    z-index: 30;
+  }
+  .agi-tool:is([data-open], :focus-within)::before {
+    opacity: 1;
+  }
+  @media (hover: hover) {
+    .agi-tool:hover::before {
+      opacity: 1;
+    }
+  }
+
+  .agi-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  /* The tool's name opens its permissions; its hit area is the whole item. */
+  /* Inline, so the caret follows the last word when a name wraps. */
+  .agi-name {
+    display: inline;
+    text-align: left;
+    cursor: pointer;
+  }
+  .agi-name::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .agi-name:focus-visible {
+    outline: none;
+  }
+  .agi-name:focus-visible::after {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
+  .agi-caret {
+    display: inline-block;
+    margin-left: 6px;
+    vertical-align: -1px;
+    color: var(--color-text-subtle);
+  }
+  .agi-tool[data-open] .agi-caret {
+    rotate: 180deg;
+    color: var(--color-brand-blue);
+  }
+
+  /* ------------------------------------------------------------ Switch */
+
+  .agi-toggle {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    padding-top: 3px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    color: var(--color-alert-clear);
+    pointer-events: none;
+  }
+  .agi-track {
+    position: relative;
+    width: 26px;
+    height: 16px;
+    border-radius: 9999px;
+    background: var(--color-alert-clear);
+  }
+  .agi-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-neutral-0);
+    box-shadow: 0 1px 2px rgb(7 13 38 / 25%);
+    translate: 10px 0;
+  }
+
+  /* ------------------------------------------------------------ Popover */
+
+  .agi-pop {
+    position: absolute;
+    top: calc(100% + 18px);
+    left: -12px;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: calc(100% + 24px);
+    min-width: 280px;
+    padding: 16px 18px 18px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-neutral-0);
+    box-shadow: 0 18px 40px -16px rgb(7 13 38 / 30%);
+  }
+  .agi-pop-head {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .agi-perms {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .agi-perm {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .agi-perm-icon {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    background: var(--color-surface-raised);
+    color: var(--color-brand-blue);
+  }
+  .agi-perm[data-kind='confirm'] .agi-perm-icon {
+    background: color-mix(in srgb, var(--color-alert-clear) 12%, transparent);
+    color: var(--color-alert-clear);
+  }
+  .agi-perm-label {
+    display: block;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+  .agi-perm-detail {
+    display: block;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--color-text-muted);
+  }
+
+  /* ------------------------------------------------------------ Counter */
+
+  .agi-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+  }
+  .agi-count-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-alert-clear);
+  }
+  .agi-count [data-count] {
+    display: inline-block;
+    min-width: 2ch;
+    text-align: right;
+  }
+
+  /* ------------------------------------------------------------ Motion */
+
+  @media (prefers-reduced-motion: no-preference) {
+    .agi-tool::before {
+      transition: opacity 200ms var(--motion-ease);
+    }
+    .agi-caret {
+      transition: rotate 200ms var(--motion-ease);
+    }
+    .agi-pop:not([hidden]) {
+      animation: agi-pop 200ms var(--motion-ease);
+    }
+
+    /* Rows: one 180ms step per visual row. The component sets data-row on
+       the items that start together (0 = the first row of that batch). */
+    .motion.agi-item {
+      --agi-delay: 0ms;
+    }
+    .motion.agi-item[data-row='1'] {
+      --agi-delay: 180ms;
+    }
+    .motion.agi-item[data-row='2'] {
+      --agi-delay: 360ms;
+    }
+    .motion.agi-item[data-row='3'] {
+      --agi-delay: 540ms;
+    }
+    .motion.agi-item[data-row='4'] {
+      --agi-delay: 720ms;
+    }
+    .motion.agi-item[data-row='5'] {
+      --agi-delay: 900ms;
+    }
+    .motion.agi-item[data-row='6'] {
+      --agi-delay: 1080ms;
+    }
+    .motion.agi-item[data-row='7'] {
+      --agi-delay: 1260ms;
+    }
+    .motion.agi-item[data-row='8'] {
+      --agi-delay: 1440ms;
+    }
+    .motion.agi-item[data-row='9'] {
+      --agi-delay: 1620ms;
+    }
+    .motion.agi-item[data-row='10'] {
+      --agi-delay: 1800ms;
+    }
+
+    .motion.agi-item[data-anim]:not([data-anim='reset']) :is(.agi-head, .agi-body) {
+      animation: agi-rise 600ms var(--motion-ease) var(--agi-delay) backwards;
+    }
+    /* The switch flips on as its row lands. */
+    .motion.agi-item[data-anim]:not([data-anim='reset']) .agi-track {
+      animation: agi-track 260ms var(--motion-ease) calc(var(--agi-delay) + 380ms) backwards;
+    }
+    .motion.agi-item[data-anim]:not([data-anim='reset']) .agi-knob {
+      animation: agi-knob 260ms var(--motion-ease) calc(var(--agi-delay) + 380ms) backwards;
+    }
+    .motion.agi-item[data-anim]:not([data-anim='reset']) .agi-toggle-label {
+      animation: agi-label 260ms var(--motion-ease) calc(var(--agi-delay) + 380ms) backwards;
+    }
+  }
+}
+
+@keyframes agi-rise {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+  }
+}
+
+@keyframes agi-track {
+  from {
+    background: var(--color-neutral-300);
+  }
+}
+
+@keyframes agi-knob {
+  from {
+    translate: 0 0;
+  }
+}
+
+@keyframes agi-label {
+  from {
+    color: var(--color-text-subtle);
+  }
+}
+
+@keyframes agi-pop {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}

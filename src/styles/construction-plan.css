@@ -1,0 +1,486 @@
+/*
+ * Construction page, "One plan view: the 1 km cell, the crane radius and the
+ * cease-work ring" (components/industries/construction-plan.tsx).
+ *
+ * The plan is a 784 x 480 drawing; HTML labels over it are sized in --u, one
+ * drawing unit, so the whole panel scales as one (with a floor so labels stay
+ * readable on a phone). Motion hangs off the <Motion> block `.cp-plan`:
+ *   intro  once, ~2.5s: boundary, crane + jib sweep, ring, cell, muster point;
+ *          each legend key lights as its layer lands
+ *   loop   14s, from 3s: a predicted-strike area drifts in, touches the ring
+ *          (ring pulses, crane radius dims, "Cease work"), drifts off ("All-clear")
+ * Loop parts all start together and pause together (.motion-loop off screen),
+ * so they never drift apart. Legend toggles and hover set --cp-on / --cp-dim on
+ * a layer's wrapper only, so switching a layer never restarts its animation.
+ * No data-anim (no JS, reduced motion): the finished plan, every layer on.
+ */
+@layer components {
+  /* ---- Panel ---------------------------------------------------------- */
+
+  .cp-stage {
+    --u: calc(100cqw / 784);
+    position: relative;
+    container-type: inline-size;
+    overflow: clip;
+    border: 1px solid rgb(255 255 255 / 10%);
+    border-radius: 20px;
+    background: rgb(4 8 24 / 72%);
+  }
+  .cp-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .cp-chip {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: max(4px, calc(var(--u) * 6));
+    padding: max(3px, calc(var(--u) * 6)) max(6px, calc(var(--u) * 10));
+    border-radius: max(4px, calc(var(--u) * 6));
+    background: var(--color-brand-navy);
+    white-space: nowrap;
+  }
+  .cp-title {
+    top: calc(var(--u) * 16);
+    left: calc(var(--u) * 16);
+    color: var(--color-text-on-dark-muted);
+    font-size: max(7px, calc(var(--u) * 10));
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.14em;
+  }
+
+  .cp-label {
+    position: absolute;
+    font-size: max(8.5px, calc(var(--u) * 12));
+    line-height: 1.33;
+    white-space: nowrap;
+  }
+  .cp-label-ring {
+    top: calc(var(--u) * 60);
+    left: calc(var(--u) * 236);
+    color: var(--color-alert-warning);
+  }
+  .cp-label-crane {
+    top: calc(var(--u) * 258);
+    left: calc(var(--u) * 360);
+    color: var(--color-neutral-0);
+    font-weight: 600;
+  }
+  .cp-label-muster {
+    top: calc(var(--u) * 356);
+    left: calc(var(--u) * 664);
+    color: var(--color-alert-clear);
+  }
+  /* On a phone the label's floor size would run off the right edge: it sits left of the square instead. */
+  @container (width < 560px) {
+    .cp-label-muster {
+      left: auto;
+      right: calc(var(--u) * 150);
+    }
+  }
+  .cp-footnote {
+    position: absolute;
+    right: calc(var(--u) * 16);
+    bottom: calc(var(--u) * 16);
+    color: var(--color-text-subtle);
+    font-size: max(7.5px, calc(var(--u) * 11));
+    line-height: 1.27;
+    white-space: nowrap;
+  }
+
+  /* The loop's status: bottom left, clear of the site. Hidden unless the loop shows it. */
+  .cp-status {
+    bottom: calc(var(--u) * 16);
+    left: calc(var(--u) * 16);
+    color: var(--color-neutral-0);
+    font-size: max(8.5px, calc(var(--u) * 12));
+    font-weight: 600;
+    line-height: 1.33;
+    opacity: 0;
+  }
+  .cp-status-dot {
+    width: max(5px, calc(var(--u) * 7));
+    height: max(5px, calc(var(--u) * 7));
+    border-radius: 9999px;
+  }
+  .cp-status-cease {
+    box-shadow: inset 0 0 0 1px rgb(194 46 34 / 70%);
+  }
+  .cp-status-cease .cp-status-dot {
+    background: var(--color-alert-warning);
+  }
+  .cp-status-clear {
+    box-shadow: inset 0 0 0 1px rgb(18 138 94 / 70%);
+  }
+  .cp-status-clear .cp-status-dot {
+    background: var(--color-alert-clear);
+  }
+
+  .cp-strike-area,
+  .cp-halo {
+    opacity: 0;
+  }
+
+  /* ---- Layers: legend toggles and hover -------------------------------- */
+
+  .cp-layer,
+  .cp-strike {
+    opacity: calc(var(--cp-on, 1) * var(--cp-dim, 1));
+    transition: opacity 0.3s ease;
+  }
+  .cp:has(.cp-check[data-layer='cell']:not(:checked)) .cp-layer[data-layer='cell'],
+  .cp:has(.cp-check[data-layer='ring']:not(:checked)) .cp-layer[data-layer='ring'],
+  .cp:has(.cp-check[data-layer='crane']:not(:checked)) .cp-layer[data-layer='crane'],
+  .cp:has(.cp-check[data-layer='muster']:not(:checked)) .cp-layer[data-layer='muster'] {
+    --cp-on: 0;
+  }
+  /* Pointing at a key (or tabbing to it) fades every other layer back. */
+  @media (hover: hover) {
+    .cp:has(.cp-key[data-layer='cell']:hover) :is(.cp-layer:not([data-layer='cell']), .cp-strike),
+    .cp:has(.cp-key[data-layer='ring']:hover) :is(.cp-layer:not([data-layer='ring']), .cp-strike),
+    .cp:has(.cp-key[data-layer='crane']:hover) :is(.cp-layer:not([data-layer='crane']), .cp-strike),
+    .cp:has(.cp-key[data-layer='muster']:hover) :is(.cp-layer:not([data-layer='muster']), .cp-strike) {
+      --cp-dim: 0.18;
+    }
+  }
+  .cp:has(.cp-key[data-layer='cell'] :focus-visible) :is(.cp-layer:not([data-layer='cell']), .cp-strike),
+  .cp:has(.cp-key[data-layer='ring'] :focus-visible) :is(.cp-layer:not([data-layer='ring']), .cp-strike),
+  .cp:has(.cp-key[data-layer='crane'] :focus-visible) :is(.cp-layer:not([data-layer='crane']), .cp-strike),
+  .cp:has(.cp-key[data-layer='muster'] :focus-visible) :is(.cp-layer:not([data-layer='muster']), .cp-strike) {
+    --cp-dim: 0.18;
+  }
+
+  /* Pointing at the crane radius shows it at full strength even mid-"Cease work". !important beats the
+     loop's dim without stopping it, so the loop stays in step. */
+  @media (hover: hover) {
+    .cp:has(.cp-key[data-layer='crane']:hover) .cp-radius-dim {
+      opacity: 1 !important;
+    }
+  }
+  .cp:has(.cp-key[data-layer='crane'] :focus-visible) .cp-radius-dim {
+    opacity: 1 !important;
+  }
+
+  /* ---- Legend keys ------------------------------------------------------ */
+
+  .cp-keys {
+    display: flex;
+    flex-direction: column;
+  }
+  .cp-key {
+    --cp-tone: var(--color-neutral-600);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-inline: -10px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  .cp-key[data-tone='advisory'] {
+    --cp-tone: var(--color-viz-gold);
+  }
+  .cp-key[data-tone='warning'] {
+    --cp-tone: var(--color-alert-warning);
+  }
+  .cp-key[data-tone='watch'] {
+    --cp-tone: var(--color-alert-watch);
+  }
+  .cp-key[data-tone='clear'] {
+    --cp-tone: var(--color-alert-clear);
+  }
+  .cp-key[data-tone='info'] {
+    --cp-tone: var(--color-alert-info);
+  }
+  .cp-key[data-tone='brand'] {
+    --cp-tone: var(--color-brand-blue);
+  }
+  @media (hover: hover) {
+    .cp-key:hover {
+      background-color: rgb(255 255 255 / 6%);
+    }
+  }
+  .cp-key:has(:focus-visible) {
+    outline: 2px solid var(--color-alert-info);
+    outline-offset: 0;
+  }
+  .cp-key > :last-child {
+    transition: opacity 0.2s ease;
+  }
+  .cp-key:has(.cp-check:not(:checked)) > :last-child {
+    opacity: 0.5;
+  }
+
+  .cp-swatch {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    transition: background-color 0.2s ease;
+  }
+  .cp-swatch[data-shape='square'] {
+    border-radius: 3px;
+    background-color: var(--cp-tone);
+    box-shadow: inset 0 0 0 1.5px var(--cp-tone);
+  }
+  .cp-swatch[data-shape='ring'],
+  .cp-swatch[data-shape='ring-dashed'] {
+    border: 2px solid var(--cp-tone);
+    border-radius: 9999px;
+  }
+  .cp-swatch[data-shape='ring-dashed'] {
+    border-style: dashed;
+  }
+  /* Off: a square empties to its outline, a ring fades. */
+  .cp-key:has(.cp-check:not(:checked)) .cp-swatch[data-shape='square'] {
+    background-color: transparent;
+  }
+  .cp-key:has(.cp-check:not(:checked)) .cp-swatch:not([data-shape='square']) {
+    opacity: 0.45;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cp-layer,
+    .cp-strike,
+    .cp-key,
+    .cp-key > :last-child,
+    .cp-swatch {
+      transition: none;
+    }
+  }
+
+  /* ---- Intro: once, when the plan scrolls in --------------------------- */
+
+  .cp-mast,
+  .cp-muster {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .cp-jib {
+    transform-box: view-box;
+    transform-origin: 340px 250px;
+  }
+  .cp-cell {
+    transform-box: fill-box;
+    transform-origin: bottom;
+  }
+
+  .cp-plan[data-anim]:not([data-anim='reset']) {
+    .cp-reveal,
+    .cp-ring {
+      stroke-dasharray: 1 1;
+    }
+    .cp-boundary-reveal {
+      animation: motion-draw 0.7s var(--motion-ease) both;
+    }
+    .cp-mast {
+      animation: motion-pop-in 0.35s var(--motion-ease) 0.45s both;
+    }
+    /* The jib sweeps once round the crane radius, drawing it as it goes. Same curve, so they stay together. */
+    .cp-jib {
+      animation: cp-sweep 0.85s cubic-bezier(0.45, 0, 0.3, 1) 0.6s both;
+    }
+    .cp-radius-reveal {
+      animation: motion-draw 0.85s cubic-bezier(0.45, 0, 0.3, 1) 0.6s both;
+    }
+    .cp-label-crane {
+      animation: motion-fade 0.4s ease 1.3s both;
+    }
+    .cp-ring {
+      animation: motion-draw 0.65s var(--motion-ease) 1.25s both;
+    }
+    .cp-label-ring {
+      animation: motion-fade 0.4s ease 1.65s both;
+    }
+    .cp-cell {
+      animation: motion-grow-y 0.5s var(--motion-ease) 1.85s both;
+    }
+    .cp-muster {
+      animation: motion-pop-in 0.35s var(--motion-ease) 2.2s both;
+    }
+    .cp-label-muster {
+      animation: motion-fade 0.35s ease 2.3s both;
+    }
+
+    /* ---- Loop: 14s, from 3s, while in view ---------------------------- */
+
+    .cp-strike-area {
+      animation: cp-strike 14s ease-in-out 3s infinite both;
+    }
+    .cp-ring-pulse {
+      animation: cp-ring-pulse 14s linear 3s infinite both;
+    }
+    .cp-halo {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: cp-halo 14s ease-out 3s infinite both;
+    }
+    .cp-radius-dim {
+      animation: cp-radius-dim 14s ease 3s infinite both;
+    }
+    .cp-status-cease {
+      animation: cp-status-cease 14s ease 3s infinite both;
+    }
+    .cp-status-clear {
+      animation: cp-status-clear 14s ease 3s infinite both;
+    }
+  }
+  /* The idle hold in globals.css covers these too (they are inside the block). */
+
+  /* Legend keys light as their layer lands. They sit outside the block, so they wait for run, not idle. */
+  .cp:has(.cp-plan[data-anim='run']) .cp-key {
+    animation: cp-key-flash 0.9s ease both;
+  }
+  .cp:has(.cp-plan[data-anim='run']) .cp-key .cp-swatch {
+    animation: motion-pop 0.6s var(--motion-ease) both;
+  }
+  .cp:has(.cp-plan[data-anim='run']) :is(.cp-key[data-layer='crane'], .cp-key[data-layer='crane'] .cp-swatch) {
+    animation-delay: 0.6s;
+  }
+  .cp:has(.cp-plan[data-anim='run']) :is(.cp-key[data-layer='ring'], .cp-key[data-layer='ring'] .cp-swatch) {
+    animation-delay: 1.25s;
+  }
+  .cp:has(.cp-plan[data-anim='run']) :is(.cp-key[data-layer='cell'], .cp-key[data-layer='cell'] .cp-swatch) {
+    animation-delay: 1.85s;
+  }
+  .cp:has(.cp-plan[data-anim='run']) :is(.cp-key[data-layer='muster'], .cp-key[data-layer='muster'] .cp-swatch) {
+    animation-delay: 2.2s;
+  }
+}
+
+@keyframes cp-sweep {
+  from {
+    transform: rotate(-360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes cp-key-flash {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+  30% {
+    background-color: color-mix(in oklab, var(--cp-tone) 22%, transparent);
+  }
+}
+
+/* In from beyond the right edge, touches the ring at 34%, holds, drifts off to the south-east. */
+@keyframes cp-strike {
+  0% {
+    transform: translate(330px, -90px);
+    opacity: 0;
+  }
+  8% {
+    transform: translate(262px, -72px);
+    opacity: 0.9;
+  }
+  34% {
+    transform: translate(0, 0);
+  }
+  58% {
+    transform: translate(-8px, 6px);
+    opacity: 0.9;
+  }
+  80%,
+  100% {
+    transform: translate(300px, 230px);
+    opacity: 0;
+  }
+}
+
+/* Cease window 35%-60%: the ring thickens and beats. */
+@keyframes cp-ring-pulse {
+  0%,
+  34%,
+  61%,
+  100% {
+    stroke-width: 1.5;
+    stroke: var(--color-alert-warning);
+  }
+  37%,
+  45%,
+  53% {
+    stroke-width: 4;
+    stroke: #e0564b;
+  }
+  41%,
+  49%,
+  57% {
+    stroke-width: 2.5;
+    stroke: var(--color-alert-warning);
+  }
+}
+
+@keyframes cp-halo {
+  0%,
+  35% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  35.1% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  44% {
+    opacity: 0;
+    transform: scale(1.14);
+  }
+  44.1% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  53%,
+  100% {
+    opacity: 0;
+    transform: scale(1.14);
+  }
+}
+
+@keyframes cp-radius-dim {
+  0%,
+  34%,
+  62%,
+  100% {
+    opacity: 1;
+  }
+  37%,
+  59% {
+    opacity: 0.22;
+  }
+}
+
+@keyframes cp-status-cease {
+  0%,
+  34%,
+  61%,
+  100% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  36%,
+  59% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cp-status-clear {
+  0%,
+  63%,
+  88%,
+  100% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  65%,
+  86% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

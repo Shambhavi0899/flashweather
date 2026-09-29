@@ -1,0 +1,55 @@
+/*
+ * about — global styles for this area of the site.
+ *
+ * Components use these class names; no component carries inline style={...}.
+ * Classes sit in @layer components so a Tailwind utility on the same element
+ * still wins.
+ */
+
+@layer components {
+  /* Hero: navy wash from the copy side (left) across the shelf-cloud photo. */
+  .about-hero-grade-left {
+    background-image: linear-gradient(
+      in oklab 90deg,
+      oklab(17.1% -0.0005 -0.052 / 96%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 76%) 42%,
+      oklab(17.1% -0.0005 -0.052 / 10%) 100%
+    );
+  }
+
+  /* Hero: top-to-bottom grade that darkens at the foot of the section. */
+  .about-hero-grade-bottom {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 24%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 0%) 40%,
+      oklab(17.1% -0.0005 -0.052 / 92%) 100%
+    );
+  }
+
+  /* Founder card photo (forecast office at night): deep navy under the card. */
+  .about-founder-grade {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(14% -0.002 -0.036 / 4%) 0%,
+      oklab(14% -0.002 -0.036 / 22%) 42%,
+      oklab(14% -0.002 -0.036 / 92%) 100%
+    );
+  }
+
+  /* Navy fade from 45% down, for photo banners with a caption at the bottom. */
+  .about-navy-fade-10-88 {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 10%) 45%,
+      oklab(17.1% -0.0005 -0.052 / 88%) 100%
+    );
+  }
+  .about-navy-fade-12-88 {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 12%) 45%,
+      oklab(17.1% -0.0005 -0.052 / 88%) 100%
+    );
+  }
+}

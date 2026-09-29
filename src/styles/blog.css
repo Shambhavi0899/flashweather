@@ -1,0 +1,29 @@
+/*
+ * blog — global styles for this area of the site.
+ *
+ * Components use these class names; no component carries inline style={...}.
+ * Classes sit in @layer components so a Tailwind utility on the same element
+ * still wins.
+ */
+
+@layer components {
+  /* Featured post card on the index: bottom grade under the title. */
+  .blog-featured-grade {
+    background-image: linear-gradient(180deg, rgb(7 13 38 / 0.06) 0%, rgb(7 13 38 / 0.28) 50%, rgb(7 13 38 / 0.88) 100%);
+  }
+
+  /* Article cover image: a light bottom grade under the badge. */
+  .blog-cover-grade {
+    background-image: linear-gradient(180deg, rgb(7 13 38 / 0.04) 0%, rgb(7 13 38 / 0.22) 60%, rgb(7 13 38 / 0.7) 100%);
+  }
+
+  /* Figure photos (author figure, figure-variant photo panel). */
+  .blog-figure-grade {
+    background-image: linear-gradient(180deg, rgb(7 13 38 / 0.1) 45%, rgb(7 13 38 / 0.88) 100%);
+  }
+
+  /* Photo panel (default variant): bottom grade under the caption. */
+  .blog-panel-grade {
+    background-image: linear-gradient(180deg, rgb(7 13 38 / 0.15) 45%, rgb(7 13 38 / 0.86) 100%);
+  }
+}

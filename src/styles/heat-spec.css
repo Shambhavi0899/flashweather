@@ -1,0 +1,156 @@
+/*
+ * The Heat & WBGT page's spec tables, "What exactly does the heat model
+ * deliver?" (components/products/heat/spec-thermometer.tsx, SpecSection in
+ * heat/sections.tsx).
+ *
+ *   desktop  a slim thermometer down the tables' left edge. The script sets
+ *            --hsx-fill (0 → 1) on the shared scroll loop: the mercury flows
+ *            down from the bulb with its tip on a reading line, the colour
+ *            at the tip warming gold → orange → red, and each row fades in
+ *            as the tip reaches it (data-on).
+ *   mobile   no thermometer; each row is its own <Motion> and fades up as
+ *            it scrolls in.
+ *
+ * The markup is the finished frame (mercury full, rows shown), which is what
+ * reduced motion and a browser without script get. The "Policy bands" row
+ * carries a small bar of the GHSA bands, the same gold → red as the state
+ * policy bar. Hard edges, no grid.
+ */
+@layer components {
+  .hsx {
+    display: flex;
+    align-items: stretch;
+    gap: 32px;
+  }
+  .hsx > :last-child {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  /* ------------------------------------------------------------ Thermometer */
+  .hsx-thermo {
+    display: none;
+    @media (width >= 1024px) {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 14px;
+      flex-shrink: 0;
+      padding-top: 1px;
+    }
+  }
+  .hsx-bulb {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background-color: var(--color-viz-gold);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-viz-gold) 22%, transparent);
+  }
+  .hsx-tube {
+    position: relative;
+    flex: 1 1 auto;
+    width: 4px;
+    margin-top: -2px;
+    border-radius: 999px;
+    background-color: var(--color-neutral-100);
+  }
+  /* The whole length is painted gold → red; the fill uncovers it from the
+     top, so the colour at the tip warms as it goes. */
+  .hsx-mercury {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background-image: linear-gradient(
+      180deg,
+      var(--color-viz-gold),
+      var(--color-alert-watch) 66%,
+      var(--color-alert-warning)
+    );
+    clip-path: inset(0 0 calc((1 - var(--hsx-fill, 1)) * 100%) 0 round 999px);
+  }
+
+  /* ------------------------------------------------------------ Rows */
+  @media (prefers-reduced-motion: no-preference) {
+    .hsx[data-armed] .hsx-row {
+      transition:
+        opacity 0.5s var(--motion-ease),
+        translate 0.5s var(--motion-ease);
+    }
+    .hsx[data-armed] .hsx-row:not([data-on]) {
+      opacity: 0;
+      translate: 0 8px;
+    }
+    /* The row is its own Motion block, so the shared idle pause (which holds
+       a block's children) does not hold it: it waits hidden instead. */
+    @media (width < 1024px) {
+      .motion.hsx-row[data-anim='idle'] {
+        opacity: 0;
+      }
+      .motion.hsx-row[data-anim='run'] {
+        animation: motion-rise 0.6s var(--motion-ease) var(--motion-delay) both;
+      }
+    }
+  }
+
+  /* Hover: a soft highlight, carried 12px past the text on both sides. */
+  @media (hover: hover) {
+    .hsx-row > * {
+      transition: background-color 0.2s var(--motion-ease), box-shadow 0.2s var(--motion-ease);
+    }
+    .hsx-row:hover > * {
+      background-color: var(--color-surface-sunken);
+    }
+    .hsx-row:hover > :first-child {
+      box-shadow: -12px 0 0 var(--color-surface-sunken);
+    }
+    .hsx-row:hover > :last-child {
+      box-shadow: 12px 0 0 var(--color-surface-sunken);
+    }
+  }
+
+  /* ------------------------------------------------------------ Policy bands bar */
+  .hsx-bands {
+    display: flex;
+    gap: 2px;
+    max-width: 260px;
+    margin-top: 12px;
+  }
+  .hsx-band {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .hsx-seg {
+    height: 6px;
+    background-image: linear-gradient(
+      90deg,
+      var(--color-viz-gold),
+      var(--color-alert-watch) 66%,
+      var(--color-alert-warning)
+    );
+    background-size: 400% 100%;
+  }
+  .hsx-band:nth-child(1) .hsx-seg {
+    border-radius: 3px 0 0 3px;
+    background-position: 0% 0;
+  }
+  .hsx-band:nth-child(2) .hsx-seg {
+    background-position: 33.333% 0;
+  }
+  .hsx-band:nth-child(3) .hsx-seg {
+    background-position: 66.667% 0;
+  }
+  .hsx-band:nth-child(4) .hsx-seg {
+    border-radius: 0 3px 3px 0;
+    background-position: 100% 0;
+  }
+  .hsx-temp {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 700;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+  }
+}

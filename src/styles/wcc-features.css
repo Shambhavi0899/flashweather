@@ -1,0 +1,534 @@
+/*
+ * Weather Command Center: "Why teams run operations from the Command
+ * Center" (components/products/detail/command-center-window.tsx), classes
+ * wcw-*.
+ *
+ * Four navy tiles glide together into one dashboard window as the section
+ * scrolls in. The script writes `--wcw-t` (0 scattered → 1 assembled) on the
+ * shared scroll loop: on the whole window from 768px, on each panel below it
+ * (stacked, so each one assembles when it is reached). Every scattered pose
+ * is `--wcw-dx/-dy/-rot` × (1 − t), so t = 1, the value without JavaScript
+ * or with reduced motion, is the finished window.
+ *
+ * Each panel is its own <Motion> block: its live detail runs off
+ * `.motion[data-anim]` like every other diagram, and loops as `.motion-loop`,
+ * so it pauses off screen.
+ */
+@layer components {
+  .wcw {
+    --wcw-t: 1;
+  }
+  /* The chrome arrives over the last 40% of the glide (negative opacity
+     clamps to 0), so a half-faded window never sits behind the tiles. */
+  .wcw-frame {
+    --wcw-chrome: calc((var(--wcw-t, 1) - 0.6) * 2.5);
+  }
+
+  /* ---------- The window ---------- */
+
+  /* The chrome is a layer of its own, faded by t, so the scattered tiles
+     float on the section until they meet. */
+  .wcw-frame {
+    position: relative;
+    isolation: isolate;
+    padding: 1px;
+  }
+  .wcw-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 16px;
+    background: var(--color-brand-navy-deep);
+    box-shadow: 0 30px 70px -24px rgb(7 13 38 / 0.5);
+    opacity: var(--wcw-chrome);
+  }
+  .wcw-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    padding-inline: 20px;
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    color: rgb(255 255 255 / 0.86);
+    opacity: var(--wcw-chrome);
+    transform: translateY(calc((1 - var(--wcw-t, 1)) * 10px));
+  }
+  .wcw-live {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--color-alert-clear);
+    box-shadow: 0 0 0 3px rgb(18 138 94 / 0.25);
+  }
+  .wcw-live::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--color-alert-clear);
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .wcw-live::after {
+      animation: motion-ping 2.2s ease-out infinite;
+    }
+    .wcw:not([data-inview]) .wcw-live::after {
+      animation-play-state: paused;
+    }
+  }
+
+  /* ---------- Panels: stacked, 2 × 2 from 768px, one row from 1280px ---------- */
+
+  .wcw-panels {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .wcw-panel {
+    position: relative;
+    display: flex;
+    --wcw-dx: 0px;
+    --wcw-dy: 0px;
+    --wcw-rot: 0deg;
+    transform: translate(
+        calc(var(--wcw-dx) * (1 - var(--wcw-t))),
+        calc(var(--wcw-dy) * (1 - var(--wcw-t)))
+      )
+      rotate(calc(var(--wcw-rot) * (1 - var(--wcw-t))));
+  }
+  .wcw-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 26px 24px 30px;
+    background-color: var(--color-brand-navy);
+    border-radius: calc((1 - var(--wcw-t)) * 14px);
+    transition:
+      transform 0.35s var(--motion-ease),
+      background-color 0.35s var(--motion-ease),
+      box-shadow 0.35s var(--motion-ease);
+  }
+  /* The tile's own edge while it floats apart; gone once it docks. */
+  .wcw-tile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgb(255 255 255 / 0.12);
+    border-radius: inherit;
+    box-shadow: 0 18px 40px -14px rgb(7 13 38 / 0.45);
+    opacity: calc(1 - var(--wcw-t));
+    pointer-events: none;
+  }
+  /* The hairlines between docked panels; each panel draws its top and/or left. */
+  .wcw-tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 0 solid rgb(255 255 255 / 0.08);
+    border-radius: inherit;
+    opacity: var(--wcw-t);
+    pointer-events: none;
+  }
+
+  /* Stacked. */
+  .wcw-p2 .wcw-tile::after,
+  .wcw-p3 .wcw-tile::after,
+  .wcw-p4 .wcw-tile::after {
+    border-top-width: 1px;
+  }
+  .wcw-p4 .wcw-tile {
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+  }
+  .wcw-p1 {
+    --wcw-dx: -18px;
+    --wcw-dy: 36px;
+    --wcw-rot: -1.2deg;
+  }
+  .wcw-p2 {
+    --wcw-dx: 18px;
+    --wcw-dy: 36px;
+    --wcw-rot: 1.2deg;
+  }
+  .wcw-p3 {
+    --wcw-dx: -18px;
+    --wcw-dy: 36px;
+    --wcw-rot: -1deg;
+  }
+  .wcw-p4 {
+    --wcw-dx: 18px;
+    --wcw-dy: 36px;
+    --wcw-rot: 1deg;
+  }
+
+  @media (width >= 768px) {
+    .wcw-panels {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+    .wcw-panel {
+      width: 50%;
+    }
+    .wcw-tile {
+      padding: 28px 28px 32px;
+    }
+    .wcw-p2 .wcw-tile::after {
+      border-top-width: 0;
+      border-left-width: 1px;
+    }
+    .wcw-p3 .wcw-tile::after {
+      border-top-width: 1px;
+    }
+    .wcw-p4 .wcw-tile::after {
+      border-top-width: 1px;
+      border-left-width: 1px;
+    }
+    .wcw-p3 .wcw-tile {
+      border-bottom-left-radius: 15px;
+    }
+    .wcw-p4 .wcw-tile {
+      border-bottom-left-radius: calc((1 - var(--wcw-t)) * 14px);
+    }
+    .wcw-p1 {
+      --wcw-dx: -28px;
+      --wcw-dy: -22px;
+      --wcw-rot: -1.6deg;
+    }
+    .wcw-p2 {
+      --wcw-dx: 26px;
+      --wcw-dy: -32px;
+      --wcw-rot: 1.2deg;
+    }
+    .wcw-p3 {
+      --wcw-dx: -32px;
+      --wcw-dy: 26px;
+      --wcw-rot: 1deg;
+    }
+    .wcw-p4 {
+      --wcw-dx: 24px;
+      --wcw-dy: 36px;
+      --wcw-rot: -1.4deg;
+    }
+  }
+
+  @media (width >= 1280px) {
+    .wcw-panel {
+      width: 25%;
+    }
+    .wcw-p3 .wcw-tile::after,
+    .wcw-p4 .wcw-tile::after {
+      border-top-width: 0;
+    }
+    .wcw-p3 .wcw-tile::after {
+      border-left-width: 1px;
+    }
+    .wcw-p3 .wcw-tile {
+      border-bottom-left-radius: calc((1 - var(--wcw-t)) * 14px);
+    }
+    .wcw-p1 .wcw-tile {
+      border-bottom-left-radius: 15px;
+    }
+    .wcw-p1 {
+      --wcw-dx: -40px;
+      --wcw-dy: 30px;
+      --wcw-rot: -2deg;
+    }
+    .wcw-p2 {
+      --wcw-dx: -14px;
+      --wcw-dy: -26px;
+      --wcw-rot: 1.3deg;
+    }
+    .wcw-p3 {
+      --wcw-dx: 14px;
+      --wcw-dy: 40px;
+      --wcw-rot: -1.1deg;
+    }
+    .wcw-p4 {
+      --wcw-dx: 40px;
+      --wcw-dy: -16px;
+      --wcw-rot: 1.8deg;
+    }
+  }
+
+  /* Hover: the panel brightens and lifts inside the window. */
+  .wcw-body {
+    color: var(--color-text-on-dark-muted);
+    transition: color 0.35s var(--motion-ease);
+  }
+  @media (hover: hover) {
+    .wcw-panel:hover {
+      z-index: 1;
+    }
+    .wcw-panel:hover .wcw-tile {
+      transform: translateY(-4px);
+      background-color: #111a3d;
+      box-shadow: 0 18px 36px -16px rgb(0 0 0 / 0.7);
+    }
+    .wcw-panel:hover .wcw-body {
+      color: #dce2f0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wcw-tile,
+    .wcw-body {
+      transition: none;
+    }
+  }
+
+  /* ---------- Live details, one per panel, in a fixed-height slot ---------- */
+
+  .wcw-viz {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 92px;
+    margin-block: 18px 26px;
+  }
+
+  /* 01 · A single platform: hazard icons fade into one row. */
+  .wcw-hazards {
+    display: flex;
+    gap: 8px;
+  }
+  .wcw-haz {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 1px solid rgb(255 255 255 / 0.14);
+    border-radius: 50%;
+    color: rgb(255 255 255 / 0.9);
+  }
+  .wcw-haz svg {
+    width: 20px;
+    height: 20px;
+  }
+  .wcw-haz-bolt {
+    color: var(--color-viz-gold);
+  }
+  .wcw-i1 {
+    --wcw-i: 1;
+  }
+  .wcw-i2 {
+    --wcw-i: 2;
+  }
+  .wcw-i3 {
+    --wcw-i: 3;
+  }
+  .wcw-i4 {
+    --wcw-i: 4;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wcw-haz {
+    animation-name: wcw-haz;
+    animation-duration: 6s;
+    animation-timing-function: var(--motion-ease);
+    animation-delay: calc(var(--motion-delay) + var(--wcw-i, 0) * 320ms);
+    animation-iteration-count: infinite;
+    animation-fill-mode: both;
+  }
+  .wcw-caption {
+    margin-top: 12px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-text-on-dark-muted);
+  }
+
+  /* 02 · Accuracy: 99.6% counts up once; the bar grows with it. */
+  .motion.wcw-p2 {
+    --motion-count-delay: 200ms;
+  }
+  .wcw-acc {
+    font-size: 44px;
+    line-height: 48px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--color-text-on-dark);
+    font-variant-numeric: tabular-nums;
+  }
+  .wcw-acc-track {
+    height: 4px;
+    margin-top: 14px;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 0.1);
+    overflow: hidden;
+  }
+  .wcw-acc-fill {
+    width: 99.6%;
+    height: 100%;
+    background: var(--color-viz-gold);
+    transform-origin: left;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wcw-acc-fill {
+    animation: motion-grow-x 1.2s cubic-bezier(0.25, 1, 0.5, 1) calc(var(--motion-delay) + 200ms) both;
+  }
+
+  /* 03 · Future radar: a soft sweep, and the valid time ticking to +18 h. */
+  .wcw-radar-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+  }
+  .wcw-radar {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    background: radial-gradient(circle, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.02) 70%);
+  }
+  .wcw-radar svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .wcw-echo {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(255 255 255 / 0.32), transparent);
+  }
+  .wcw-echo-a {
+    left: 50px;
+    top: 18px;
+    width: 26px;
+    height: 20px;
+  }
+  .wcw-echo-b {
+    left: 16px;
+    top: 48px;
+    width: 22px;
+    height: 16px;
+  }
+  .wcw-sweep {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0deg 285deg, rgb(230 186 45 / 0.5) 360deg);
+    transform: rotate(40deg);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wcw-sweep {
+    animation: wcw-spin 2.4s linear infinite;
+  }
+  .wcw-clock {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .wcw-ticks {
+    height: 28px;
+    overflow: hidden;
+  }
+  .wcw-tick-strip {
+    /* The last label's index: "Now", then +1 h … +18 h (HOURS in the component). */
+    --wcw-last: 18;
+    display: flex;
+    flex-direction: column;
+    /* At rest: the last label, +18 h. */
+    transform: translateY(calc(var(--wcw-last) * -28px));
+  }
+  .wcw-tick-strip > span {
+    height: 28px;
+    font-size: 22px;
+    line-height: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--color-text-on-dark);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wcw-tick-strip {
+    animation: wcw-ticks 11.4s steps(19, end) var(--motion-delay) infinite both;
+  }
+
+  /* 04 · Plan ahead: the highlight walks from today across the outlook. */
+  .wcw-days {
+    position: relative;
+    display: flex;
+    gap: 3px;
+    height: 26px;
+  }
+  .wcw-day {
+    flex: 1;
+    border-radius: 4px;
+    background: rgb(255 255 255 / 0.09);
+  }
+  .wcw-day-hl {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: calc((100% - 27px) / 10);
+    border-radius: 4px;
+    background: var(--color-viz-gold);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wcw-day-hl {
+    animation: wcw-days 7s steps(10, end) var(--motion-delay) infinite both;
+  }
+  .wcw-day-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-text-on-dark-muted);
+  }
+  .wcw-day-today {
+    font-weight: 700;
+    color: var(--color-viz-gold);
+  }
+}
+
+@keyframes wcw-haz {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.85);
+  }
+  7%,
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+  90%,
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+}
+@keyframes wcw-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes wcw-ticks {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc((var(--wcw-last) + 1) * -28px));
+  }
+}
+/* Ten steps of one day-width (its own width plus the 3px gap). */
+@keyframes wcw-days {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(1000% + 30px));
+  }
+}

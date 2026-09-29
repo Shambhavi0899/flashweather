@@ -1,0 +1,234 @@
+/*
+ * The Heat & WBGT page's "Forecast or measurement: which one decides?"
+ * (components/products/heat/sections.tsx, DecisionSection).
+ *
+ * Table (hd-*), on the shared .motion system: each row is its own block, so
+ * rows fade up one by one as they scroll in. In a row, the cell that
+ * "Decides." then stamps in (1.1 → 1) and its green check draws. "Supports"
+ * and "Cannot" stay plain. Hovering a row lays a soft highlight across it.
+ *
+ * Banner (hn-*, components/products/heat/noon-banner.tsx): the script sets
+ * `--hn-t`, 0 → 1, as the banner passes through view, on the shared scroll
+ * loop so it moves with Lenis. It scrubs the clock from 12:00 to 16:00: the
+ * light on the photo warms and the shadows lengthen (overlays, not a new
+ * image), the fill and handle run along the bottom, and the two chips land
+ * at either end (`data-on`).
+ *
+ * The markup is the final frame (--hn-t 1, both chips showing), which is
+ * what reduced motion and a browser without JavaScript get. No grid, no
+ * seam: the banner is a card inside the section.
+ */
+@layer components {
+  /* ---------- Table ---------- */
+
+  /* The highlight hangs off the row's first cell, sized by the row (its
+     containing block): a pseudo on the <tr> itself takes a cell slot. */
+  .hd-table {
+    isolation: isolate;
+  }
+  .hd-row {
+    position: relative;
+  }
+  .hd-row > :first-child::before {
+    content: '';
+    position: absolute;
+    inset: 0 -12px;
+    z-index: -1;
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-sunken);
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+    pointer-events: none;
+    @media (width >= 1024px) {
+      inset-inline: -16px;
+    }
+  }
+  .hd-row:hover > :first-child::before {
+    opacity: 1;
+  }
+
+  /* .motion's own 100ms default is declared later (globals.css), so match its weight and add one. */
+  .motion.hd-row {
+    --motion-stagger: 120ms;
+    --hd-stamp-at: calc(var(--motion-delay) + 260ms);
+  }
+  /* backwards, not both: a held transform would make each cell the highlight's containing block. */
+  .motion[data-anim]:not([data-anim='reset']) > .hd-cell {
+    animation: motion-rise 0.55s var(--motion-ease) var(--motion-delay) backwards;
+  }
+
+  /* "Decides.": a check and the word, stamped in once the row has landed. */
+  .hd-stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transform-origin: 0 50%;
+  }
+  .hd-check {
+    flex-shrink: 0;
+    color: var(--color-alert-clear);
+  }
+  .hd-check path {
+    stroke-dasharray: 1;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .hd-stamp {
+    animation: hd-stamp 0.45s var(--motion-ease) var(--hd-stamp-at) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .hd-check path {
+    animation: motion-draw 0.35s ease-out calc(var(--hd-stamp-at) + 120ms) both;
+  }
+
+  /* ---------- Banner: noon to 4 pm ---------- */
+
+  .hn {
+    --hn-t: 1;
+  }
+
+  /* The afternoon light: a warm wash from the upper right, stronger as the sun lowers. */
+  .hn-warm {
+    background-image:
+      radial-gradient(90% 120% at 88% 8%, rgb(255 150 60 / 0.55) 0%, rgb(255 130 50 / 0.22) 40%, transparent 72%),
+      linear-gradient(180deg, rgb(255 140 60 / 0.16), rgb(255 110 40 / 0.06));
+    mix-blend-mode: screen;
+    opacity: var(--hn-t);
+  }
+
+  /* The shadows: a long cool band cast from the left, reaching further as the afternoon goes. */
+  .hn-shade {
+    background-image: linear-gradient(
+      100deg,
+      oklab(17.1% -0.0005 -0.052 / 70%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 35%) 35%,
+      transparent 65%
+    );
+    transform-origin: 0 50%;
+    transform: scaleX(calc(0.45 + var(--hn-t) * 0.55));
+    opacity: calc(0.2 + var(--hn-t) * 0.8);
+  }
+
+  /* The two chips, left at 12:00 and right at 16:00. */
+  .hn-chips {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    @media (width >= 768px) {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+  }
+  .hn-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 10px;
+    border-radius: var(--radius-pill);
+    background-color: oklab(14% -0.002 -0.036 / 78%);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.16);
+    color: var(--color-text-on-dark);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    transition:
+      opacity 0.45s var(--motion-ease),
+      translate 0.45s var(--motion-ease);
+  }
+  .hn-chip-dot {
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-pill);
+  }
+  .hn-chip-forecast .hn-chip-dot {
+    background-color: var(--color-viz-gold);
+  }
+  .hn-chip-sensor {
+    @media (width < 768px) {
+      align-self: flex-end;
+    }
+  }
+  .hn-chip-sensor .hn-chip-dot {
+    background-color: #7fd1a8;
+  }
+  .hn[data-armed] .hn-chip:not([data-on]) {
+    opacity: 0;
+    translate: 0 6px;
+  }
+
+  /* The scrubber: the track, the elapsed fill, and the handle with the time. */
+  .hn-track {
+    position: relative;
+    height: 2px;
+    border-radius: var(--radius-pill);
+    background-color: rgb(255 255 255 / 0.22);
+  }
+  .hn-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: linear-gradient(90deg, var(--color-viz-gold), var(--color-alert-watch));
+    transform-origin: 0 50%;
+    transform: scaleX(var(--hn-t));
+  }
+  /* Full track width, so translating it by 100% carries the handle to 16:00. */
+  .hn-run {
+    position: absolute;
+    inset: 0;
+    transform: translateX(calc(var(--hn-t) * 100%));
+  }
+  .hn-handle {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-white, #fff);
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--color-alert-watch) 45%, transparent),
+      0 2px 8px rgb(0 0 0 / 0.35);
+  }
+  /* The clock rides above the handle. */
+  .hn-time {
+    position: absolute;
+    bottom: 12px;
+    left: 0;
+    translate: -50% 0;
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-white, #fff);
+    color: var(--color-brand-navy);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .hn-hours {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    color: rgb(255 255 255 / 0.62);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  /* The hours between the ends only from md; on a phone the ends are enough. */
+  .hn-hour-mid {
+    @media (width < 768px) {
+      display: none;
+    }
+  }
+}
+
+@keyframes hd-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}

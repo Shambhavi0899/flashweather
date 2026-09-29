@@ -1,0 +1,370 @@
+/*
+ * alert-chain — the construction page's "Who hears the lightning alert"
+ * steps (components/industries/alert-chain.tsx, ac-*).
+ *
+ * One connector line runs through the five steps: left → right from 1280px,
+ * top → bottom under it. Each step owns the piece of line from its node to
+ * the next (::after), so the line is drawn by CSS alone. A gold pulse and
+ * the fill behind it ride on top, placed by the script through --ac-x/--ac-y
+ * (px from the first node). Server HTML, no JavaScript and reduced motion
+ * show every step lit and the whole line gold, with no pulse.
+ */
+
+@layer components {
+  .ac {
+    position: relative;
+    isolation: isolate;
+    margin-top: 40px;
+  }
+
+  /* --ac-nx/--ac-ny: where each step's node sits inside the step. */
+  .ac-steps {
+    --ac-gap: 32px;
+    --ac-nx: 11px;
+    --ac-ny: 7px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ac-gap);
+  }
+  .ac-step {
+    position: relative;
+    padding-left: 40px;
+  }
+
+  /* ---------- The line ---------- */
+
+  .ac-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: calc(var(--ac-nx) - 1px);
+    top: var(--ac-ny);
+    width: 2px;
+    height: calc(100% + var(--ac-gap));
+    background-color: var(--color-border-strong);
+  }
+  /* A piece turns gold once both of its ends are lit; the last step's piece
+     (desktop only) once it is. */
+  .ac-step[data-state='lit']:has(+ .ac-step[data-state='lit'])::after,
+  .ac-step[data-state='lit']:last-child::after {
+    background-color: var(--color-gold-on-light);
+  }
+
+  .ac-node {
+    position: absolute;
+    z-index: 1;
+    left: var(--ac-nx);
+    top: var(--ac-ny);
+    width: 10px;
+    height: 10px;
+    translate: -50% -50%;
+    border: 2px solid var(--color-border-strong);
+    border-radius: 50%;
+    background-color: var(--color-surface-sunken);
+  }
+  .ac-step[data-state='lit'] .ac-node {
+    border-color: var(--color-gold-on-light);
+    background-color: var(--color-gold-on-light);
+  }
+
+  /* The fill and the pulse hang off the first node. */
+  .ac-origin {
+    position: absolute;
+    left: var(--ac-nx);
+    top: var(--ac-ny);
+  }
+  .ac-fill {
+    position: absolute;
+    left: -1px;
+    top: 0;
+    width: 2px;
+    height: var(--ac-y, 0px);
+    background-color: var(--color-gold-on-light);
+  }
+  .ac-pulse {
+    position: absolute;
+    z-index: 2;
+    left: -7px;
+    top: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 4px color-mix(in oklab, var(--color-gold-on-light) 18%, transparent),
+      0 0 16px 3px color-mix(in oklab, var(--color-gold-300) 75%, transparent);
+    transform: translate(var(--ac-x, 0px), var(--ac-y, 0px));
+    opacity: 0;
+  }
+  .ac:is([data-phase='playing'], [data-phase='done']) .ac-pulse {
+    opacity: 1;
+  }
+
+  /* ---------- The step ---------- */
+
+  .ac-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .ac-photo {
+    position: relative;
+    height: 150px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    background-color: var(--color-brand-navy);
+  }
+  .ac-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* The title's button covers the whole step, so the step is one target. */
+  .ac-hit {
+    text-align: left;
+    cursor: pointer;
+  }
+  .ac-hit::after {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    inset: -8px;
+    border-radius: 18px;
+  }
+  .ac-hit:focus-visible {
+    outline: none;
+  }
+  .ac-hit:focus-visible::after {
+    outline: 2px solid var(--color-brand-blue);
+  }
+
+  /* Channel chip: muted until the alert reaches the step, then a gold tint
+     and a drawn check. The check's slot is always held. */
+  .ac-chip {
+    display: inline-flex;
+    max-width: 100%;
+    align-self: flex-start;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 8px;
+    padding: 4px 10px 4px 8px;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--color-text-muted);
+  }
+  .ac-check {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+  .ac-check path {
+    fill: none;
+    stroke: var(--color-gold-on-light);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1 1;
+    stroke-dashoffset: 1;
+  }
+  .ac-step[data-state='lit'] .ac-chip {
+    border-color: color-mix(in oklab, var(--color-gold-on-light) 40%, transparent);
+    background-color: color-mix(in oklab, var(--color-gold-on-light) 14%, transparent);
+    color: var(--color-brand-navy);
+  }
+  .ac-step[data-state='lit'] .ac-check path {
+    stroke-dashoffset: 0;
+  }
+
+  /* Not reached yet: slightly dimmed. Reached: full colour. Current: lifted. */
+  .ac-step[data-state='pending'] .ac-photo img {
+    filter: brightness(0.62) saturate(0.55);
+  }
+  .ac-step[data-state='pending'] .ac-copy {
+    opacity: 0.6;
+  }
+  .ac-step[data-current] .ac-card {
+    transform: translateY(-6px);
+  }
+  .ac-step[data-current] .ac-photo {
+    box-shadow: 0 14px 28px -14px rgb(7 13 38 / 45%);
+  }
+  .ac-step[data-current] .ac-photo img {
+    filter: brightness(1.06) saturate(1.05);
+  }
+
+  /* ---------- Replay ---------- */
+
+  .ac-foot {
+    display: flex;
+    min-height: 44px;
+    margin-top: 20px;
+    padding-left: 40px;
+  }
+  .ac-replay {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 700;
+    color: var(--color-gold-on-light);
+    cursor: pointer;
+    visibility: hidden;
+    opacity: 0;
+  }
+  .ac[data-phase='done'] .ac-replay {
+    visibility: visible;
+    opacity: 1;
+  }
+  .ac-replay:hover {
+    text-decoration: underline;
+  }
+  .ac-replay:focus-visible {
+    outline: 2px solid var(--color-gold-on-light);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* ---------- Layouts ---------- */
+
+  /* Tablet: photo beside the copy, node level with the kicker. */
+  @media (width >= 640px) {
+    .ac-card {
+      flex-direction: row;
+      gap: 24px;
+    }
+    .ac-photo {
+      width: 220px;
+      height: 140px;
+    }
+    .ac-copy {
+      flex: 1;
+    }
+  }
+
+  /* Desktop: five columns, the line through the gap under each photo where
+     the design's rule sat (photo 120px, line at 137px, copy from 158px). */
+  @media (width >= 1280px) {
+    .ac {
+      margin-top: 48px;
+    }
+    .ac-steps {
+      --ac-nx: 5px;
+      --ac-ny: 137px;
+      flex-direction: row;
+    }
+    .ac-step {
+      flex: 1 1 0;
+      padding-left: 0;
+    }
+    .ac-step::after,
+    .ac-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      left: var(--ac-nx);
+      top: calc(var(--ac-ny) - 1px);
+      width: calc(100% + var(--ac-gap) - var(--ac-nx));
+      height: 2px;
+      background-color: var(--color-border-strong);
+    }
+    .ac-step:last-child::after {
+      width: calc(100% - var(--ac-nx));
+    }
+    .ac-card {
+      flex-direction: column;
+      gap: 0;
+    }
+    .ac-photo {
+      width: auto;
+      height: 120px;
+    }
+    .ac-copy {
+      flex: none;
+      padding-top: 38px;
+    }
+    .ac-fill {
+      left: 0;
+      top: -1px;
+      width: var(--ac-x, 0px);
+      height: 2px;
+    }
+    .ac-foot {
+      padding-left: 0;
+    }
+  }
+
+  /* ---------- Motion ---------- */
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ac-card {
+      transition: transform 350ms var(--motion-ease);
+    }
+    .ac-photo {
+      transition: box-shadow 350ms var(--motion-ease);
+    }
+    .ac-photo img {
+      transition: filter 400ms ease;
+    }
+    .ac-copy {
+      transition: opacity 400ms ease;
+    }
+    .ac-node,
+    .ac-step::after {
+      transition:
+        background-color 250ms ease,
+        border-color 250ms ease;
+    }
+    .ac-chip {
+      transition:
+        background-color 300ms ease,
+        border-color 300ms ease,
+        color 300ms ease;
+    }
+    .ac-check path {
+      transition: stroke-dashoffset 300ms ease 120ms;
+    }
+    .ac-pulse,
+    .ac-replay {
+      transition: opacity 200ms ease;
+    }
+    /* A ring leaves the node the pulse has just reached. */
+    .ac-node::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border: 2px solid var(--color-gold-on-light);
+      border-radius: inherit;
+      opacity: 0;
+    }
+    .ac-step[data-current] .ac-node::after {
+      animation: ac-ping 700ms ease-out;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ac-pulse,
+    .ac-fill,
+    .ac-foot {
+      display: none;
+    }
+  }
+}
+
+@keyframes ac-ping {
+  from {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.8);
+  }
+}

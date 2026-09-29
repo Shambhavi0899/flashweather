@@ -1,0 +1,352 @@
+/*
+ * Weather Command Center "What is the Weather Command Center?" as a guided
+ * tour of its screenshot (components/products/detail/command-center-tour.tsx).
+ *
+ * From 1024px: the text (~45%) scrolls on the left, the screenshot (~55%) is
+ * sticky on the right. The component sets `data-armed` on `.wct` (desktop,
+ * motion welcome) and `data-on` on the current stop and its hotspot. Armed:
+ * other stops step back to 40%; the current hotspot glows, pulses and shows
+ * its label while its huge box-shadow dims the rest of the screenshot; the
+ * others stay as faint rings you can click. Unarmed (reduced motion, no JS,
+ * phones) is the still state: every stop at full strength, every hotspot
+ * drawn with its label, nothing pulsing.
+ *
+ * Both are a `.wct-view`: a window onto the whole screenshot (`.wct-stage`),
+ * zoomed by --z and centred on the box --x --y --w --h. From 1024px the view
+ * frames the laptop (the image's right half is a marketing tagline, not UI),
+ * so the screen reads larger. Below 1024px there is no sticky screenshot:
+ * each stop opens with a view zoomed onto its own area, ring drawn.
+ *
+ * Hotspot areas are fractions of the screenshot (1600×900 source), shared by
+ * the rings and the crops: --x --y --w --h the area's box, --r its corner
+ * radius, --z the crop's zoom, and --cx --cy (optional) the crop's centre
+ * where the box's own centre would bring the tagline or too much keyboard
+ * into a phone crop. The section keeps hard edges: no fades.
+ */
+@layer components {
+  /* ------------------------------------------------------------ Areas */
+  /* The FirstStrike swaths either side of the river (source 222–628 × 298–504). */
+  [data-spot='risk'] {
+    --x: 0.139;
+    --y: 0.331;
+    --w: 0.254;
+    --h: 0.229;
+    --r: 50%;
+    --z: 2.6;
+  }
+  /* "Refreshing in 2" and the time chip on the timeline bar (640–740 × 612–646). */
+  [data-spot='refresh'] {
+    --x: 0.4;
+    --y: 0.68;
+    --w: 0.0625;
+    --h: 0.038;
+    --r: 8px;
+    --z: 3.2;
+    --cx: 0.36;
+    --cy: 0.64;
+  }
+  /* The minutes-ahead colour scale, 20 to 55 min, along the top (64–866 × 170–198). */
+  [data-spot='lead-time'] {
+    --x: 0.04;
+    --y: 0.189;
+    --w: 0.501;
+    --h: 0.031;
+    --r: 6px;
+    --z: 1.85;
+  }
+  /* The whole laptop screen (62–866 × 154–672). */
+  [data-spot='screen'] {
+    --x: 0.039;
+    --y: 0.171;
+    --w: 0.5025;
+    --h: 0.576;
+    --r: 14px;
+    --z: 1.8;
+    --cx: 0.27;
+  }
+
+  /* ------------------------------------------------------------ Layout */
+  .wct {
+    display: flex;
+    flex-direction: column;
+    padding-block: 80px;
+  }
+  .wct-text {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .wct-head {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .wct-stops {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .wct-stop {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: opacity 0.5s var(--motion-ease);
+  }
+  /* The number sits outside the <h3>, so the heading reads as the lead-in alone. */
+  .wct-title {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .wct-number {
+    font-weight: 800;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0.13em;
+    color: var(--color-gold-on-light);
+  }
+  .wct-media {
+    display: none;
+  }
+
+  /* ------------------------------------------------------------ Stage */
+  /* The screenshot at its own 16:9, with the hotspots laid over it. */
+  .wct-stage {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    /* The screenshot's own night ground, under the image while it loads. */
+    background: var(--color-brand-navy-deep);
+  }
+
+  /* ------------------------------------------------------------ Hotspots */
+  .wct-spot {
+    position: absolute;
+    left: calc(var(--x) * 100%);
+    top: calc(var(--y) * 100%);
+    width: calc(var(--w) * 100%);
+    height: calc(var(--h) * 100%);
+    border: 1.5px solid var(--color-viz-gold);
+    border-radius: var(--r);
+    box-shadow:
+      0 0 0 200vmax transparent,
+      0 0 18px color-mix(in srgb, var(--color-viz-gold) 45%, transparent),
+      inset 0 0 14px color-mix(in srgb, var(--color-viz-gold) 25%, transparent);
+    transition:
+      box-shadow 0.6s var(--motion-ease),
+      border-color 0.4s var(--motion-ease);
+  }
+  button.wct-spot {
+    cursor: pointer;
+  }
+  /* Grows out of the ring and fades, on repeat; only on the current spot and in crops. */
+  .wct-pulse {
+    position: absolute;
+    inset: -1.5px;
+    border-radius: inherit;
+    outline: 1.5px solid var(--color-viz-gold);
+    outline-offset: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .wct-spot-label {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: -1.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 4px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-brand-navy) 90%, transparent);
+    color: var(--color-text-on-dark);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: opacity 0.4s var(--motion-ease);
+  }
+  .wct-spot-label::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-viz-gold);
+  }
+  /* The refresh readout sits near the screen's right edge: its label ends
+     with the ring instead of starting with it. */
+  [data-spot='refresh'] > .wct-spot-label {
+    right: -1.5px;
+    left: auto;
+  }
+  /* The scale runs along the top of the screen: its label hangs below it. */
+  [data-spot='lead-time'] > .wct-spot-label {
+    top: calc(100% + 8px);
+    bottom: auto;
+  }
+
+  /* ------------------------------------------------------------ Views */
+  /* --view-h is the view's height as a share of its width. */
+  .wct-view {
+    --view-h: 0.625;
+    position: relative;
+    aspect-ratio: 1 / var(--view-h);
+    overflow: hidden;
+    background: var(--color-brand-navy-deep);
+    container-type: inline-size;
+  }
+  /* The whole screenshot at --z times the view's width, the box centred,
+     held so no edge of the image comes into view. */
+  .wct-view > .wct-stage {
+    position: absolute;
+    width: calc(var(--z) * 100cqw);
+    left: clamp(
+      calc(100cqw - var(--z) * 100cqw),
+      calc(50cqw - (var(--cx, var(--x) + var(--w) / 2)) * var(--z) * 100cqw),
+      0px
+    );
+    top: clamp(
+      calc(var(--view-h) * 100cqw - var(--z) * 56.25cqw),
+      calc(var(--view-h) * 50cqw - (var(--cy, var(--y) + var(--h) / 2)) * var(--z) * 56.25cqw),
+      0px
+    );
+    background: none;
+  }
+
+  /* ------------------------------------------------------------ Phones: crops */
+  .wct-crop {
+    margin-bottom: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+  }
+  .wct-crop .wct-pulse {
+    animation: wct-pulse 2.4s var(--motion-ease) 0.6s infinite;
+  }
+
+  /* ------------------------------------------------------------ Desktop */
+  @media (width >= 1024px) {
+    .wct {
+      flex-direction: row;
+      align-items: stretch;
+      gap: 64px;
+      padding-block: 120px;
+    }
+    .wct-text {
+      flex: 0 0 calc(45% - 32px);
+      gap: 0;
+    }
+    .wct-head {
+      padding-bottom: 12svh;
+    }
+    /* Room to read each stop while the screenshot holds still. */
+    .wct-stops {
+      gap: 32svh;
+      padding-bottom: 12svh;
+    }
+    .wct-stop {
+      gap: 14px;
+    }
+    .wct-crop {
+      display: none;
+    }
+    .wct-media {
+      display: block;
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    /* Held in the space below the fixed header, centred in it. */
+    .wct-sticky {
+      position: sticky;
+      top: var(--site-header-h);
+      display: flex;
+      align-items: center;
+      height: calc(100svh - var(--site-header-h));
+    }
+    .wct-figure {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+    /* The laptop, source 0–880 × 105–755: its screen, keyboard and the
+       room above the screen that the whole-screen label needs, stopping
+       short of the tagline's first letters. */
+    .wct-screen {
+      --view-h: 0.739;
+      --x: 0;
+      --y: 0.1167;
+      --w: 0.55;
+      --h: 0.7222;
+      --z: 1.818;
+      border: 1px solid var(--color-border);
+      border-radius: 20px;
+      box-shadow: 0 30px 80px -30px #0b132259;
+    }
+
+    /* ---------------------------------------------------------- Armed */
+    .wct[data-armed] .wct-stop:not([data-on]) {
+      opacity: 0.4;
+    }
+    .wct[data-armed] .wct-screen .wct-spot:not([data-on]) {
+      border-color: color-mix(in srgb, var(--color-neutral-0) 40%, transparent);
+      box-shadow:
+        0 0 0 200vmax transparent,
+        0 0 18px transparent,
+        inset 0 0 14px transparent;
+    }
+    .wct[data-armed] .wct-screen .wct-spot:not([data-on]) .wct-spot-label {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .wct[data-armed] .wct-screen .wct-spot:not([data-on]):is(:hover, :focus-visible) {
+      border-color: var(--color-viz-gold);
+    }
+    .wct[data-armed] .wct-screen .wct-spot:not([data-on]):is(:hover, :focus-visible) .wct-spot-label {
+      opacity: 1;
+    }
+    .wct[data-armed] .wct-screen .wct-spot[data-on] {
+      z-index: 1;
+      box-shadow:
+        0 0 0 200vmax color-mix(in srgb, var(--color-brand-navy-deep) 45%, transparent),
+        0 0 22px color-mix(in srgb, var(--color-viz-gold) 55%, transparent),
+        inset 0 0 16px color-mix(in srgb, var(--color-viz-gold) 30%, transparent);
+    }
+    .wct[data-armed] .wct-screen .wct-spot[data-on] .wct-pulse {
+      animation: wct-pulse 2.4s var(--motion-ease) 0.3s infinite;
+    }
+  }
+
+  /* ------------------------------------------------------------ Entrance */
+  .wct-head[data-anim]:not([data-anim='reset']) > *,
+  .wct-stop[data-anim]:not([data-anim='reset']) > * {
+    animation: motion-rise 0.7s var(--motion-ease) calc(var(--motion-delay) + var(--i, 0) * 90ms) both;
+  }
+  .wct-head > :nth-child(2),
+  .wct-stop > :nth-child(2) {
+    --i: 1;
+  }
+  .wct-stop > :nth-child(3) {
+    --i: 2;
+  }
+  .wct-media[data-anim]:not([data-anim='reset']) .wct-figure {
+    animation: motion-rise 0.8s var(--motion-ease) calc(var(--motion-delay) + 0.2s) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wct-pulse {
+      animation: none !important;
+    }
+  }
+}
+
+@keyframes wct-pulse {
+  from {
+    opacity: 0.8;
+    outline-offset: 0;
+  }
+  70%,
+  to {
+    opacity: 0;
+    outline-offset: 12px;
+  }
+}

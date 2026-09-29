@@ -1,0 +1,131 @@
+/*
+ * The Heat & WBGT page's "What does Flash predict for heat?" row
+ * (components/products/heat/sparkline.tsx, PredictsSection in
+ * heat/sections.tsx): a six-hour sparkline above each parameter, the hero's
+ * illustrative Field B afternoon.
+ *
+ * Scroll-in rides the shared <Motion>, one block per column: columns that
+ * scroll in together (the desktop row) draw left to right one after another,
+ * --hsp-step apart, and a stacked column (mobile) draws when it is reached.
+ * As each curve finishes, its peak dot and value pop in. The draw is a
+ * clip wipe, like the hero's band lines: the curve's stroke does not scale
+ * with its stretched SVG, and Chrome then lays pathLength dashes out wrong.
+ *
+ * Hover a column (mouse or trackpad): its curve thickens, and every column
+ * shows a thin 4 pm line with its value there. The peak values step aside
+ * while the readouts show, since three of them sit near 4 pm. No script:
+ * :has() on the list.
+ *
+ * The markup is the finished row, so with reduced motion (or no script) the
+ * sparklines are simply drawn, dots and values in place. Hard edges, no grid.
+ */
+@layer components {
+  .hsp {
+    --hsp-step: 420ms;
+    --hsp-draw: 700ms;
+  }
+  /* .motion.: the shared .motion stagger is declared after this sheet. */
+  .motion.hsp-col {
+    --motion-stagger: var(--hsp-step);
+  }
+
+  .hsp-spark {
+    max-width: 232px;
+    font-variant-numeric: tabular-nums;
+  }
+  .hsp-base {
+    stroke: var(--color-border);
+    stroke-width: 1;
+  }
+  .hsp-curve {
+    fill: none;
+    stroke: var(--color-text);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .hsp-peak-dot {
+    fill: var(--color-gold-on-light);
+    stroke: var(--color-surface-sunken);
+    stroke-width: 2;
+    paint-order: stroke;
+  }
+  .hsp-peak-value,
+  .hsp-at-value {
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .hsp-peak-value {
+    fill: var(--color-gold-on-light);
+  }
+  .hsp-hour {
+    fill: var(--color-text-muted);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  /* The 4 pm readout, shown while any column is hovered. */
+  .hsp-at,
+  .hsp-at-dot {
+    opacity: 0;
+  }
+  .hsp-at-line {
+    stroke: var(--color-text-muted);
+    stroke-width: 1;
+  }
+  .hsp-at-value {
+    fill: var(--color-text);
+  }
+  .hsp-at-dot {
+    fill: var(--color-surface-sunken);
+    stroke: var(--color-text);
+    stroke-width: 1.5;
+  }
+
+  @media (hover: hover) {
+    .hsp:has(.hsp-col:hover) :is(.hsp-at, .hsp-at-dot) {
+      opacity: 1;
+    }
+    .hsp:has(.hsp-col:hover) .hsp-peak-value {
+      opacity: 0;
+    }
+    .hsp-col:hover .hsp-curve {
+      stroke-width: 2.5;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hsp-curve {
+      transition: stroke-width 200ms var(--motion-ease);
+    }
+    :is(.hsp-at, .hsp-at-dot, .hsp-peak-value) {
+      transition: opacity 200ms var(--motion-ease);
+    }
+
+    /* Scroll-in: each curve draws, then its peak lands. */
+    .hsp-peak-dot {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .motion[data-anim]:not([data-anim='reset']) .hsp-curve {
+      animation: hsp-draw var(--hsp-draw) var(--motion-ease) var(--motion-delay) both;
+    }
+    .motion[data-anim]:not([data-anim='reset']) .hsp-peak-dot {
+      animation: motion-pop-in 0.4s var(--motion-ease)
+        calc(var(--motion-delay) + var(--hsp-draw) - 120ms) both;
+    }
+    .motion[data-anim]:not([data-anim='reset']) .hsp-peak {
+      animation: motion-fade 0.4s var(--motion-ease)
+        calc(var(--motion-delay) + var(--hsp-draw) - 120ms) both;
+    }
+  }
+}
+
+@keyframes hsp-draw {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}

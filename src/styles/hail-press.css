@@ -1,0 +1,257 @@
+/*
+ * hail-press — "What did the trade press say at launch?" on the Hail page,
+ * as press clippings (components/products/hail/press-clippings.tsx).
+ *
+ * Each clipping is an off-white paper cutout with slightly uneven edges and
+ * a faint grain, turned a few degrees, with its shadow on the navy ground.
+ * From 1280px the two overlap side by side, the second a little lower;
+ * below, they stack in a column.
+ *
+ * The finished frame is the base (`--hp-p` 1, phrases marked): what
+ * reduced motion and a browser without JavaScript show. With motion the
+ * component sets `data-armed`, then scrubs `--hp-p` from 0 to 1 on the
+ * shared scroll loop (the list from 1280px, each clipping below it) and
+ * sets `data-marked` once a clipping is in place:
+ *   .hp-clip   fan: slides and turns from the stack (or the side) to its place
+ *   .hp-card   the clipping's own tilt; hover or focus straightens and lifts it
+ *   .hp-mark   the highlighter, swiping left to right over 600ms
+ */
+
+@layer components {
+  .hp-list {
+    --hp-p: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    @media (width >= 1280px) {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 0;
+      padding-block: 8px 24px;
+    }
+  }
+
+  /* ---------------------------------------------------------------- Fan */
+
+  .hp-clip {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    transform: translate(calc(var(--hp-dx) * (1 - var(--hp-p))), calc(var(--hp-dy) * (1 - var(--hp-p))))
+      rotate(calc(var(--hp-spin) * (1 - var(--hp-p))));
+    opacity: calc(0.2 + var(--hp-p) * 0.8);
+  }
+  /* Below 1280px each comes in from its own side. */
+  .hp-clip:nth-child(1) {
+    --hp-dx: -14%;
+    --hp-dy: 48px;
+    --hp-spin: -7deg;
+    --hp-tilt: -1.5deg;
+  }
+  .hp-clip:nth-child(2) {
+    --hp-dx: 14%;
+    --hp-dy: 48px;
+    --hp-spin: 7deg;
+    --hp-tilt: 1.5deg;
+  }
+  /* From 1280px they start as one stack in the middle of the column: each
+     clipping is 51.5% of it and they overlap by 3%, so each centre is
+     24.25% of the column (47.1% of a clipping) from the middle. */
+  @media (width >= 1280px) {
+    .hp-clip {
+      width: 51.5%;
+      max-width: none;
+      opacity: 1;
+    }
+    .hp-clip:nth-child(1) {
+      --hp-dx: 47.1%;
+      --hp-dy: 36px;
+      --hp-spin: 5deg;
+      --hp-tilt: -3deg;
+    }
+    .hp-clip:nth-child(2) {
+      --hp-dx: -47.1%;
+      --hp-dy: -36px;
+      --hp-spin: -5deg;
+      --hp-tilt: 2.5deg;
+      z-index: 1;
+      margin-top: 72px;
+      margin-left: -3%;
+    }
+  }
+  .hp-clip:hover,
+  .hp-clip:focus-within {
+    z-index: 2;
+  }
+
+  /* ----------------------------------------------------------- Clipping */
+
+  .hp-card {
+    display: block;
+    rotate: var(--hp-tilt);
+    color: var(--color-text);
+    filter: drop-shadow(0 18px 28px rgb(0 0 0 / 45%)) drop-shadow(0 2px 3px rgb(0 0 0 / 35%));
+    transition:
+      rotate 0.35s var(--motion-ease),
+      translate 0.35s var(--motion-ease),
+      filter 0.35s var(--motion-ease);
+  }
+  @media (hover: hover) {
+    .hp-card:hover {
+      rotate: 0deg;
+      translate: 0 -6px;
+      filter: drop-shadow(0 26px 36px rgb(0 0 0 / 50%)) drop-shadow(0 3px 5px rgb(0 0 0 / 35%));
+    }
+  }
+  /* The ring sits on the link: the paper's clip-path would cut it off. */
+  .hp-card:focus-visible {
+    rotate: 0deg;
+    translate: 0 -6px;
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: 6px;
+  }
+
+  /* Paper: warm off-white, a faint grain, and the uneven edge of a cut. */
+  .hp-paper {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 26px 24px 22px;
+    background-color: #f3efe4;
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 0.1 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"),
+      radial-gradient(ellipse 80% 60% at 30% 20%, rgb(255 255 255 / 55%), transparent 70%),
+      linear-gradient(180deg, #f6f2e8, #ebe5d6);
+    clip-path: polygon(
+      0.6% 1.2%, 9% 0.2%, 21% 0.9%, 34% 0%, 47% 0.8%, 60% 0.1%, 73% 0.9%, 86% 0.2%, 99.4% 0.8%,
+      100% 14%, 99.3% 29%, 100% 45%, 99.4% 61%, 100% 77%, 99.2% 99%,
+      87% 99.6%, 74% 98.9%, 61% 100%, 48% 99.2%, 35% 100%, 22% 99.1%, 10% 99.8%, 0.4% 99.2%,
+      0% 84%, 0.7% 68%, 0% 52%, 0.8% 36%, 0.1% 20%
+    );
+    @media (width >= 640px) {
+      padding: 30px 30px 24px;
+    }
+  }
+
+  .hp-masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 3px double rgb(11 19 34 / 55%);
+  }
+  .hp-outlet {
+    font-size: 26px;
+    line-height: 28px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--color-brand-navy);
+    @media (width >= 640px) {
+      font-size: 30px;
+      line-height: 32px;
+    }
+  }
+  .hp-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+  }
+  .hp-tag {
+    padding: 4px 8px;
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in oklab, var(--color-gold-on-light) 14%, transparent);
+    color: var(--color-brand-navy);
+    font-weight: 700;
+  }
+
+  .hp-quote {
+    position: relative;
+    padding-left: 22px;
+    font-size: 17px;
+    line-height: 27px;
+    font-weight: 500;
+    color: var(--color-text);
+    text-wrap: pretty;
+  }
+  .hp-quote-mark {
+    position: absolute;
+    top: -6px;
+    left: -2px;
+    font-size: 44px;
+    line-height: 1;
+    font-weight: 800;
+    color: var(--color-gold-on-light);
+  }
+
+  /* The highlighter: slice decoration, so the swipe runs along line one,
+     then line two, as a pen would. */
+  .hp-mark {
+    padding-inline: 0.08em;
+    background-color: transparent;
+    background-image: linear-gradient(
+      100deg,
+      color-mix(in oklab, var(--color-viz-gold) 55%, transparent),
+      color-mix(in oklab, var(--color-viz-gold) 68%, transparent) 50%,
+      color-mix(in oklab, var(--color-viz-gold) 58%, transparent)
+    );
+    background-position: 0 88%;
+    background-repeat: no-repeat;
+    background-size: 100% 74%;
+    color: inherit;
+  }
+
+  .hp-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 16px;
+    padding-top: 14px;
+    border-top: 1px dashed rgb(11 19 34 / 22%);
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .hp-audience {
+    font-weight: 700;
+    color: var(--color-brand-navy);
+  }
+  .hp-read {
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+  .hp-card:hover .hp-read,
+  .hp-card:focus-visible .hp-read {
+    color: var(--color-brand-navy);
+    text-decoration: underline;
+  }
+
+  /* -------------------------------------------------------------- Motion */
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hp-list[data-armed] .hp-mark {
+      background-size: 0% 74%;
+      transition: background-size 0.6s cubic-bezier(0.45, 0, 0.3, 1) 0.15s;
+    }
+    .hp-list[data-armed] .hp-clip[data-marked] .hp-mark {
+      background-size: 100% 74%;
+    }
+    /* From 1280px the stack is marked as one, the second clipping after the first. */
+    @media (width >= 1280px) {
+      .hp-list[data-armed][data-marked] .hp-mark {
+        background-size: 100% 74%;
+      }
+      .hp-list[data-armed] .hp-clip:nth-child(2) .hp-mark {
+        transition-delay: 0.85s;
+      }
+    }
+  }
+}

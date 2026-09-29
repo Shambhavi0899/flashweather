@@ -1,0 +1,238 @@
+/*
+ * Industry "Keep reading" as one row of cards (components/industries/
+ * keep-reading.tsx, related.layout 'cards'). The row is a native horizontal
+ * scroller that snaps card by card: a swipe on touch, a trackpad swipe or a
+ * mouse drag on desktop, and the two arrow buttons beside the heading (hidden
+ * on phones). It runs the full width of the section, so cards slide out under
+ * the page edge; its inset keeps the first card on the page gutter.
+ *
+ * Every card is one link: a type tag, the title and "Read →". On hover the
+ * card lifts and the arrow slides. The cards fade in once from the right, a
+ * beat apart, when the row scrolls in (Motion on the row). With reduced motion nothing
+ * moves: no fade, no lift, no slide.
+ */
+
+@layer components {
+  .kr {
+    --kr-gutter: 16px;
+    --kr-gap: 12px;
+    --kr-card: 280px;
+    /* The page gutter, measured from the section's edge. */
+    --kr-inset: max(var(--kr-gutter), calc((100% - var(--container-page)) / 2 + var(--kr-gutter)));
+    @media (width >= 768px) {
+      --kr-gutter: 40px;
+      --kr-gap: 20px;
+      --kr-card: 340px;
+    }
+    @media (width >= 1440px) {
+      --kr-gutter: 96px;
+      --kr-gap: 24px;
+      --kr-card: 384px;
+    }
+  }
+
+  /* ---------- Heading and arrows ---------- */
+
+  .kr-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .kr-nav {
+    display: none;
+    @media (width >= 768px) {
+      display: flex;
+      flex-shrink: 0;
+      gap: 8px;
+    }
+  }
+  .kr-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-0);
+    color: var(--color-text);
+    cursor: pointer;
+    transition:
+      border-color 180ms ease,
+      color 180ms ease;
+  }
+  .kr-btn:hover {
+    border-color: var(--color-brand-blue);
+    color: var(--color-brand-blue);
+  }
+  /* The end of the row. Still focusable, so the keyboard keeps its place. */
+  .kr-btn[aria-disabled='true'] {
+    border-color: var(--color-border);
+    background-color: transparent;
+    color: var(--color-neutral-400);
+    cursor: default;
+  }
+
+  /* ---------- The row ---------- */
+
+  /* The block padding is room for the lift, its shadow and the focus ring,
+     which the scroller would otherwise clip; the margins take it back. */
+  .kr-scroller {
+    position: relative;
+    margin-block: 20px -36px;
+    padding-block: 12px 36px;
+    padding-inline: var(--kr-inset);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--kr-inset);
+    scrollbar-width: none;
+  }
+  .kr-scroller::-webkit-scrollbar {
+    display: none;
+  }
+  /* A mouse drag moves the row freely; it snaps again once it has settled. */
+  .kr-scroller[data-dragging] {
+    scroll-snap-type: none;
+    cursor: grabbing;
+    user-select: none;
+  }
+  .kr-scroller[data-dragging] .kr-card {
+    pointer-events: none;
+  }
+
+  .kr-list {
+    display: flex;
+    gap: var(--kr-gap);
+    width: max-content;
+  }
+  .kr-item {
+    display: flex;
+    flex: 0 0 var(--kr-card);
+    width: var(--kr-card);
+    scroll-snap-align: start;
+  }
+  .kr-item:nth-child(2) {
+    --kr-i: 1;
+  }
+  .kr-item:nth-child(3) {
+    --kr-i: 2;
+  }
+  .kr-item:nth-child(4) {
+    --kr-i: 3;
+  }
+  .kr-item:nth-child(5) {
+    --kr-i: 4;
+  }
+  .kr-item:nth-child(6) {
+    --kr-i: 5;
+  }
+  .kr-item:nth-child(7) {
+    --kr-i: 6;
+  }
+  .kr-item:nth-child(n + 8) {
+    --kr-i: 7;
+  }
+
+  /* ---------- Card ---------- */
+
+  .kr-card {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    min-height: 184px;
+    padding: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-neutral-0);
+    transition:
+      transform 260ms var(--motion-ease),
+      box-shadow 260ms var(--motion-ease),
+      border-color 180ms ease;
+    @media (width >= 768px) {
+      min-height: 196px;
+      padding: 28px;
+    }
+  }
+  .kr-tag {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-gold-on-light);
+  }
+  .kr-title {
+    font-size: var(--text-body-l);
+    line-height: 24px;
+    font-weight: 600;
+    color: var(--color-text);
+    transition: color 180ms ease;
+    @media (width >= 768px) {
+      font-size: var(--text-h4);
+      line-height: var(--leading-h4);
+      letter-spacing: var(--tracking-heading);
+    }
+  }
+  .kr-read {
+    display: flex;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 20px;
+    font-size: var(--text-body-s);
+    line-height: 22px;
+    font-weight: 600;
+    color: var(--color-brand-blue);
+  }
+  .kr-arrow {
+    transition: transform 220ms var(--motion-ease);
+  }
+
+  .kr-card:is(:hover, :focus-visible) {
+    border-color: var(--color-border-strong);
+  }
+  .kr-card:is(:hover, :focus-visible) .kr-title {
+    color: var(--color-brand-blue);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @media (hover: hover) {
+      .kr-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 32px -12px rgb(7 13 38 / 28%);
+      }
+    }
+    .kr-card:is(:hover, :focus-visible) .kr-arrow {
+      transform: translateX(4px);
+    }
+  }
+
+  /* ---------- Scroll-in: the cards come in from the right, once ---------- */
+
+  /* On the card, not the <li>: a moved <li> would move its snap point and the
+     row would scroll to follow it. Filled backwards only, so the finished
+     animation leaves the hover lift alone. */
+  .motion.kr-row[data-anim]:not([data-anim='reset']) .kr-card {
+    animation: kr-in 560ms var(--motion-ease) calc(var(--motion-delay) + var(--kr-i, 0) * 70ms) backwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kr-btn,
+    .kr-card,
+    .kr-title,
+    .kr-arrow {
+      transition: none;
+    }
+  }
+}
+
+@keyframes kr-in {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}

@@ -1,0 +1,8 @@
+Flash Weather AI: boilerplate
+=============================
+
+Flash Weather AI (Flash Scientific Technology Inc., Canton, Georgia) builds AI weather intelligence — 15+ proprietary prediction products and over 100 parameters on a 1km × 1km grid, refreshed every 2 minutes, delivered through its Command Center, mobile app, API and Flash Agent.
+
+Use verbatim. Lightning prediction accuracy of 99.6% on the one-hour window may be quoted with that qualifier.
+
+Press contact: support@flashweather.ai

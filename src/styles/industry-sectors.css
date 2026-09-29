@@ -1,0 +1,251 @@
+/*
+ * Industry sectors — "Built for the person who has to make the call." on
+ * /industries-we-serve/ (components/industries/industry-sectors.tsx).
+ *
+ * Three panels, one per sector: a photo header in its natural colour with the
+ * sector's name on it, its hazards as tags right under the photo, then the
+ * sector's industries as rows. Stacked under 1024px, three equal columns of
+ * equal height from there. Every row is one line of copy and the same height,
+ * so rows line up across the panels; a panel with fewer rows ends with spare
+ * space below its last row. Every row is always visible.
+ */
+
+@layer components {
+  .isec-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .isec-panel {
+    display: flex;
+    min-width: 0;
+  }
+
+  .isec-card {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 0;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-neutral-0);
+  }
+
+  /* ---- Header: the sector's photo, its name and count on it -------------- */
+
+  .isec-head {
+    position: relative;
+    display: flex;
+    height: 200px;
+    flex: none;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 4px;
+    overflow: hidden;
+    padding: 20px 24px;
+    background-color: var(--color-brand-navy);
+  }
+  .isec-head img {
+    object-fit: cover;
+    object-position: center;
+    transition: transform 700ms var(--motion-ease);
+  }
+  .isec-head[data-tone='lift'] img {
+    filter: brightness(1.1);
+  }
+  .isec-head[data-tone='dim'] img {
+    filter: brightness(0.9);
+  }
+  /* The same light bottom grade on all three, under the name. */
+  .isec-head::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 0%) 30%,
+      oklab(17.1% -0.0005 -0.052 / 82%) 100%
+    );
+    pointer-events: none;
+  }
+  .isec-name,
+  .isec-count {
+    position: relative;
+    z-index: 1;
+  }
+  .isec-name {
+    font-size: 24px;
+    line-height: 30px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--color-neutral-0);
+  }
+  .isec-count {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-viz-gold);
+  }
+
+  .isec-card:hover .isec-head img,
+  .isec-card:has(:focus-visible) .isec-head img {
+    transform: scale(1.03);
+  }
+
+  /* ---- Body: the sector's industries ------------------------------------- */
+
+  .isec-rows {
+    display: flex;
+    flex-direction: column;
+  }
+  .isec-row + .isec-row {
+    border-top: 1px solid var(--color-border);
+  }
+  .isec-link {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 24px;
+    color: var(--color-text);
+    transition: background-color 200ms ease;
+  }
+  .isec-copy {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .isec-title {
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    transition: transform 320ms var(--motion-ease);
+  }
+  .isec-line {
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--color-text-muted);
+    text-wrap: pretty;
+  }
+  .isec-arrow {
+    display: flex;
+    width: 20px;
+    height: 20px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-subtle);
+    transition:
+      transform 320ms var(--motion-ease),
+      color 200ms ease;
+  }
+  .isec-arrow svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Hover and keyboard focus look the same. */
+  .isec-link:hover,
+  .isec-link:focus-visible {
+    background-color: var(--color-surface-sunken);
+  }
+  .isec-link:hover .isec-title,
+  .isec-link:focus-visible .isec-title {
+    transform: translateX(4px);
+  }
+  .isec-link:hover .isec-arrow,
+  .isec-link:focus-visible .isec-arrow {
+    color: var(--color-brand-blue);
+    transform: translateX(4px);
+  }
+  .isec-link:focus-visible {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: -2px;
+  }
+
+  /* ---- The sector's hazards, right under the photo ----------------------- */
+
+  .isec-tags {
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    gap: 6px;
+    border-bottom: 1px solid var(--color-border);
+    padding: 14px 24px;
+  }
+  .isec-tag {
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    padding: 4px 8px;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  /* ---- Reveal: the three panels fade up, rows with them ------------------- */
+
+  .motion.isec-panel {
+    --motion-stagger: 110ms;
+  }
+  .isec-panel[data-anim]:not([data-anim='reset']) > .isec-card {
+    animation: isec-rise 700ms var(--motion-ease) var(--motion-delay) both;
+  }
+
+  @media (min-width: 1024px) {
+    .isec-list {
+      flex-direction: row;
+      align-items: stretch;
+    }
+    .isec-panel {
+      flex: 1 1 0;
+    }
+    /* Side by side, every line is one line (card.line is written to fit from
+       1024px up); the ellipsis is only a guard, so rows never grow. Stacked
+       on a phone the copy wraps instead of being cut. */
+    .isec-line {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    /* Equal panel heights from the row stretch; rows keep their own height,
+       so they line up across the panels and a shorter panel ends with space. */
+    .isec-row {
+      display: flex;
+    }
+    .isec-link {
+      flex: 1 1 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .isec-head img,
+    .isec-link,
+    .isec-title,
+    .isec-arrow {
+      transition: none;
+    }
+    .isec-card:hover .isec-head img,
+    .isec-card:has(:focus-visible) .isec-head img,
+    .isec-link:hover .isec-title,
+    .isec-link:focus-visible .isec-title,
+    .isec-link:hover .isec-arrow,
+    .isec-link:focus-visible .isec-arrow {
+      transform: none;
+    }
+  }
+}
+
+@keyframes isec-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}

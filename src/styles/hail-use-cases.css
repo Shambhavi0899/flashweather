@@ -1,0 +1,322 @@
+/*
+ * Hail "Who moves first when the cell is forecast?"
+ * (components/products/hail/use-cases.tsx, use-case-cards.tsx).
+ *
+ * Two layouts, picked by media query here and by the same query in
+ * use-case-cards.tsx (keep the two equal):
+ *
+ *   stack  the default: no JavaScript or reduced motion. Each card is its
+ *          front (photo, name, tagline) with its back (their move, the
+ *          alert, the link) under it, nothing hidden, nothing turning.
+ *   flip   motion and scripting: the two faces share one cell and the card
+ *          turns over (3D, 500ms). The script sets data-flipped; the
+ *          hidden face is `inert`.
+ *
+ * The badge names the class carried down from the size-class table; cards
+ * alerted on it (data-alerted) keep full strength and a ring in the class's
+ * colour, the others step back a little.
+ *
+ * Reveal: the head rises (the shared motion-rise), then, in the flip layout,
+ * the cards deal out of a small stack at the first card's place, each
+ * turning straight as it lands. No section transitions: hard edges.
+ */
+@layer components {
+  .huc-head[data-anim]:not([data-anim='reset']) > * {
+    animation: motion-rise 0.7s var(--motion-ease) calc(var(--motion-delay) + var(--i, 0) * 110ms) both;
+  }
+  .huc-head > :nth-child(2) {
+    --i: 1;
+  }
+
+  /* ------------------------------------------------------------ Badge */
+  .huc-badge {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 10px;
+    padding: 7px 14px 7px 12px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-0);
+    box-shadow: inset 0 0 0 1px var(--color-border);
+    color: var(--color-text-muted);
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 500;
+  }
+  .huc-badge strong {
+    color: var(--color-text);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  /* ------------------------------------------------------------ Cards: shared */
+  .huc-card {
+    --huc-ring: var(--color-alert-watch);
+    position: relative;
+    display: flex;
+  }
+  .huc-card[data-class='severe'] {
+    --huc-ring: var(--color-viz-gold);
+  }
+  .huc-card[data-class='destructive'] {
+    --huc-ring: var(--color-alert-warning);
+  }
+  .huc-inner {
+    position: relative;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    overflow: clip;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-neutral-0);
+  }
+  .huc-card[data-alerted] .huc-inner {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px var(--huc-ring);
+  }
+  .huc-card:not([data-alerted]) :is(.huc-front, .huc-back) {
+    opacity: 0.62;
+    filter: saturate(0.55);
+    transition:
+      opacity 0.3s ease-out,
+      filter 0.3s ease-out;
+  }
+  .huc-card:not([data-alerted]):is(:hover, :focus-within, [data-flipped]) :is(.huc-front, .huc-back) {
+    opacity: 1;
+    filter: none;
+  }
+
+  /* The front: the photo, graded, with the name and tagline on it. */
+  .huc-front {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    min-height: 220px;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 18px;
+    overflow: clip;
+    background-color: var(--color-brand-navy);
+    color: var(--color-neutral-0);
+  }
+  .huc-front-grade {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 10%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 30%) 40%,
+      oklab(17.1% -0.0005 -0.052 / 92%) 100%
+    );
+  }
+  .huc-alerted {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 4px 8px;
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--color-brand-navy) 78%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-neutral-0) 22%, transparent);
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+  .huc-alerted::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--huc-ring);
+  }
+
+  /* The back: their move, the alert they get, the link. */
+  .huc-back {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px 18px 20px;
+    background-color: var(--color-neutral-0);
+  }
+  .huc-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    counter-reset: huc-step;
+  }
+  .huc-steps > li {
+    display: flex;
+    gap: 10px;
+    counter-increment: huc-step;
+  }
+  .huc-steps > li::before {
+    content: counter(huc-step, decimal-leading-zero);
+    flex-shrink: 0;
+    width: 18px;
+    padding-top: 3px;
+    color: var(--color-gold-on-light);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  /* The alert as it arrives: the comparison's dark chip. */
+  .huc-alert {
+    align-self: flex-start;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-brand-navy);
+    color: var(--color-text-on-dark-muted);
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .huc-alert strong {
+    color: var(--color-neutral-0);
+    font-weight: 800;
+  }
+  .huc-alert .huc-alert-size {
+    color: var(--huc-ring);
+  }
+
+  /* Only the flip layout turns cards; in the stack they are plain content. */
+  .huc-flip,
+  .huc-unflip {
+    display: none;
+  }
+
+  /* ------------------------------------------------------------ Flip layout */
+  @media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+    .huc-card {
+      perspective: 1200px;
+    }
+    .huc-inner {
+      display: grid;
+      overflow: visible;
+      border: 0;
+      background-color: transparent;
+      transform-style: preserve-3d;
+      transition: transform 500ms var(--motion-ease);
+    }
+    .huc-card[data-alerted] .huc-inner {
+      box-shadow: none;
+    }
+    .huc-card[data-flipped] .huc-inner {
+      transform: rotateY(180deg);
+    }
+    .huc-front,
+    .huc-back {
+      grid-area: 1 / 1;
+      min-height: 360px;
+      border-radius: var(--radius-lg);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .huc-back {
+      transform: rotateY(180deg);
+      box-shadow: inset 0 0 0 1px var(--color-border);
+    }
+    .huc-card[data-alerted] :is(.huc-front, .huc-back) {
+      box-shadow: 0 0 0 2px var(--huc-ring);
+    }
+
+    /* The whole front is the button that turns the card; its visible part is the hint. */
+    .huc-flip {
+      display: inline-flex;
+      align-items: center;
+      align-self: flex-start;
+      gap: 6px;
+      margin-top: 6px;
+      color: var(--color-viz-gold);
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .huc-flip::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+    }
+    .huc-flip:focus-visible {
+      outline: none;
+    }
+    .huc-flip:focus-visible::after {
+      outline: 2px solid var(--color-viz-gold);
+      outline-offset: -4px;
+    }
+    .huc-unflip {
+      display: grid;
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      place-items: center;
+      border-radius: var(--radius-pill);
+      color: var(--color-text-muted);
+      cursor: pointer;
+    }
+    .huc-unflip:hover {
+      background-color: var(--color-surface-sunken);
+      color: var(--color-text);
+    }
+    .huc-unflip:focus-visible {
+      outline: 2px solid var(--color-brand-blue);
+      outline-offset: 2px;
+    }
+
+    /*
+     * The deal: every card starts on a small stack at the first card's
+     * place (--deal-x from lg, where the four share a row), the first on
+     * top, and lands in turn, turning straight. Below lg the cards simply
+     * rise in turn from the same small tilt.
+     */
+    .huc-card:nth-child(1) {
+      --n: 0;
+      --deal-r: -5deg;
+    }
+    .huc-card:nth-child(2) {
+      --n: 1;
+      --deal-r: 3deg;
+    }
+    .huc-card:nth-child(3) {
+      --n: 2;
+      --deal-r: -2deg;
+    }
+    .huc-card:nth-child(4) {
+      --n: 3;
+      --deal-r: 6deg;
+    }
+    /* The stack fades in where it sits, then the cards leave it one by one. */
+    .huc-list[data-anim]:not([data-anim='reset']) {
+      animation: motion-fade 0.3s ease-out var(--motion-delay) both;
+    }
+    .huc-list[data-anim]:not([data-anim='reset']) > .huc-card {
+      z-index: calc(10 - var(--n));
+      animation: huc-deal 0.75s var(--motion-ease) calc(var(--motion-delay) + 250ms + var(--n) * 150ms) both;
+    }
+    @media (width >= 1024px) {
+      .huc-card {
+        --deal-x: calc(var(--n) * -1 * (100% + 24px));
+      }
+    }
+  }
+}
+
+@keyframes huc-deal {
+  from {
+    transform: translate(var(--deal-x, 0), 28px) rotate(var(--deal-r, 0deg));
+  }
+  to {
+    transform: none;
+  }
+}

@@ -1,0 +1,475 @@
+/*
+ * mobile-app-hero — the Mobile App hero's four phones
+ * (components/products/detail/mobile-app-phones.tsx), prefix mph-.
+ *
+ * Everything is sized off the lineup's width (container units), so the
+ * phones, the notification and the labels scale together:
+ *
+ *   sm and up    four phones in a row, overlapping a little. The selected
+ *                one scales up and comes forward; the others dim, shrink
+ *                and sit back
+ *   below sm     one phone at a time, its neighbours peeking at the sides;
+ *                swipe or tap the dots (the labels, as dots)
+ *
+ * Motion, inside the no-preference query, on the hero's timings:
+ *   --mph-fan-at      the phones fan out of a tilted stack in the centre
+ *   --mph-labels-at   the labels rise under them, 80ms apart
+ *   data-ready        (set by the component at 2.3s) selection takes over
+ *   .mph-progress     the selected label's bar fills over 4s, then the next
+ *                     phone comes forward; paused by hover, focus, the
+ *                     notification, a hero off screen, and data-hold
+ *   .mph-notice       the push notification, once
+ *   .mph-float        a 3px drift per phone, out of step
+ * Outside it: the finished lineup, still, which is what reduced motion and
+ * a browser without JavaScript show.
+ */
+
+@layer components {
+  .mph {
+    --mph-fan-at: calc(var(--hero-visual-at) + 200ms);
+    --mph-labels-at: calc(var(--mph-fan-at) + 700ms);
+    --mph-settled-at: calc(var(--mph-fan-at) + 1300ms);
+    --mph-w: 29cqi;
+    container-type: inline-size;
+    user-select: none;
+  }
+
+  /* ------------------------------------------------------------ Lineup */
+
+  .mph-stage {
+    position: relative;
+    aspect-ratio: 100 / 66;
+  }
+  .mph-slot {
+    position: absolute;
+    top: 3cqi;
+    left: var(--mph-x);
+    width: var(--mph-w);
+    cursor: pointer;
+  }
+  /* Four places in a row; --mph-stack is how many phone widths each is
+     from the centre, and --mph-tilt its angle in the stack. */
+  .mph-slot:nth-child(1) { --mph-x: 0cqi; --mph-stack: 1.224; --mph-tilt: -7deg; }
+  .mph-slot:nth-child(2) { --mph-x: 23.67cqi; --mph-stack: 0.408; --mph-tilt: -2.5deg; }
+  .mph-slot:nth-child(3) { --mph-x: 47.33cqi; --mph-stack: -0.408; --mph-tilt: 2.5deg; }
+  .mph-slot:nth-child(4) { --mph-x: 71cqi; --mph-stack: -1.224; --mph-tilt: 7deg; }
+  .mph-slot[data-rel='-3'] { --rel: -3; }
+  .mph-slot[data-rel='-2'] { --rel: -2; }
+  .mph-slot[data-rel='-1'] { --rel: -1; }
+  .mph-slot[data-rel='0'] { --rel: 0; }
+  .mph-slot[data-rel='1'] { --rel: 1; }
+  .mph-slot[data-rel='2'] { --rel: 2; }
+  .mph-slot[data-rel='3'] { --rel: 3; }
+
+  /* The phone: a black bezel with a light rim, the screenshot inside. */
+  .mph-phone {
+    position: relative;
+    padding: calc(var(--mph-w) * 0.05);
+    border-radius: calc(var(--mph-w) * 0.155);
+    background-color: #050507;
+    box-shadow:
+      inset 0 0 0 max(1.5px, calc(var(--mph-w) * 0.009)) #dfe2e8,
+      0 calc(var(--mph-w) * 0.14) calc(var(--mph-w) * 0.3) calc(var(--mph-w) * -0.06) rgb(0 0 0 / 60%);
+  }
+  .mph-screen {
+    position: relative;
+    overflow: clip;
+    border-radius: calc(var(--mph-w) * 0.105);
+    background-color: #1e1e2e;
+  }
+  .mph-shot {
+    display: block;
+    width: 100%;
+    height: auto;
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+  /* The dim on a phone that sits back. */
+  .mph-screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-brand-navy-deep);
+    opacity: 0;
+  }
+
+  /* Selection: the selected phone comes forward and the rest stack back
+     from it. --mph-sel is 1, or 0 while the phones fan in (the motion
+     block), so the server's markup is right both with and without motion. */
+  .mph {
+    --mph-sel: 1;
+  }
+  .mph-slot[data-rel='0'] { z-index: 4; }
+  .mph-slot:is([data-rel='-1'], [data-rel='1']) { z-index: 3; }
+  .mph-slot:is([data-rel='-2'], [data-rel='2']) { z-index: 2; }
+  .mph-slot:is([data-rel='-3'], [data-rel='3']) { z-index: 1; }
+  .mph-slot[data-on] .mph-phone {
+    scale: calc(1 + 0.06 * var(--mph-sel));
+  }
+  .mph-slot:not([data-on]) .mph-phone {
+    scale: calc(1 - 0.05 * var(--mph-sel));
+    translate: 0 calc(1.6cqi * var(--mph-sel));
+  }
+  .mph-slot:not([data-on]) .mph-screen::after {
+    opacity: calc(0.38 * var(--mph-sel));
+  }
+
+  /* ------------------------------------------------------ Notification */
+
+  .mph-notice {
+    position: absolute;
+    top: calc(var(--mph-w) * 0.19);
+    right: -6%;
+    left: -6%;
+    z-index: 1;
+    padding: 0.7em 0.85em 0.8em;
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: calc(var(--mph-w) * 0.075);
+    background-color: rgb(30 32 48 / 88%);
+    box-shadow: 0 0.9em 2.2em rgb(0 0 0 / 50%);
+    backdrop-filter: blur(14px);
+    color: var(--color-text-on-dark);
+    font-size: clamp(9px, calc(var(--mph-w) * 0.062), 12.5px);
+    line-height: 1.3;
+    pointer-events: none;
+  }
+  .mph-notice-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    font-size: 0.82em;
+    color: rgb(255 255 255 / 62%);
+  }
+  .mph-notice-icon {
+    display: grid;
+    place-items: center;
+    width: 1.7em;
+    height: 1.7em;
+    border-radius: 0.42em;
+    background-color: var(--color-brand-navy);
+    box-shadow: inset 0 0 0 1px rgb(230 186 45 / 35%);
+  }
+  .mph-notice-icon svg {
+    width: 0.8em;
+    height: 1.05em;
+    fill: var(--color-viz-gold);
+  }
+  .mph-notice-app {
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 88%);
+  }
+  .mph-notice-time {
+    margin-left: auto;
+  }
+  .mph-notice-body {
+    display: block;
+    margin-top: 0.4em;
+    font-weight: 600;
+    text-wrap: pretty;
+  }
+  .mph-notice-bolt {
+    display: inline-block;
+    width: 0.7em;
+    height: 0.92em;
+    margin-right: 0.3em;
+    vertical-align: -0.08em;
+    fill: var(--color-viz-gold);
+  }
+
+  /* ------------------------------------------------------------ Labels */
+
+  .mph-caption {
+    display: none;
+  }
+  /* The labels sit under their phones: 2.67cqi in, four equal cells. */
+  .mph-tabs {
+    display: flex;
+    padding-inline: 2.67cqi;
+  }
+  .mph-tab {
+    position: relative;
+    display: flex;
+    flex: 1 1 0;
+    justify-content: center;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 4px 14px;
+    border-radius: 6px;
+    color: var(--color-text-on-dark-muted);
+    font-size: clamp(12px, 2.3cqi, 15px);
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: center;
+    cursor: pointer;
+  }
+  .mph-tab[aria-selected='true'] {
+    color: var(--color-text-on-dark);
+  }
+  .mph-tab:focus-visible {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: 2px;
+  }
+  /* The track, and the selected label's bar over it: full at rest,
+     filling while the lineup cycles. */
+  .mph-tab::before,
+  .mph-progress {
+    position: absolute;
+    right: 18%;
+    bottom: 4px;
+    left: 18%;
+    height: 2px;
+    border-radius: 1px;
+  }
+  .mph-tab::before {
+    content: '';
+    background-color: rgb(255 255 255 / 12%);
+  }
+  .mph-progress {
+    background-color: var(--color-viz-gold);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+  .mph-tab[aria-selected='true'] .mph-progress {
+    transform: none;
+  }
+
+  /* ------------------------------------------------ One phone at a time */
+
+  @media (width < 640px) {
+    .mph {
+      --mph-w: 58cqi;
+    }
+    .mph-stage {
+      aspect-ratio: 100 / 124;
+      touch-action: pan-y;
+    }
+    /* Each phone sits 64cqi from the next, so the stack it fans out of is
+       its own offset back to the centre. The selected phone is on top from
+       the start. */
+    .mph-slot {
+      --mph-from: calc(var(--rel, 0) * -64cqi);
+      top: 2.5cqi;
+      left: 21cqi;
+      translate: calc(var(--rel, 0) * 64cqi + var(--mph-drag, 0px)) 0;
+    }
+    .mph-slot[data-rel='0'] {
+      z-index: 4;
+    }
+    .mph-slot:not([data-rel='-1'], [data-rel='0'], [data-rel='1']) {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .mph-slot[data-on] .mph-phone {
+      scale: 1;
+    }
+    .mph-slot:not([data-on]) .mph-phone {
+      scale: calc(1 - 0.1 * var(--mph-sel));
+      translate: none;
+    }
+
+    .mph-caption {
+      display: block;
+      margin-top: 4px;
+      color: var(--color-text-on-dark);
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 20px;
+      text-align: center;
+    }
+    /* The labels become dots; each keeps its name for screen readers. */
+    .mph-tabs {
+      justify-content: center;
+      padding-inline: 0;
+    }
+    .mph-tab {
+      flex: none;
+      width: 36px;
+      padding: 0;
+    }
+    .mph-tab-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .mph-tab::before,
+    .mph-progress {
+      top: 50%;
+      right: auto;
+      bottom: auto;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      margin: -4px 0 0 -4px;
+      border-radius: 4px;
+    }
+    .mph-tab::before {
+      background-color: rgb(255 255 255 / 30%);
+    }
+    .mph-tab[aria-selected='true']::before,
+    .mph-tab[aria-selected='true'] .mph-progress {
+      width: 24px;
+      margin-left: -12px;
+    }
+  }
+
+  /* ------------------------------------------------------------ Motion */
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Until the component says the phones have settled: no selection, and
+       no bar. */
+    .mph:not([data-ready]) {
+      --mph-sel: 0;
+    }
+    .mph:not([data-ready]) .mph-progress {
+      transform: scaleX(0);
+    }
+
+    /* Intro: out of the stack, then the tilt settles a beat after. */
+    .mph-slot {
+      animation:
+        mph-fan 1.1s var(--hero-ease) var(--mph-fan-at) backwards,
+        mph-tilt 1.3s ease-out var(--mph-fan-at) backwards;
+    }
+    .mph-tab {
+      animation: hero-lift 0.5s var(--hero-ease) calc(var(--mph-labels-at) + var(--t, 0) * 80ms) backwards;
+    }
+    .mph-tab:nth-child(2) { --t: 1; }
+    .mph-tab:nth-child(3) { --t: 2; }
+    .mph-tab:nth-child(4) { --t: 3; }
+
+    /* Selection. */
+    .mph-phone {
+      transition:
+        scale 0.6s var(--hero-ease),
+        translate 0.6s var(--hero-ease);
+    }
+    .mph-screen::after {
+      transition: opacity 0.6s var(--hero-ease);
+    }
+    .mph-tab {
+      transition: color 0.4s var(--hero-ease);
+    }
+
+    /* Float: 3px, a different period per phone, from once they settle. */
+    .mph-float {
+      animation: mph-float var(--mph-float, 6s) ease-in-out calc(var(--mph-settled-at) + var(--mph-float-at, 0s))
+        infinite;
+    }
+    .mph-slot:nth-child(1) .mph-float { --mph-float: 5.6s; }
+    .mph-slot:nth-child(2) .mph-float { --mph-float: 6.4s; --mph-float-at: 0.8s; }
+    .mph-slot:nth-child(3) .mph-float { --mph-float: 5.2s; --mph-float-at: 0.3s; }
+    .mph-slot:nth-child(4) .mph-float { --mph-float: 6s; --mph-float-at: 1.1s; }
+    .hero-fx[data-offscreen] .mph-float {
+      animation-play-state: paused;
+    }
+
+    /* Cycle: the bar fills, then the component moves on. Longhands, so the
+       pauses below are not reset by the shorthand. */
+    .mph[data-ready] .mph-tab[aria-selected='true'] .mph-progress {
+      animation-name: mph-progress;
+      animation-duration: 4s;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+    }
+    .mph[data-hold] .mph-tab[aria-selected='true'] .mph-progress {
+      animation-name: none;
+    }
+    .mph[data-notify] .mph-progress,
+    .mph:has(:focus-visible) .mph-progress,
+    .hero-fx[data-offscreen] .mph-progress {
+      animation-play-state: paused;
+    }
+    @media (hover: hover) {
+      .mph:hover .mph-progress {
+        animation-play-state: paused;
+      }
+    }
+
+    /* The notification drops on, holds 3s, and goes back up. */
+    .mph-notice {
+      animation: mph-notice 3.9s linear both;
+    }
+
+    @media (width < 640px) {
+      .mph-slot {
+        transition:
+          translate 0.55s var(--hero-ease),
+          opacity 0.4s var(--hero-ease);
+      }
+      .mph[data-dragging] .mph-slot {
+        transition: none;
+      }
+      .mph-tab::before,
+      .mph-progress {
+        transition:
+          width 0.35s var(--hero-ease),
+          margin 0.35s var(--hero-ease);
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mph-notice {
+      display: none;
+    }
+  }
+}
+
+@keyframes mph-fan {
+  from {
+    transform: translateX(var(--mph-from, calc(var(--mph-stack) * 100%)));
+  }
+}
+@keyframes mph-tilt {
+  from {
+    rotate: var(--mph-tilt);
+  }
+  65% {
+    rotate: calc(var(--mph-tilt) * -0.12);
+  }
+  to {
+    rotate: 0deg;
+  }
+}
+@keyframes mph-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -3px;
+  }
+}
+@keyframes mph-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes mph-notice {
+  0% {
+    opacity: 0.01;
+    translate: 0 -55%;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  13% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  88% {
+    opacity: 1;
+    translate: 0 0;
+    animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0);
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -45%;
+  }
+}

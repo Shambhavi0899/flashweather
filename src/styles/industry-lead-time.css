@@ -1,0 +1,251 @@
+/*
+ * Roofing "Three ways hail costs a roofer, and what a 55-minute warning
+ * changes" (components/industries/lead-time-cards.tsx, and the card parts
+ * PhotoTile draws for a card with a `problem`).
+ *
+ * A "Warning lead time" slider over the three cards. A card is turned over
+ * (`data-on`, set by the script) once the slider reaches its `flipAt`: red
+ * problem label out, photo title in with a green check, photo from dimmed to
+ * full. Everything is written so the markup is the finished state; only under
+ * `data-armed` (JavaScript, motion welcome) does a card that is not turned
+ * over show its problem. The track fills along a red → amber → green ramp up
+ * to --ilt-fill. The section keeps hard edges: no fades in or out.
+ */
+@layer components {
+  .ilt {
+    --ilt-thumb: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    margin-top: 40px;
+  }
+
+  /* ------------------------------------------------------------ Slider */
+  .ilt-control {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 720px;
+  }
+  .ilt-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .ilt-label {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .ilt-value {
+    font-size: 28px;
+    line-height: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+  }
+  .ilt-slider {
+    position: relative;
+    padding-bottom: 38px;
+  }
+  .ilt-input {
+    display: block;
+    width: 100%;
+    height: 28px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    appearance: none;
+  }
+  .ilt-input::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background:
+      linear-gradient(to right, transparent var(--ilt-fill, 100%), var(--color-neutral-200) var(--ilt-fill, 100%)),
+      linear-gradient(to right, var(--color-alert-warning), var(--color-alert-watch) 45%, var(--color-alert-clear));
+  }
+  .ilt-input::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background:
+      linear-gradient(to right, transparent var(--ilt-fill, 100%), var(--color-neutral-200) var(--ilt-fill, 100%)),
+      linear-gradient(to right, var(--color-alert-warning), var(--color-alert-watch) 45%, var(--color-alert-clear));
+  }
+  .ilt-input::-webkit-slider-thumb {
+    width: var(--ilt-thumb);
+    height: var(--ilt-thumb);
+    margin-top: calc((6px - var(--ilt-thumb)) / 2);
+    border: 2px solid var(--color-brand-navy);
+    border-radius: 50%;
+    background: var(--color-neutral-0);
+    box-shadow: 0 2px 8px #0b132240;
+    appearance: none;
+  }
+  .ilt-input::-moz-range-thumb {
+    width: var(--ilt-thumb);
+    height: var(--ilt-thumb);
+    border: 2px solid var(--color-brand-navy);
+    border-radius: 50%;
+    background: var(--color-neutral-0);
+    box-shadow: 0 2px 8px #0b132240;
+  }
+  .ilt-input:focus-visible {
+    outline: none;
+  }
+  .ilt-input:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--color-alert-info);
+    outline-offset: 2px;
+  }
+  .ilt-input:focus-visible::-moz-range-thumb {
+    outline: 2px solid var(--color-alert-info);
+    outline-offset: 2px;
+  }
+
+  /* Ticks under the track, each centred on the thumb's position at its minute. */
+  .ilt-marks {
+    position: absolute;
+    inset: 32px 0 0;
+  }
+  .ilt-mark {
+    position: absolute;
+    top: 0;
+    left: calc(var(--ilt-thumb) / 2 + (100% - var(--ilt-thumb)) * var(--at, 0));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translateX(-50%);
+    font-size: 11px;
+    line-height: 14px;
+    white-space: nowrap;
+    color: var(--color-text-subtle);
+  }
+  .ilt-mark::before {
+    content: '';
+    width: 1px;
+    height: 6px;
+    margin-bottom: 3px;
+    background: var(--color-border-strong);
+  }
+  .ilt-mark-end::before {
+    display: none;
+  }
+  .ilt-mark-end[data-at='0'] {
+    align-items: flex-start;
+    transform: none;
+    left: 0;
+  }
+  .ilt-mark-end:not([data-at='0']) {
+    align-items: flex-end;
+    transform: none;
+    left: auto;
+    right: 0;
+  }
+  .ilt-mark-min {
+    font-weight: 700;
+    color: var(--color-text-muted);
+  }
+  .ilt-mark-label {
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    transition: color 0.3s var(--motion-ease);
+  }
+  .ilt-mark[data-on] .ilt-mark-label {
+    color: var(--color-alert-clear);
+  }
+  /* Where a flip point sits along the 0–55 min track. */
+  .ilt-mark[data-at='5'] { --at: calc(5 / 55); }
+  .ilt-mark[data-at='10'] { --at: calc(10 / 55); }
+  .ilt-mark[data-at='15'] { --at: calc(15 / 55); }
+  .ilt-mark[data-at='20'] { --at: calc(20 / 55); }
+  .ilt-mark[data-at='25'] { --at: calc(25 / 55); }
+  .ilt-mark[data-at='30'] { --at: calc(30 / 55); }
+  .ilt-mark[data-at='35'] { --at: calc(35 / 55); }
+  .ilt-mark[data-at='40'] { --at: calc(40 / 55); }
+  .ilt-mark[data-at='45'] { --at: calc(45 / 55); }
+  .ilt-mark[data-at='50'] { --at: calc(50 / 55); }
+
+  /* ------------------------------------------------------------ Cards */
+  /* The photo title a card earns: a green check before it. */
+  .ilt-solved {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    transition: opacity 0.4s var(--motion-ease);
+  }
+  .ilt-check {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .ilt-check circle {
+    fill: var(--color-alert-clear);
+  }
+  .ilt-check path {
+    fill: none;
+    stroke: var(--color-neutral-0);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  /* The problem before the warning: a red label where the title will be. */
+  .ilt-problem {
+    position: absolute;
+    bottom: 12px;
+    left: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 30px;
+    padding: 0 12px;
+    border-radius: 15px;
+    background: var(--color-alert-warning);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-neutral-0);
+    opacity: 0;
+    transition: opacity 0.4s var(--motion-ease);
+  }
+  .ilt-problem::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 2px;
+    background: var(--color-neutral-0);
+  }
+  .ilt-photo img {
+    transition: filter 0.5s var(--motion-ease);
+  }
+  .ilt[data-armed] [data-flip-at]:not([data-on]) .ilt-problem {
+    opacity: 1;
+  }
+  .ilt[data-armed] [data-flip-at]:not([data-on]) .ilt-solved {
+    opacity: 0;
+  }
+  .ilt[data-armed] [data-flip-at]:not([data-on]) .ilt-photo img {
+    filter: brightness(0.55) saturate(0.8);
+  }
+
+  @media (width >= 640px) {
+    .ilt-problem {
+      bottom: 16px;
+      left: 18px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ilt * {
+      transition: none !important;
+    }
+  }
+}

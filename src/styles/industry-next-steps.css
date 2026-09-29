@@ -1,0 +1,199 @@
+/*
+ * Industry "Where to go next" as three intent cards (components/industries/
+ * next-steps.tsx): Learn, Prove, Act. Act is the primary card: navy with a
+ * metallic gold border and the Book a demo button. On phones the cards stack
+ * with Act first; from 1024px they sit in one row, Learn → Prove → Act, which
+ * is also the DOM (and keyboard) order.
+ *
+ * Each card fades up once when it scrolls in (Motion on the <li>, animation on
+ * the card inside it so Motion's idle pause holds it). Link rows take a soft
+ * highlight on hover and keyboard focus, and their arrow slides. With reduced
+ * motion nothing moves: no fade, no slide; the highlight still shows.
+ */
+
+@layer components {
+  .ns {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 32px;
+  }
+  .ns-item {
+    display: flex;
+  }
+  .ns-item-act {
+    order: -1;
+  }
+  @media (width >= 1024px) {
+    .ns {
+      flex-direction: row;
+      gap: 24px;
+    }
+    .ns-item {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .ns-item-act {
+      order: 0;
+    }
+  }
+
+  /* ---------- Card ---------- */
+
+  .ns-card {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 20px;
+    padding: 28px 28px 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-neutral-0);
+  }
+  /* The primary card: a 2px metallic gold ring around a navy face. */
+  .ns-card-act {
+    border: 2px solid transparent;
+    background:
+      linear-gradient(var(--color-brand-navy), var(--color-brand-navy)) padding-box,
+      linear-gradient(
+          in oklab 160deg,
+          var(--color-gold-metallic-base) 0%,
+          var(--color-gold-metallic-highlight) 28%,
+          var(--color-gold-100) 40%,
+          var(--color-gold-metallic-mid) 58%,
+          var(--color-gold-metallic-shade) 72%,
+          var(--color-gold-metallic-glint) 88%,
+          var(--color-gold-metallic-edge) 100%
+        )
+        border-box;
+  }
+
+  .ns-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ns-label {
+    font-size: var(--text-h3);
+    line-height: var(--leading-h3);
+    font-weight: 700;
+    letter-spacing: var(--tracking-heading);
+    color: var(--color-text);
+  }
+  .ns-line {
+    font-size: var(--text-body-s);
+    line-height: var(--leading-body-s);
+    color: var(--color-text-muted);
+  }
+  .ns-card-act .ns-label {
+    color: var(--color-text-on-dark);
+  }
+  .ns-card-act .ns-line {
+    color: var(--color-text-on-dark-muted);
+  }
+
+  .ns-demo {
+    align-self: flex-start;
+  }
+
+  /* ---------- Link rows ---------- */
+
+  .ns-links {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-inline: -12px;
+  }
+  .ns-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    transition: background-color 180ms ease;
+  }
+  .ns-row-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .ns-row-title {
+    font-size: var(--text-body);
+    line-height: 24px;
+    font-weight: 600;
+    color: var(--color-text);
+    transition: color 180ms ease;
+  }
+  .ns-row-text {
+    font-size: var(--text-body-s);
+    line-height: 20px;
+    color: var(--color-text-muted);
+  }
+  /* Fixed slot so the arrows form one lane down the card. */
+  .ns-arrow {
+    display: flex;
+    flex-shrink: 0;
+    justify-content: center;
+    width: 20px;
+    font-size: var(--text-body);
+    line-height: 24px;
+    font-weight: 600;
+    color: var(--color-text-subtle);
+    transition:
+      transform 220ms var(--motion-ease),
+      color 180ms ease;
+  }
+  .ns-card-act .ns-row-title {
+    color: var(--color-text-on-dark);
+  }
+  .ns-card-act .ns-row-text,
+  .ns-card-act .ns-arrow {
+    color: var(--color-text-on-dark-muted);
+  }
+
+  .ns-row:is(:hover, :focus-visible) {
+    background-color: color-mix(in oklab, var(--color-brand-blue) 6%, transparent);
+  }
+  .ns-row:is(:hover, :focus-visible) :is(.ns-row-title, .ns-arrow) {
+    color: var(--color-brand-blue);
+  }
+  .ns-row:is(:hover, :focus-visible) .ns-arrow {
+    transform: translateX(4px);
+  }
+  .ns-card-act .ns-row:is(:hover, :focus-visible) {
+    background-color: color-mix(in oklab, var(--color-neutral-0) 8%, transparent);
+  }
+  .ns-card-act .ns-row:is(:hover, :focus-visible) :is(.ns-row-title, .ns-arrow) {
+    color: var(--color-text-on-dark);
+  }
+  /* The global ring is a mid blue; on navy it needs the light one. */
+  .ns-card-act :focus-visible {
+    outline-color: #8fb7ff;
+  }
+
+  /* ---------- Scroll-in: each card fades up once ---------- */
+
+  .motion.ns-item[data-anim]:not([data-anim='reset']) .ns-card {
+    animation: ns-rise 640ms var(--motion-ease) var(--motion-delay) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ns-row,
+    .ns-row-title,
+    .ns-arrow {
+      transition: none;
+    }
+    .ns-row:is(:hover, :focus-visible) .ns-arrow {
+      transform: none;
+    }
+  }
+}
+
+@keyframes ns-rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}

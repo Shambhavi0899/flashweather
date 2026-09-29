@@ -1,0 +1,247 @@
+/*
+ * heat-audiences — "Who plans with the WBGT outlook?" on the Heat and WBGT
+ * page (components/products/heat/audiences.tsx).
+ *
+ * The photo is a stage for the four audiences under it. The one shown
+ * (`data-on`) has a gold bar over its column, its photo on the stage and its
+ * heat chip on the photo; the others' photos wait underneath at 0 opacity,
+ * so a swap is a crossfade.
+ *
+ * From 1024px the audiences are four columns in a row, divided by
+ * hairlines, under one rule; below, they are a swipeable row of cards.
+ *
+ * The finished frame is the base: first audience shown, everything in
+ * place. The motion (no-preference only, on the shared .motion block):
+ *   reveal  the photo focuses in (blur and a 1.04 scale settle), then the
+ *           columns rise left to right
+ *   cycle   the shown column's `.hau-clock` runs 5s and the component moves
+ *           on when it ends. It is a `.motion-loop`, so it holds while the
+ *           block is off screen, and it holds while hovered, while a key
+ *           has focus inside, and once a finger has swiped the row
+ *           (data-hold).
+ */
+@layer components {
+  .hau {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    @media (width >= 1024px) {
+      gap: 48px;
+    }
+  }
+
+  /* ------------------------------------------------------------ Stage */
+
+  .hau-stage {
+    position: relative;
+    isolation: isolate;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 20px;
+    background-color: var(--color-brand-navy);
+    @media (width >= 768px) {
+      aspect-ratio: auto;
+      height: 420px;
+    }
+  }
+  .hau-shot {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.6s var(--motion-ease);
+  }
+  .hau-shot[data-on] {
+    z-index: 1;
+    opacity: 1;
+  }
+
+  /* The heat chip: a reading pinned on the photo. */
+  .hau-chip {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100% - 32px);
+    padding: 8px 14px 8px 12px;
+    border: 1px solid rgb(255 255 255 / 16%);
+    border-radius: var(--radius-pill);
+    background-color: rgb(7 13 38 / 80%);
+    backdrop-filter: blur(8px);
+    color: var(--color-text-on-dark);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    transition:
+      opacity 0.45s var(--motion-ease) 0.15s,
+      translate 0.45s var(--motion-ease) 0.15s;
+    @media (width >= 768px) {
+      bottom: 24px;
+      left: 24px;
+      font-size: 14px;
+      line-height: 18px;
+    }
+  }
+  .hau-shot:not([data-on]) .hau-chip {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  .hau-chip-dot {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background-color: var(--color-alert-watch);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-alert-watch) 30%, transparent);
+  }
+
+  /* ------------------------------------------------------------ Audiences */
+
+  .hau-list {
+    display: flex;
+    gap: 16px;
+    margin-inline: -16px;
+    padding: 4px 16px 8px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px;
+    scrollbar-width: none;
+    @media (width >= 1024px) {
+      gap: 0;
+      margin-inline: 0;
+      padding: 0;
+      overflow: visible;
+    }
+  }
+  .hau-list::-webkit-scrollbar {
+    display: none;
+  }
+  .hau-col {
+    position: relative;
+    display: flex;
+    flex: 0 0 82%;
+    flex-direction: column;
+    gap: 14px;
+    padding: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-neutral-0);
+    scroll-snap-align: center;
+    cursor: pointer;
+    @media (width >= 640px) {
+      flex-basis: 46%;
+    }
+    @media (width >= 1024px) {
+      flex: 1 1 0;
+      padding: 40px 40px 0;
+      border-width: 1px 0 0;
+      border-radius: 0;
+      background-color: transparent;
+    }
+  }
+  @media (width >= 1024px) {
+    .hau-col:first-child {
+      padding-left: 0;
+    }
+    .hau-col:last-child {
+      padding-right: 0;
+    }
+    .hau-col + .hau-col {
+      border-left-width: 1px;
+    }
+  }
+  /* The gold bar over the shown audience (bg-gold-metallic): over the
+     card's top edge below 1024px, over its stretch of the rule from 1024px. */
+  .hau-bar {
+    position: absolute;
+    top: -1px;
+    right: 0;
+    left: 0;
+    height: 3px;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 0.45s var(--motion-ease);
+    @media (width < 1024px) {
+      right: 20px;
+      left: 20px;
+      border-radius: 0 0 3px 3px;
+    }
+  }
+  .hau-col[data-on] .hau-bar {
+    transform: none;
+  }
+  .hau-col[data-on] {
+    @media (width < 1024px) {
+      border-color: var(--color-border-strong);
+    }
+  }
+  .hau-pick {
+    text-align: left;
+    cursor: pointer;
+  }
+  .hau-pick:focus-visible {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+  .hau-clock {
+    position: absolute;
+    width: 0;
+    height: 0;
+    visibility: hidden;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Reveal: the photo focuses in, then the columns rise left to right. */
+    .hau[data-anim]:not([data-anim='reset']) .hau-stage {
+      animation: hau-focus 1.1s var(--motion-ease) var(--motion-delay) both;
+    }
+    .hau[data-anim]:not([data-anim='reset']) .hau-col {
+      animation: motion-rise 0.7s var(--motion-ease) calc(var(--motion-delay) + 500ms + var(--i, 0) * 120ms) both;
+    }
+    .hau-col:nth-child(2) {
+      --i: 1;
+    }
+    .hau-col:nth-child(3) {
+      --i: 2;
+    }
+    .hau-col:nth-child(4) {
+      --i: 3;
+    }
+
+    /* Cycle: longhands, so the pause below is not reset by a shorthand. */
+    .hau[data-inview] .hau-col[data-on] .hau-clock {
+      animation-name: hau-clock;
+      animation-duration: 5s;
+      animation-timing-function: linear;
+    }
+    .hau:is(:hover, :has(:focus-visible), [data-hold]) .hau-clock {
+      animation-play-state: paused;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hau-shot,
+    .hau-chip,
+    .hau-bar {
+      transition: none;
+    }
+  }
+}
+
+@keyframes hau-focus {
+  from {
+    opacity: 0.01;
+    filter: blur(14px);
+    scale: 1.04;
+  }
+}
+/* Nothing to draw: the clock only times the cycle. */
+@keyframes hau-clock {
+  from {
+    visibility: hidden;
+  }
+  to {
+    visibility: hidden;
+  }
+}

@@ -1,0 +1,93 @@
+/*
+ * The Flash API page's "What are the rate limits and SLAs?" details
+ * (components/products/api/rate-limit-icons.tsx, RateLimits in
+ * reference-sections.tsx). Each column is a <Motion> that plays once; the
+ * banner caption is its own. The markup is the final frame, so with no JS or
+ * reduced motion nothing moves (the .motion rules in globals.css).
+ */
+@layer components {
+  /* Rate limits: the needle swings in from the left, overshoots and settles mid-range. */
+  .rl-needle {
+    transform-box: view-box;
+    transform-origin: 24px 26px;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .rl-needle {
+    animation: rl-needle 1.4s var(--motion-ease) calc(var(--motion-delay) + 150ms) both;
+  }
+
+  /* Uptime and support: the pill rises in, then its dot pings three times and rests. */
+  .rl-ping {
+    opacity: 0;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .rl-status {
+    animation: rl-rise 0.5s var(--motion-ease) calc(var(--motion-delay) + 150ms) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .rl-ping {
+    animation: motion-ping 1.2s ease-out calc(var(--motion-delay) + 550ms) 3 both;
+  }
+
+  /* Webhook delivery: the arrow turns once, then three attempts, each waiting
+     twice as long as the last (0.4s, 0.8s, 1.6s after the turn). */
+  .rl-arrow {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .rl-dot {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .rl-arrow {
+    animation: rl-turn 0.8s var(--motion-ease) calc(var(--motion-delay) + 150ms) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .rl-dot {
+    animation: motion-pop-in 0.45s var(--motion-ease) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .rl-dot-1 {
+    animation-delay: calc(var(--motion-delay) + 950ms);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .rl-dot-2 {
+    animation-delay: calc(var(--motion-delay) + 1350ms);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .rl-dot-3 {
+    animation-delay: calc(var(--motion-delay) + 2150ms);
+  }
+
+  /* The photo banner's caption fades up once. It is the <Motion> itself, so
+     the idle hold that pauses a block's children is repeated for it here
+     (!important, as in globals.css: the shorthand above is more specific). */
+  .motion.rl-caption[data-anim]:not([data-anim='reset']) {
+    animation: rl-rise 0.8s var(--motion-ease) var(--motion-delay) both;
+  }
+  .motion.rl-caption[data-anim='idle'] {
+    animation-play-state: paused !important;
+  }
+}
+
+@keyframes rl-needle {
+  0% {
+    transform: rotate(-80deg);
+  }
+  55% {
+    transform: rotate(16deg);
+  }
+  75% {
+    transform: rotate(-7deg);
+  }
+  90% {
+    transform: rotate(2deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+@keyframes rl-turn {
+  from {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes rl-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}

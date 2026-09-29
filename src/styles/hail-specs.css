@@ -1,0 +1,339 @@
+/*
+ * Hail "What exactly does FlashHail deliver?"
+ * (components/products/hail/spec-grid.tsx, spec-list.tsx, spec-stone.tsx,
+ * agent-ask-bar.tsx).
+ *
+ * The markup is the finished frame: every ring drawn, every row shown, no
+ * shimmer. The shared <Motion> sets data-anim on .hs-body as it scrolls in,
+ * and only then do the rings draw from the core out, --k (1 → 8) steps
+ * apart, each row rising beside its ring. Reduced motion never sets it (and
+ * globals.css stops every .motion animation), so it stays on the finished
+ * frame. The shimmer is a .motion-loop: paused while off screen.
+ *
+ * Highlight: data-active on a row and on its ring (and the ring's number),
+ * from pointing at either, or a tap on a touch screen.
+ */
+@layer components {
+  .hs-k1 { --k: 1; }
+  .hs-k2 { --k: 2; }
+  .hs-k3 { --k: 3; }
+  .hs-k4 { --k: 4; }
+  .hs-k5 { --k: 5; }
+  .hs-k6 { --k: 6; }
+  .hs-k7 { --k: 7; }
+  .hs-k8 { --k: 8; }
+
+  .hs-body {
+    --hs-step: 160ms;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ------------------------------------------------------------ Stone */
+  /* Phones: a band that rides under the header while the list scrolls, so a
+     tapped row's ring is in view. The header is compact by the time it sticks. */
+  .hs-figure {
+    position: sticky;
+    z-index: 2;
+    top: var(--site-header-h-compact);
+    display: flex;
+    justify-content: center;
+    padding-block: 8px 12px;
+    background-color: var(--color-neutral-0);
+  }
+  .hs-card {
+    display: flex;
+    width: 200px;
+    aspect-ratio: 1;
+    padding: 14px;
+    border-radius: 20px;
+    background-color: var(--color-brand-navy-deep);
+  }
+  .hs-stone {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .hs-ring {
+    transition:
+      fill 0.25s var(--motion-ease),
+      stroke 0.25s var(--motion-ease);
+  }
+  /* Hail grows in milky (air-filled) and clear layers, alternately. */
+  .hs-ring[data-tone='milky'] {
+    fill: color-mix(in srgb, #d5e2f4 34%, transparent);
+  }
+  .hs-ring[data-tone='clear'] {
+    fill: color-mix(in srgb, #6e8ab4 22%, transparent);
+  }
+  .hs-ring[data-active] {
+    fill: color-mix(in srgb, var(--color-viz-gold) 24%, transparent);
+    stroke: var(--color-viz-gold);
+    stroke-width: 2;
+  }
+  .hs-edge {
+    stroke: color-mix(in srgb, var(--color-neutral-0) 34%, transparent);
+    stroke-width: 1;
+    stroke-dasharray: 1;
+    pointer-events: none;
+  }
+  .hs-edge.hs-k8 {
+    stroke: color-mix(in srgb, var(--color-neutral-0) 62%, transparent);
+    stroke-width: 1.6;
+  }
+  .hs-core,
+  .hs-shade,
+  .hs-glint,
+  .hs-shimmer,
+  .hs-number {
+    pointer-events: none;
+  }
+  .hs-core {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .hs-bubble {
+    fill: color-mix(in srgb, var(--color-neutral-0) 60%, transparent);
+  }
+  /* Numbered only where the stone is big enough to read them (from 1024px). */
+  .hs-number {
+    display: none;
+    fill: color-mix(in srgb, var(--color-neutral-0) 55%, transparent);
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    transition: fill 0.25s var(--motion-ease);
+  }
+  .hs-number[data-active] {
+    fill: var(--color-viz-gold);
+  }
+  /* Parked off the stone; the loop sweeps it across. */
+  .hs-shimmer {
+    transform: translateX(-400px);
+  }
+
+  /* ------------------------------------------------------------ List */
+  .hs-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .hs-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 12px;
+    border-top: 1px solid var(--color-border);
+    transition:
+      background-color 0.25s var(--motion-ease),
+      box-shadow 0.25s var(--motion-ease);
+  }
+  .hs-row:last-child {
+    border-bottom: 1px solid var(--color-border);
+  }
+  .hs-term {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .hs-mark {
+    display: flex;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-pill);
+    box-shadow: inset 0 0 0 1.5px var(--color-border-strong);
+    color: var(--color-text-muted);
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    transition:
+      color 0.25s var(--motion-ease),
+      background-color 0.25s var(--motion-ease),
+      box-shadow 0.25s var(--motion-ease);
+  }
+  .hs-value,
+  .hs-note {
+    padding-left: 40px;
+  }
+  .hs-row[data-active] {
+    background-color: var(--color-surface-sunken);
+    box-shadow: inset 2px 0 0 var(--color-gold-on-light);
+  }
+  .hs-row[data-active] .hs-mark {
+    background-color: color-mix(in srgb, var(--color-gold-on-light) 12%, transparent);
+    box-shadow: inset 0 0 0 1.5px var(--color-gold-on-light);
+    color: var(--color-gold-on-light);
+  }
+
+  /* ------------------------------------------------------------ Draw-in */
+  .motion[data-anim]:not([data-anim='reset']) .hs-core {
+    animation: hs-grow 0.6s var(--motion-ease) var(--motion-delay) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .hs-ring {
+    animation: motion-fade 0.5s var(--motion-ease) calc(var(--motion-delay) + var(--k) * var(--hs-step)) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .hs-edge {
+    animation: motion-draw 0.8s var(--motion-ease) calc(var(--motion-delay) + var(--k) * var(--hs-step)) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .hs-number {
+    animation: motion-fade 0.4s var(--motion-ease) calc(var(--motion-delay) + var(--k) * var(--hs-step) + 200ms) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .hs-row {
+    animation: motion-rise 0.6s var(--motion-ease) calc(var(--motion-delay) + var(--k) * var(--hs-step)) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .hs-shade,
+  .motion[data-anim]:not([data-anim='reset']) .hs-glint {
+    animation: motion-fade 1s ease-out calc(var(--motion-delay) + 1.4s) both;
+  }
+  /* Idle: a faint light crosses the stone every six seconds. */
+  .motion[data-anim]:not([data-anim='reset']) .hs-shimmer {
+    animation: hs-shimmer 6s linear calc(var(--motion-delay) + 2.2s) infinite;
+  }
+
+  /* ------------------------------------------------------------ Flash Agent banner */
+  .hs-agent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 24px;
+    border: 1px solid color-mix(in srgb, var(--color-gold-on-light) 55%, transparent);
+    border-radius: 12px;
+    background-color: color-mix(in srgb, var(--color-gold-on-light) 6%, transparent);
+  }
+  .hs-ask {
+    display: flex;
+    min-height: 52px;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 18px;
+    background-color: var(--color-neutral-0);
+    box-shadow: inset 0 0 0 1px var(--color-border-strong);
+    transition: box-shadow 0.25s var(--motion-ease);
+  }
+  .hs-ask:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--color-gold-on-light),
+      0 8px 20px -14px color-mix(in srgb, var(--color-brand-navy) 40%, transparent);
+  }
+  .hs-ask:focus-visible {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: 2px;
+  }
+  .hs-ask-field {
+    display: flex;
+    min-width: 0;
+    flex-grow: 1;
+    align-items: center;
+    color: var(--color-text);
+    font-size: 15px;
+    line-height: 22px;
+  }
+  .hs-ask-caret {
+    display: none;
+    width: 2px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-left: 2px;
+    background-color: var(--color-brand-blue);
+  }
+  .hs-ask[data-typing] .hs-ask-caret {
+    display: block;
+    animation: hs-caret 1s steps(1) infinite;
+  }
+
+  /* ------------------------------------------------------------ Layout */
+  @media (width >= 640px) {
+    .hs-card {
+      width: 240px;
+    }
+    .hs-ask {
+      border-radius: var(--radius-pill);
+      padding-left: 8px;
+    }
+    .hs-ask-field {
+      overflow: hidden;
+      white-space: nowrap;
+    }
+  }
+
+  @media (width >= 1024px) {
+    .hs-body {
+      flex-direction: row;
+      align-items: center;
+      gap: 56px;
+    }
+    .hs-figure {
+      position: static;
+      flex: 0 0 40%;
+      padding: 0;
+      background-color: transparent;
+    }
+    .hs-number {
+      display: inline;
+    }
+    .hs-card {
+      width: 100%;
+      max-width: 500px;
+      padding: 32px;
+      border-radius: 24px;
+    }
+    .hs-list {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .hs-row {
+      padding-inline: 16px;
+    }
+  }
+
+  /* Wide: label · value · description on one line. */
+  @media (width >= 1280px) {
+    .hs-row {
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+    }
+    .hs-term {
+      width: 168px;
+      flex-shrink: 0;
+    }
+    .hs-value {
+      width: 218px;
+      flex-shrink: 0;
+      padding-left: 0;
+    }
+    .hs-note {
+      min-width: 0;
+      flex: 1 1 0;
+      padding-left: 0;
+    }
+  }
+}
+
+@keyframes hs-grow {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+@keyframes hs-shimmer {
+  from {
+    transform: translateX(-400px);
+  }
+  28%,
+  to {
+    transform: translateX(400px);
+  }
+}
+@keyframes hs-caret {
+  50% {
+    opacity: 0;
+  }
+}

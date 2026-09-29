@@ -1,0 +1,1827 @@
+/*
+ * products — global styles for this area of the site.
+ *
+ * Components use these class names; no component carries inline style={...}.
+ * Classes sit in @layer components so a Tailwind utility on the same element
+ * still wins.
+ */
+
+@layer components {
+  /* ---------------------------------------------------------------- Hero grades */
+
+  /* Left-weighted navy grade over a hero photo (lightning, hail, API, product pages). */
+  .products-hero-grade {
+    background-image: linear-gradient(
+      in oklab 90deg,
+      oklab(17.1% -0.0005 -0.052 / 97%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 88%) 46%,
+      oklab(17.1% -0.0005 -0.052 / 42%) 100%
+    );
+  }
+
+  /* The /products/ platform hero: a deeper, slightly angled grade. */
+  .products-platform-hero-grade {
+    background-image: linear-gradient(
+      in oklab 105deg,
+      oklab(14% -0.002 -0.036 / 93%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 74%) 46%,
+      oklab(17.1% -0.0005 -0.052 / 34%) 100%
+    );
+  }
+
+  /* --------------------------------------------------------------- Photo grades */
+  /* Bottom-weighted navy grades over card and figure photos, named <from>-<to> opacity. */
+
+  .products-photo-grade-15-82 {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 15%) 40%,
+      oklab(17.1% -0.0005 -0.052 / 82%) 100%
+    );
+  }
+
+  .products-photo-grade-15-88 {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 15%) 40%,
+      oklab(17.1% -0.0005 -0.052 / 88%) 100%
+    );
+  }
+
+  .products-photo-grade-38-90 {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 38%) 40%,
+      oklab(17.1% -0.0005 -0.052 / 90%) 100%
+    );
+  }
+
+  /* Deep-navy variants (brand-navy-deep base). */
+  .products-photo-grade-deep-30-92 {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(14% -0.002 -0.036 / 30%) 40%,
+      oklab(14% -0.002 -0.036 / 92%) 100%
+    );
+  }
+
+  .products-photo-grade-deep-35-92 {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(14% -0.002 -0.036 / 35%) 40%,
+      oklab(14% -0.002 -0.036 / 92%) 100%
+    );
+  }
+
+  .products-photo-grade-deep-40-92 {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(14% -0.002 -0.036 / 40%) 40%,
+      oklab(14% -0.002 -0.036 / 92%) 100%
+    );
+  }
+
+  /* Top and bottom darkened: the hail-on-the-ground figure under the size-class table. */
+  .products-photo-grade-hail-ground {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 52%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 22%) 45%,
+      oklab(17.1% -0.0005 -0.052 / 90%) 100%
+    );
+  }
+
+  /* ----------------------------------------------------- Platform hero render */
+  /* Labels positioned in percentages of the render's 640×572 frame. */
+
+  .products-platform-label-agent {
+    left: calc(235 / 640 * 100%);
+    top: calc(172 / 572 * 100%);
+  }
+
+  .products-platform-label-command-center {
+    left: calc(105 / 640 * 100%);
+    top: calc(274 / 572 * 100%);
+  }
+
+  .products-platform-label-mobile-app {
+    left: calc(226 / 640 * 100%);
+    top: calc(323 / 572 * 100%);
+  }
+
+  .products-platform-label-edge-model {
+    left: calc(340 / 640 * 100%);
+    top: calc(331 / 572 * 100%);
+  }
+
+  .products-platform-label-api {
+    left: calc(404 / 640 * 100%);
+    top: calc(274 / 572 * 100%);
+  }
+
+  .products-platform-label-practice-field {
+    left: calc(256 / 640 * 100%);
+    top: calc(456 / 572 * 100%);
+  }
+
+  /* ---------------------------------------------- Platform hero render: motion */
+  /*
+   * On the shared .motion system (globals.css, components/motion.tsx). The
+   * markup is the finished render, so no JavaScript or reduced motion shows
+   * it assembled and still. Everything keys off data-layer, bottom to top:
+   *   intro    the layers drop in 400ms apart, each legend item lighting as
+   *            its layer lands, then the delivery chips pop in. About 2s.
+   *   ambient  starts as the intro ends and loops while the render is in
+   *            view (`motion-loop`).
+   *   hover    a legend item or a layer picks out that layer.
+   * components/tilt.tsx supplies --tilt-x / --tilt-y, -1 to 1.
+   */
+  .plat {
+    --plat-step: 400ms;
+    --plat-ambient: 2300ms;
+  }
+  .plat [data-layer='predictions'] {
+    --plat-i: 0;
+    --plat-depth: -5;
+    --plat-float: 1.1%;
+  }
+  .plat [data-layer='delivery'] {
+    --plat-i: 1;
+    --plat-depth: 0;
+  }
+  .plat [data-layer='intelligence'] {
+    --plat-i: 2;
+    --plat-depth: 5;
+    --plat-float: -1.1%;
+  }
+
+  /* Tilt: 4 degrees at most, and the layers slide a few px over each other. */
+  .plat-stage {
+    perspective: 1100px;
+  }
+  .plat-tilt {
+    transform: rotateX(calc(var(--tilt-y, 0) * -4deg)) rotateY(calc(var(--tilt-x, 0) * 4deg));
+    transition: transform 0.5s var(--motion-ease);
+  }
+  .plat-layer {
+    translate: calc(var(--tilt-x, 0) * var(--plat-depth, 0) * 1px) calc(var(--tilt-y, 0) * var(--plat-depth, 0) * 0.6px);
+    transition:
+      translate 0.5s var(--motion-ease),
+      opacity 0.35s var(--motion-ease);
+  }
+
+  /* The planes overlap in full, so only what is drawn takes the pointer. */
+  .plat-tilt svg,
+  .plat-layer {
+    pointer-events: none;
+  }
+  .plat-hit,
+  .plat-chip,
+  .plat-tag {
+    pointer-events: auto;
+  }
+
+  .plat-legend {
+    transition:
+      opacity 0.35s var(--motion-ease),
+      color 0.35s var(--motion-ease);
+  }
+  @media (hover: hover) {
+    .plat:has([data-layer='predictions']:hover) [data-layer]:not([data-layer='predictions']),
+    .plat:has([data-layer='delivery']:hover) [data-layer]:not([data-layer='delivery']),
+    .plat:has([data-layer='intelligence']:hover) [data-layer]:not([data-layer='intelligence']) {
+      opacity: 0.3;
+    }
+    .plat:has([data-layer='predictions']:hover) .plat-legend[data-layer='predictions'],
+    .plat:has([data-layer='delivery']:hover) .plat-legend[data-layer='delivery'],
+    .plat:has([data-layer='intelligence']:hover) .plat-legend[data-layer='intelligence'] {
+      color: var(--color-text-on-dark);
+    }
+  }
+
+  /* Intro. `backwards` holds the first frame until a layer's turn and lets
+     go at the end, so the hover states above are free to take over. */
+  .motion[data-anim]:not([data-anim='reset']) .plat-layer {
+    animation: plat-drop 0.8s var(--motion-ease) calc(var(--motion-delay) + var(--plat-i) * var(--plat-step)) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .plat-legend {
+    animation: plat-legend 0.9s var(--motion-ease)
+      calc(var(--motion-delay) + var(--plat-i) * var(--plat-step) + 450ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .plat-swatch {
+    animation: plat-swatch 0.9s var(--motion-ease)
+      calc(var(--motion-delay) + var(--plat-i) * var(--plat-step) + 450ms) backwards;
+  }
+  .plat-chip:nth-of-type(2) { --plat-chip-i: 1; }
+  .plat-chip:nth-of-type(3) { --plat-chip-i: 2; }
+  .plat-chip:nth-of-type(4) { --plat-chip-i: 3; }
+  .motion[data-anim]:not([data-anim='reset']) .plat-chip {
+    --plat-pop: plat-pop 0.45s var(--motion-ease) calc(var(--motion-delay) + 1200ms + var(--plat-chip-i, 0) * 90ms)
+      backwards;
+    animation: var(--plat-pop);
+  }
+
+  /* Ambient: the outer layers float apart and back. */
+  .motion[data-anim]:not([data-anim='reset']) .plat-plane.motion-loop {
+    animation: plat-float 6s ease-in-out var(--plat-ambient) infinite;
+  }
+
+  /* Ambient, bottom layer: the storm path draws, the cell pulses, the pin pings. */
+  .plat-storm {
+    stroke-dasharray: 1;
+  }
+  .plat-ping {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .plat-storm {
+    animation: plat-storm 6s var(--motion-ease) var(--plat-ambient) infinite;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .plat-cell {
+    animation: plat-cell 2.6s ease-in-out var(--plat-ambient) infinite;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .plat-ping {
+    animation: motion-ping 2.6s ease-out var(--plat-ambient) infinite;
+  }
+
+  /*
+   * Ambient, data flow. Two routes leave the gold cell three seconds apart,
+   * one through Command Center and one through Mobile app, so a pulse
+   * reaches the bolt every 3s. A pulse travels for the first third of its
+   * 6s; the chip lights as it passes and the bolt glows as it arrives.
+   */
+  .plat-pulse {
+    opacity: 0;
+    offset-rotate: 0deg;
+    filter: drop-shadow(0 0 5px var(--color-viz-gold));
+  }
+  .plat-pulse-a {
+    offset-path: path('M190 426C186 380 170 335 168 290C166 235 270 190 320 150');
+  }
+  .plat-pulse-b {
+    offset-path: path('M190 426C215 400 250 370 268 338C290 290 318 210 320 150');
+  }
+  .motion[data-anim]:not([data-anim='reset']) .plat-pulse {
+    animation: plat-flow 6s ease-in-out var(--plat-ambient) infinite;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .plat-chip:nth-of-type(1) {
+    animation:
+      var(--plat-pop),
+      plat-chip 6s ease-out var(--plat-ambient) infinite;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .plat-pulse-b {
+    animation-delay: calc(var(--plat-ambient) + 3s);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .plat-chip:nth-of-type(2) {
+    animation:
+      var(--plat-pop),
+      plat-chip 6s ease-out calc(var(--plat-ambient) + 3s) infinite;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .plat-bolt {
+    animation: plat-bolt 3s ease-out var(--plat-ambient) infinite;
+  }
+
+  /* ------------------------------------------ "What is Flash Agent?" exchange */
+  /*
+   * The platform page's one conversation, on the home page's chat playback:
+   * components/agent-conversation/agent-chat.tsx drives it and the `chat-*`
+   * rules in styles/agent-conversation.css draw the bubble, the avatar, the dots, the streamed words
+   * and Replay. These are the steps that are this panel's own. A panel with
+   * no data-chat is the finished exchange (no JS, reduced motion).
+   */
+  .chat[data-chat] :is(.exchange-head, .exchange-chip) {
+    opacity: 0;
+  }
+  .chat[data-chat] .exchange-tick {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  /* The placeholder stays out from the first keystroke to the last step. */
+  .chat[data-chat='play']:not([data-steps~='actions']) .exchange-placeholder {
+    opacity: 0;
+  }
+
+  /* 1 · The header fades in as the query starts, and the dot pulses. One
+     animation across both states, so sending does not restart it. */
+  .chat:is([data-typing], [data-steps~='sent']) .exchange-head {
+    animation: chat-fade 0.5s ease-out both;
+  }
+  .chat:is([data-typing], [data-steps~='sent']) .exchange-dot {
+    animation: exchange-dot 1.2s ease-in-out 0.3s 3;
+  }
+
+  /* 2 · Sent: the button answers the press (the bubble is a chat-* rule). */
+  .chat[data-steps~='sent'] .exchange-send {
+    animation: exchange-send 0.35s var(--motion-ease);
+  }
+
+  /* 5 · Chips: Source, then Action with its tick, then Confirmed. */
+  .chat[data-steps~='chips'] .exchange-chip {
+    animation: chat-rise 0.35s var(--motion-ease) both;
+  }
+  .chat[data-steps~='chips'] .exchange-chip-action {
+    animation-delay: 140ms;
+  }
+  .chat[data-steps~='chips'] .exchange-chip-confirmed {
+    animation-delay: 280ms;
+  }
+  .chat[data-steps~='chips'] .exchange-tick {
+    animation: exchange-tick 0.35s var(--motion-ease) 380ms both;
+  }
+
+  /* 6 · The placeholder fades back in. */
+  .chat[data-steps~='actions'] .exchange-placeholder {
+    animation: chat-fade 0.5s ease-out both;
+  }
+
+  /* The connectors rise in as the section scrolls in, 60ms apart. */
+  .exchange-connector:nth-child(2) { --i: 1; }
+  .exchange-connector:nth-child(3) { --i: 2; }
+  .exchange-connector:nth-child(4) { --i: 3; }
+  .exchange-connector:nth-child(5) { --i: 4; }
+  .exchange-connector:nth-child(6) { --i: 5; }
+  .exchange-connector:nth-child(7) { --i: 6; }
+  .exchange-connector:nth-child(8) { --i: 7; }
+  .motion[data-anim]:not([data-anim='reset']) .exchange-connector {
+    animation: motion-rise 0.5s var(--motion-ease) calc(var(--motion-delay) + var(--i, 0) * 60ms) both;
+  }
+
+  /* Heat/WBGT hero: a flat navy wash on phones, a left-to-right grade from lg. */
+  .products-heat-hero-grade {
+    background-color: oklab(17.1% -0.0005 -0.052 / 90%);
+    @media (width >= 1024px) {
+      background-color: transparent;
+      background-image: linear-gradient(
+        in oklab 90deg,
+        oklab(17.1% -0.0005 -0.052 / 96%) 0%,
+        oklab(17.1% -0.0005 -0.052 / 88%) 46%,
+        oklab(17.1% -0.0005 -0.052 / 42%) 100%
+      );
+    }
+  }
+}
+
+/* Platform hero render. Implicit to-frames resolve to the finished render. */
+@keyframes plat-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-8%);
+  }
+}
+@keyframes plat-legend {
+  from {
+    opacity: 0.45;
+  }
+  35% {
+    opacity: 1;
+    color: var(--color-text-on-dark);
+  }
+}
+@keyframes plat-swatch {
+  35% {
+    transform: scale(1.5);
+  }
+}
+@keyframes plat-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+}
+@keyframes plat-float {
+  50% {
+    transform: translateY(var(--plat-float, 0));
+  }
+}
+/* Opens and closes on the drawn path, so the loop has no seam: it fades,
+   resets out of sight, then draws again. */
+@keyframes plat-storm {
+  0% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+  12% {
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+  12.1% {
+    opacity: 0;
+    stroke-dashoffset: 1;
+  }
+  14% {
+    opacity: 1;
+    stroke-dashoffset: 1;
+  }
+  62%,
+  100% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes plat-cell {
+  50% {
+    opacity: 0.55;
+  }
+}
+@keyframes plat-flow {
+  0% {
+    opacity: 0;
+    offset-distance: 0%;
+  }
+  4% {
+    opacity: 1;
+  }
+  32% {
+    opacity: 1;
+  }
+  35%,
+  100% {
+    opacity: 0;
+    offset-distance: 100%;
+  }
+}
+@keyframes plat-chip {
+  0%,
+  10%,
+  26%,
+  100% {
+    border-color: var(--color-border);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-viz-gold) 0%, transparent);
+  }
+  16% {
+    border-color: var(--color-viz-gold);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-viz-gold) 45%, transparent);
+  }
+}
+@keyframes plat-bolt {
+  0%,
+  62%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent) brightness(1);
+  }
+  72% {
+    filter: drop-shadow(0 0 8px var(--color-viz-gold)) brightness(1.12);
+  }
+}
+
+/* "What is Flash Agent?" exchange. */
+@keyframes exchange-dot {
+  50% {
+    opacity: 0.35;
+    transform: scale(1.35);
+  }
+}
+@keyframes exchange-send {
+  40% {
+    transform: scale(0.94);
+  }
+}
+@keyframes exchange-tick {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/*
+ * Prediction catalogue — "What does Flash predict?" on /products/
+ * (components/products/platform/platform-sections.tsx). It runs on the shared
+ * card and scroll flow (styles/parameter-card.css); this is what only it has.
+ * Every effect is an opacity, a transform, a filter or an outline, so nothing
+ * moves the layout.
+ */
+@layer components {
+  /* The heading and the intro sit on one baseline: the heading's last line
+     and the intro's. */
+  .pp-head {
+    --motion-count-delay: 400ms;
+    @media (width >= 1024px) {
+      align-items: last baseline;
+    }
+  }
+
+  /* "15+": the finished number (data-width), drawn hidden, holds the width;
+     the live one counts over it, set to its right edge, so the line never
+     reflows. Generated content, so the text reads "15+" once. */
+  .pp-count {
+    position: relative;
+    display: inline-block;
+  }
+  .pp-count::before {
+    content: attr(data-width);
+    visibility: hidden;
+  }
+  .pp-count-live {
+    position: absolute;
+    top: 0;
+    right: 0;
+    white-space: nowrap;
+  }
+
+  /* ---------------------------------------------------------- The filter */
+
+  .pp-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    padding-inline: 16px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-0);
+    color: var(--color-text);
+    font-size: var(--text-body-s);
+    line-height: var(--leading-caption);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    @media (width >= 768px) {
+      height: 36px;
+    }
+  }
+  .pp-chip:hover {
+    border-color: var(--color-brand-navy);
+  }
+  .pp-chip:has(:checked) {
+    border-color: var(--color-brand-navy);
+    background-color: var(--color-brand-navy);
+    color: var(--color-text-on-dark);
+  }
+  .pp-chip:has(:focus-visible) {
+    outline: 2px solid var(--color-alert-info);
+    outline-offset: 2px;
+  }
+
+  /* The note says what the chip did; only the checked chip's line shows. */
+  .pp-filter-note > span {
+    display: none;
+  }
+  .pp-catalogue:has([value='all']:checked) [data-note='all'],
+  .pp-catalogue:has([value='golf']:checked) [data-note='golf'],
+  .pp-catalogue:has([value='construction']:checked) [data-note='construction'],
+  .pp-catalogue:has([value='schools']:checked) [data-note='schools'],
+  .pp-catalogue:has([value='agriculture']:checked) [data-note='agriculture'],
+  .pp-catalogue:has([value='roofing']:checked) [data-note='roofing'] {
+    display: inline;
+  }
+
+  /* A card the chosen industry does not rely on steps back: its photo and
+     text fade and lose their colour, while its ground stays opaque, so the
+     grid behind never shows through. One it does rely on takes a ring (gold
+     on the navy card). "All" leaves every card as it is. */
+  .pp-catalogue .pc {
+    outline: 1.5px solid transparent;
+    outline-offset: 3px;
+  }
+  .pp-catalogue .pc > * {
+    transition: inherit;
+  }
+  .pp-catalogue:has([value='golf']:checked) .pc:not([data-for~='golf']) > *,
+  .pp-catalogue:has([value='construction']:checked) .pc:not([data-for~='construction']) > *,
+  .pp-catalogue:has([value='schools']:checked) .pc:not([data-for~='schools']) > *,
+  .pp-catalogue:has([value='agriculture']:checked) .pc:not([data-for~='agriculture']) > *,
+  .pp-catalogue:has([value='roofing']:checked) .pc:not([data-for~='roofing']) > * {
+    opacity: 0.35;
+    filter: saturate(0.15);
+  }
+  .pp-catalogue:has([value='golf']:checked) .pc[data-for~='golf'],
+  .pp-catalogue:has([value='construction']:checked) .pc[data-for~='construction'],
+  .pp-catalogue:has([value='schools']:checked) .pc[data-for~='schools'],
+  .pp-catalogue:has([value='agriculture']:checked) .pc[data-for~='agriculture'],
+  .pp-catalogue:has([value='roofing']:checked) .pc[data-for~='roofing'] {
+    outline-color: color-mix(in srgb, var(--color-brand-blue-soft) 45%, transparent);
+  }
+  .pp-catalogue:has(:not([value='all']):checked) .pc.border-viz-gold\/45[data-for] {
+    outline-color: color-mix(in srgb, var(--color-viz-gold) 60%, transparent);
+  }
+  /* A stepped-back card comes forward while it is pointed at. */
+  .pp-catalogue .pc:hover > * {
+    opacity: 1;
+    filter: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The filter eases; with reduced motion it switches at once. */
+    .pp-catalogue .pc {
+      transition:
+        transform 350ms var(--motion-ease),
+        box-shadow 350ms var(--motion-ease),
+        opacity 300ms var(--motion-ease),
+        filter 300ms var(--motion-ease),
+        outline-color 300ms var(--motion-ease);
+    }
+    .pp-chip {
+      transition:
+        background-color 200ms var(--motion-ease),
+        border-color 200ms var(--motion-ease),
+        color 200ms var(--motion-ease);
+    }
+  }
+}
+
+/*
+ * Role picker (components/products/platform/role-picker.tsx): "Which part
+ * of the platform should you start with?".
+ *
+ * From 1024px the roles are a list on the left (~35%) and the open role's
+ * panel fills the right; below, they are a row of chips over the panel, and
+ * below 768px the panel's path turns vertical. Every panel sits in the same
+ * grid cell, so switching never moves the layout.
+ *
+ * The finished frame is the base: the open panel shown, its path drawn, no
+ * progress bar. The motion (all inside the no-preference query, on the
+ * shared .motion system) crossfades the panels, draws the path node to node
+ * in 900ms each time a panel opens, and fills the open role's bar over 6s;
+ * the component opens the next role when the bar's animation ends, so the
+ * bar holding still is the pause: off screen, hovered, or keyboard focus
+ * inside.
+ */
+@layer components {
+  .role-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ------------------------------------------------------------ The roles */
+
+  .role-tabs {
+    position: relative;
+    display: flex;
+    gap: 8px;
+    margin-inline: -16px;
+    padding: 2px 16px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .role-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .role-tab {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+    padding: 4px 16px 4px 4px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-0);
+    color: var(--color-text-muted);
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    scroll-snap-align: center;
+  }
+  .role-tab[aria-selected='true'] {
+    border-color: var(--color-brand-navy);
+    background-color: var(--color-brand-navy);
+    color: var(--color-text-on-dark);
+  }
+  .role-thumb {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-brand-navy);
+  }
+  .role-tab-label {
+    font-size: var(--text-body-s);
+    line-height: 20px;
+    font-weight: 700;
+  }
+  /* The auto-advance bar: nothing until it runs. */
+  .role-progress {
+    position: absolute;
+    inset: auto 16px 0;
+    height: 2px;
+    border-radius: 1px;
+    background-color: var(--color-viz-gold);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+
+  /* ------------------------------------------------------------ The panel */
+
+  .role-stage {
+    display: grid;
+  }
+  .role-panel {
+    position: relative;
+    grid-area: 1 / 1;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: 20px;
+    background-color: var(--color-brand-navy);
+  }
+  .role-panel:not([data-on]) {
+    visibility: hidden;
+    opacity: 0;
+  }
+  .role-panel[data-on] {
+    z-index: 1;
+  }
+  .role-bg,
+  .role-grade {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+  /* The photo, softly darkened; deepest where the path sits. */
+  .role-grade {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 58%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 74%) 45%,
+      oklab(17.1% -0.0005 -0.052 / 93%) 100%
+    );
+  }
+  .role-panel-body {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 40px;
+    padding: 28px 22px 30px;
+  }
+
+  /* ------------------------------------------------------------- The path */
+
+  /* Below 768px the nodes stack; each segment runs from its node's marker
+     down to the next one. */
+  .role-path {
+    --role-gap: 22px;
+    --role-marker: 40px;
+    display: grid;
+    row-gap: var(--role-gap);
+  }
+  .role-node {
+    position: relative;
+    display: flex;
+    gap: 14px;
+  }
+  .role-node:nth-child(2) {
+    --i: 1;
+  }
+  .role-node:nth-child(3) {
+    --i: 2;
+  }
+  .role-marker {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: var(--role-marker);
+    height: var(--role-marker);
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid color-mix(in srgb, var(--color-viz-gold) 55%, transparent);
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--color-brand-navy) 80%, transparent);
+  }
+  .role-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-viz-gold);
+    box-shadow: 0 0 12px 1px color-mix(in srgb, var(--color-viz-gold) 60%, transparent);
+  }
+  .role-marker-bolt {
+    border-color: color-mix(in srgb, var(--color-viz-gold) 80%, transparent);
+    background-color: var(--color-brand-navy);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-viz-gold) 12%, transparent);
+  }
+  .role-bolt {
+    width: 16px;
+    height: 21px;
+  }
+  .role-segment {
+    position: absolute;
+    top: calc(var(--role-marker) / 2);
+    left: calc(var(--role-marker) / 2 - 1px);
+    width: 2px;
+    height: calc(100% + var(--role-gap));
+    border-radius: 1px;
+    background-image: linear-gradient(
+      in oklab 180deg,
+      var(--color-gold-metallic-highlight),
+      var(--color-gold-100) 50%,
+      var(--color-viz-gold)
+    );
+    transform-origin: 50% 0;
+  }
+  .role-node-body {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding-top: 13px;
+  }
+  .role-node-label {
+    color: var(--color-text-on-dark-muted);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+  .role-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+    font-weight: 700;
+  }
+  .role-chip-link {
+    border-color: rgb(255 255 255 / 24%);
+    background-color: rgb(255 255 255 / 8%);
+    color: var(--color-text-on-dark);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition:
+      background-color 200ms var(--motion-ease),
+      border-color 200ms var(--motion-ease);
+  }
+  .role-chip-link:hover {
+    border-color: rgb(255 255 255 / 45%);
+    background-color: rgb(255 255 255 / 16%);
+  }
+  .role-chip-tool {
+    border-color: color-mix(in srgb, var(--color-viz-gold) 55%, transparent);
+    background-color: color-mix(in srgb, var(--color-viz-gold) 12%, transparent);
+    color: var(--color-viz-gold);
+  }
+
+  /* ------------------------------------------------ Explore by industry */
+
+  .role-industry {
+    display: inline-flex;
+    padding: 7px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-0);
+    color: var(--color-brand-blue);
+    font-size: var(--text-body-s);
+    line-height: 20px;
+    font-weight: 600;
+    transition:
+      background-color 200ms var(--motion-ease),
+      border-color 200ms var(--motion-ease);
+  }
+  .role-industry:hover {
+    border-color: var(--color-brand-blue);
+    background-color: color-mix(in srgb, var(--color-brand-blue) 5%, var(--color-neutral-0));
+  }
+
+  /* ------------------------------------------------------------- Layouts */
+
+  /* From 768px the path runs left to right; each segment runs from its
+     node's marker across to the next one. */
+  @media (width >= 768px) {
+    .role-tabs {
+      margin-inline: -40px;
+      padding-inline: 40px;
+    }
+    .role-panel {
+      min-height: 460px;
+    }
+    .role-panel-body {
+      padding: 40px;
+    }
+    .role-path {
+      --role-gap: 28px;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.8fr) minmax(0, 1.3fr);
+      column-gap: var(--role-gap);
+    }
+    .role-node {
+      flex-direction: column;
+    }
+    .role-node-body {
+      padding-top: 0;
+    }
+    .role-segment {
+      top: calc(var(--role-marker) / 2 - 1px);
+      left: calc(var(--role-marker) / 2);
+      width: calc(100% + var(--role-gap));
+      height: 2px;
+      background-image: linear-gradient(
+        in oklab 90deg,
+        var(--color-gold-metallic-highlight),
+        var(--color-gold-100) 50%,
+        var(--color-viz-gold)
+      );
+      transform-origin: 0 50%;
+    }
+  }
+
+  @media (width >= 1024px) {
+    .role-picker {
+      display: grid;
+      grid-template-columns: minmax(0, 35fr) minmax(0, 65fr);
+      gap: 24px;
+    }
+    .role-tabs {
+      flex-direction: column;
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+      overflow: visible;
+    }
+    .role-tab {
+      flex-shrink: 1;
+      gap: 16px;
+      padding: 10px 16px 10px 10px;
+      border-color: transparent;
+      border-radius: 14px;
+      background-color: transparent;
+      white-space: normal;
+      transition:
+        background-color 250ms var(--motion-ease),
+        border-color 250ms var(--motion-ease),
+        color 250ms var(--motion-ease);
+    }
+    .role-tab:hover {
+      background-color: var(--color-surface-sunken);
+      color: var(--color-text);
+    }
+    .role-tab[aria-selected='true'] {
+      border-color: var(--color-border);
+      background-color: var(--color-surface-sunken);
+      color: var(--color-text);
+    }
+    .role-thumb {
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+    }
+    .role-thumb > img {
+      filter: saturate(0.55);
+      transition: filter 250ms var(--motion-ease);
+    }
+    .role-tab:is(:hover, [aria-selected='true']) .role-thumb > img {
+      filter: none;
+    }
+    .role-tab-label {
+      font-size: var(--text-body);
+      line-height: 22px;
+    }
+    .role-progress {
+      inset: auto 16px 0 82px;
+      background-color: var(--color-gold-on-light);
+    }
+    .role-panel {
+      min-height: 100%;
+    }
+  }
+
+  /* -------------------------------------------------------------- Motion */
+
+  @media (prefers-reduced-motion: no-preference) {
+    .role-panel {
+      transition:
+        opacity 450ms var(--motion-ease),
+        visibility 0s linear 450ms;
+    }
+    .role-panel[data-on] {
+      transition: opacity 450ms var(--motion-ease);
+    }
+
+    /* The path, each time a panel opens: a segment draws in 450ms, and the
+       next node pops as it arrives, so the three land 0, 450 and 900ms in. */
+    .motion[data-anim]:not([data-anim='reset']) .role-panel[data-on] .role-segment {
+      animation: role-draw-y 450ms linear calc(var(--i, 0) * 450ms) both;
+    }
+    .motion[data-anim]:not([data-anim='reset']) .role-panel[data-on] .role-marker {
+      animation: motion-pop-in 450ms var(--motion-ease) calc(var(--i, 0) * 450ms) both;
+    }
+    .motion[data-anim]:not([data-anim='reset']) .role-panel[data-on] .role-node-body {
+      animation: role-rise 450ms var(--motion-ease) calc(var(--i, 0) * 450ms + 80ms) both;
+    }
+    .motion[data-anim]:not([data-anim='reset']) .role-panel[data-on] .role-bg > img {
+      animation: role-settle 1.2s var(--motion-ease) both;
+    }
+    @media (width >= 768px) {
+      .motion[data-anim]:not([data-anim='reset']) .role-panel[data-on] .role-segment {
+        animation-name: role-draw-x;
+      }
+    }
+
+    /* Auto-advance: the open role's bar fills; its end opens the next. */
+    .motion[data-anim]:not([data-anim='reset']) .role-tab[aria-selected='true'] .role-progress {
+      animation: role-progress 6s linear both;
+    }
+    .role-picker:is(:hover, :has(:focus-visible), :not([data-inview])) .role-progress {
+      animation-play-state: paused !important;
+    }
+  }
+}
+
+@keyframes role-draw-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes role-draw-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes role-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes role-settle {
+  from {
+    transform: scale(1.05);
+  }
+}
+@keyframes role-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/*
+ * Product layers: "Every Flash product", grouped by the hero's layers
+ * (platform-sections.tsx ProductGrid, layer-stack.tsx, product-layers.tsx).
+ *
+ *   glyph   the mini stack. A plate is lit by `data-lit` on the svg (the
+ *           mobile mini-headers) or by the rail's `data-active` (set by
+ *           <LayerSpy>). Lit is viz-gold: it is a graphic on navy.
+ *   rail    lg and up. Each plate is a link, cut to the plate's shape; hover
+ *           and focus mark the plate, since a clipped link cannot show an
+ *           outline. The name under the stack swaps with the plate.
+ *   groups  on the shared .motion system: label, line, then the cards 70ms
+ *           apart; the Flash Agent flow's steps land left to right with
+ *           their arrows drawing between them (top to bottom below md).
+ *
+ * The cards are the shared `.pc` (styles/parameter-card.css). With reduced
+ * motion nothing moves; the rail still tracks.
+ */
+@layer components {
+  .pl-side {
+    fill: var(--pl-side, var(--color-brand-navy-deep));
+  }
+  .pl-face {
+    fill: var(--pl-face, var(--color-neutral-900));
+    stroke: var(--pl-edge, var(--color-neutral-700));
+    stroke-width: var(--pl-w, 1.25);
+    stroke-linejoin: round;
+  }
+  .pl-bolt {
+    fill: var(--pl-bolt, var(--color-neutral-700));
+  }
+  .pl-services {
+    fill: var(--pl-fill, transparent);
+    stroke: var(--pl-edge, var(--color-neutral-600));
+    stroke-width: var(--pl-w, 1.25);
+    stroke-dasharray: 3 3;
+  }
+  /* The mini-header glyph is 30px: its strokes and dashes scale with it. */
+  .pl-head .pl-stack {
+    --pl-w: 3;
+    & .pl-services {
+      stroke-dasharray: 7 6;
+    }
+  }
+
+  :is(.pl-stack[data-lit='intelligence'], .pl[data-active='intelligence'] .pl-rail) [data-layer='intelligence'],
+  :is(.pl-stack[data-lit='predictions'], .pl[data-active='predictions'] .pl-rail) [data-layer='predictions'],
+  :is(.pl-stack[data-lit='delivery'], .pl[data-active='delivery'] .pl-rail) [data-layer='delivery'],
+  :is(.pl-stack[data-lit='services'], .pl[data-active='services'] .pl-rail) [data-layer='services'] {
+    --pl-face: var(--color-viz-gold);
+    --pl-edge: var(--color-viz-gold);
+    --pl-side: var(--color-gold-metallic-shade);
+    --pl-bolt: var(--color-brand-navy);
+    --pl-fill: color-mix(in srgb, var(--color-viz-gold) 16%, transparent);
+  }
+
+  /* Rail: a plate is a link, cut to the plate (the 120 × 120 box in %). */
+  .pl-hit {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    &:focus-visible {
+      outline: none;
+    }
+  }
+  .pl-hit-intelligence {
+    z-index: 4;
+    clip-path: polygon(10% 20%, 50% 3.33%, 90% 20%, 90% 24.17%, 50% 40.83%, 10% 24.17%);
+  }
+  .pl-hit-delivery {
+    z-index: 3;
+    clip-path: polygon(10% 38.33%, 50% 21.67%, 90% 38.33%, 90% 42.5%, 50% 59.17%, 10% 42.5%);
+  }
+  .pl-hit-predictions {
+    z-index: 2;
+    clip-path: polygon(10% 56.67%, 50% 40%, 90% 56.67%, 90% 60.83%, 50% 77.5%, 10% 60.83%);
+  }
+  .pl-hit-services {
+    clip-path: polygon(10% 80%, 50% 63.33%, 90% 80%, 50% 96.67%);
+  }
+  .pl-rail:has(.pl-hit-intelligence:hover) [data-layer='intelligence'],
+  .pl-rail:has(.pl-hit-predictions:hover) [data-layer='predictions'],
+  .pl-rail:has(.pl-hit-delivery:hover) [data-layer='delivery'],
+  .pl-rail:has(.pl-hit-services:hover) [data-layer='services'] {
+    --pl-edge: var(--color-neutral-400);
+  }
+  .pl-rail:has(.pl-hit-intelligence:focus-visible) [data-layer='intelligence'],
+  .pl-rail:has(.pl-hit-predictions:focus-visible) [data-layer='predictions'],
+  .pl-rail:has(.pl-hit-delivery:focus-visible) [data-layer='delivery'],
+  .pl-rail:has(.pl-hit-services:focus-visible) [data-layer='services'] {
+    --pl-edge: var(--color-alert-info);
+    --pl-w: 2.5;
+  }
+
+  /* Rail: the current group's name. */
+  .pl-name {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .pl[data-active='intelligence'] .pl-name[data-layer='intelligence'],
+  .pl[data-active='predictions'] .pl-name[data-layer='predictions'],
+  .pl[data-active='delivery'] .pl-name[data-layer='delivery'],
+  .pl[data-active='services'] .pl-name[data-layer='services'] {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Cards: the shared .pc hover, plus a border that brightens (the hover
+     colour is a utility on the card, so it outranks the resting one). */
+  .pl-product {
+    transition:
+      transform 350ms var(--motion-ease),
+      box-shadow 350ms var(--motion-ease),
+      border-color 350ms var(--motion-ease);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :is(.pl-face, .pl-side, .pl-bolt, .pl-services) {
+      transition:
+        fill 350ms var(--motion-ease),
+        stroke 350ms var(--motion-ease);
+    }
+    .pl-name {
+      translate: 0 8px;
+      transition:
+        opacity 250ms var(--motion-ease),
+        translate 250ms var(--motion-ease),
+        visibility 0s 250ms;
+    }
+    .pl[data-active='intelligence'] .pl-name[data-layer='intelligence'],
+    .pl[data-active='predictions'] .pl-name[data-layer='predictions'],
+    .pl[data-active='delivery'] .pl-name[data-layer='delivery'],
+    .pl[data-active='services'] .pl-name[data-layer='services'] {
+      translate: 0 0;
+      transition-delay: 0s;
+    }
+  }
+
+  /* Groups: label, line, then the cards 70ms apart. */
+  .motion[data-anim]:not([data-anim='reset']) > .pl-head {
+    animation: motion-rise 0.6s var(--motion-ease) var(--motion-delay) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) > .pl-line {
+    animation: motion-rise 0.6s var(--motion-ease) calc(var(--motion-delay) + 80ms) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .pl-card {
+    animation: motion-rise 0.6s var(--motion-ease) calc(var(--motion-delay) + 160ms + var(--pl-i, 0) * 70ms) both;
+  }
+  .pl-card[data-i='1'] {
+    --pl-i: 1;
+  }
+  .pl-card[data-i='2'] {
+    --pl-i: 2;
+  }
+  .pl-card[data-i='3'] {
+    --pl-i: 3;
+  }
+  .pl-card[data-i='4'] {
+    --pl-i: 4;
+  }
+
+  /* The Flash Agent flow: each step lands, then the arrow draws to the next. */
+  [data-step='1'] {
+    --pl-s: 1;
+  }
+  [data-step='2'] {
+    --pl-s: 2;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .pl-step {
+    animation: pl-step-down 0.5s var(--motion-ease) calc(var(--motion-delay) + 450ms + var(--pl-s, 0) * 260ms) both;
+    @media (width >= 768px) {
+      animation-name: pl-step-right;
+    }
+  }
+  .motion[data-anim]:not([data-anim='reset']) .pl-arrow {
+    animation: motion-wipe 0.3s var(--motion-ease) calc(var(--motion-delay) + 300ms + var(--pl-s, 0) * 260ms) both;
+  }
+}
+
+@keyframes pl-step-right {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+@keyframes pl-step-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/*
+ * Lightning risk map — the Lightning Prediction hero's forecast map, a
+ * working demo (components/products/lightning/risk-map.tsx, risk-model.ts).
+ * The markup is always a finished frame; everything here is colour, an
+ * opacity or a transform, so nothing moves the card's layout. Motion sits
+ * in the no-preference query: with reduced motion the calls still change as
+ * the scrubber moves, they just do not pulse, flash, slide or pop.
+ */
+@layer components {
+  /* The legend: the app's ramp, the colours of risk-model.ts BANDS. */
+  .rm-swatch {
+    height: 100%;
+  }
+  .rm-swatch-low {
+    background-color: #12858a;
+  }
+  .rm-swatch-elevated {
+    background-color: #e0b62a;
+  }
+  .rm-swatch-high {
+    background-color: #de7a14;
+  }
+  .rm-swatch-severe {
+    background-color: #d22e16;
+  }
+
+  /* Towns on the basemap. Bigger in map units on a phone, where the map is
+     drawn at about 0.6×, so they stay legible. */
+  .rm-town circle {
+    fill: #d9dee6;
+  }
+  .rm-town text {
+    fill: #c9d1dc;
+    fill-opacity: 0.85;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    paint-order: stroke;
+    stroke: #0f1216;
+    stroke-width: 3px;
+    stroke-opacity: 0.6;
+    @media (width < 480px) {
+      font-size: 13px;
+    }
+  }
+
+  /* The full 1 km grid: there, but invisible, until the map is pointed at. */
+  .rm-grid {
+    fill: none;
+    stroke: #ffffff;
+    stroke-opacity: 0.09;
+    stroke-width: 0.6;
+    opacity: 0;
+  }
+  @media (hover: hover) {
+    .rm-map:hover .rm-grid {
+      opacity: 1;
+    }
+  }
+  .rm-map {
+    cursor: crosshair;
+  }
+
+  .rm-tip {
+    fill: var(--color-text-on-dark);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Each site's call: its pin, its label's dot, its badge in the panel. */
+  .rm-status-go {
+    --rm-call: var(--color-alert-clear);
+  }
+  .rm-status-caution {
+    --rm-call: var(--color-alert-watch);
+  }
+  .rm-status-nogo {
+    --rm-call: var(--color-alert-warning);
+  }
+  .rm-pin-dot {
+    fill: var(--rm-call);
+  }
+  .rm-dot {
+    background-color: var(--rm-call);
+  }
+  .rm-ring {
+    fill: none;
+    stroke: var(--rm-call);
+    stroke-width: 2.5;
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .rm-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+    padding-inline: 6px;
+    border-radius: var(--radius-xs);
+    font-size: 9px;
+    line-height: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    @media (width >= 480px) {
+      height: 18px;
+      font-size: 10px;
+    }
+  }
+  .rm-badge-go {
+    background-color: color-mix(in srgb, var(--color-alert-clear) 24%, transparent);
+    color: #5fd3a3;
+  }
+  .rm-badge-caution {
+    background-color: color-mix(in srgb, var(--color-alert-watch) 26%, transparent);
+    color: #f2a66b;
+  }
+  .rm-badge-nogo {
+    background-color: var(--color-alert-warning);
+    color: var(--color-text-on-dark);
+  }
+  /* "All-clear 15:45" and "All-clear —" take the same room, so the panel
+     keeps its width as the times arrive. */
+  .rm-clear {
+    min-width: 7.6em;
+  }
+
+  /*
+   * Site labels. Each is pinned to its site (the `pin` in content.ts, as %
+   * of the 570×330 frame) and moved into its slot by `translate`, in map
+   * units (--u, 1/570 of the map's width), so a slot keeps clear of the
+   * lens at any size. risk-model.ts `placeLabels` picks the slot with the
+   * same sums.
+   */
+  .rm-map {
+    container-type: inline-size;
+  }
+  .rm-label {
+    --u: calc(100cqw / 570);
+    pointer-events: none;
+  }
+  .rm-at-practice {
+    left: calc(270 / 570 * 100%);
+    top: calc(222 / 330 * 100%);
+  }
+  .rm-at-stadium {
+    left: calc(414 / 570 * 100%);
+    top: calc(114 / 330 * 100%);
+  }
+  .rm-slot-e {
+    translate: calc(var(--u) * 32) -50%;
+  }
+  .rm-slot-w {
+    translate: calc(-100% - var(--u) * 32) -50%;
+  }
+  .rm-slot-n {
+    translate: -50% calc(-100% - var(--u) * 32);
+  }
+  .rm-slot-s {
+    translate: -50% calc(var(--u) * 32);
+  }
+  .rm-slot-ne {
+    translate: calc(var(--u) * 24) calc(-100% - var(--u) * 24);
+  }
+  .rm-slot-nw {
+    translate: calc(-100% - var(--u) * 24) calc(-100% - var(--u) * 24);
+  }
+  .rm-slot-se {
+    translate: calc(var(--u) * 24) calc(var(--u) * 24);
+  }
+  .rm-slot-sw {
+    translate: calc(-100% - var(--u) * 24) calc(var(--u) * 24);
+  }
+
+  /* The alert toast: red for a NO-GO, amber for a CAUTION. */
+  .rm-toast {
+    box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  }
+  .rm-toast-nogo {
+    background-color: var(--color-alert-warning);
+  }
+  .rm-toast-caution {
+    background-color: #b85f1f;
+  }
+
+  /* The strike flash, off until risk-map.tsx lights one. */
+  .rm-flash {
+    opacity: 0;
+  }
+
+  /* The scrubber: the drawn track follows --rm-t (0 → 1), set as the map
+     moves; the native slider over it takes the input, and its focus ring
+     shows on the drawn thumb. */
+  .rm-scrub {
+    --rm-t: 0.5;
+  }
+  .rm-fill {
+    width: calc(var(--rm-t) * 100%);
+  }
+  .rm-thumb {
+    left: calc(var(--rm-t) * 100%);
+    pointer-events: none;
+  }
+  .rm-scrub:has(.rm-range:focus-visible) .rm-thumb {
+    outline: 2px solid var(--color-alert-info);
+    outline-offset: 2px;
+  }
+  .rm-play:hover {
+    color: var(--color-text-on-dark);
+    border-color: rgb(255 255 255 / 35%);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rm-grid {
+      transition: opacity 250ms var(--motion-ease);
+    }
+    .rm-label {
+      transition: translate 400ms var(--motion-ease);
+    }
+    .rm-pin-dot,
+    .rm-dot {
+      transition:
+        fill 300ms var(--motion-ease),
+        background-color 300ms var(--motion-ease);
+    }
+    .rm-ring {
+      animation: rm-ring 900ms ease-out;
+    }
+    .rm-flash {
+      animation: rm-flash 460ms ease-out;
+    }
+    .rm-toast {
+      animation: rm-toast 2200ms var(--motion-ease) both;
+    }
+    .rm-live {
+      animation: rm-live 1.8s ease-in-out infinite;
+    }
+    .hero-fx[data-offscreen] .rm-live {
+      animation-play-state: paused;
+    }
+  }
+}
+
+@keyframes rm-ring {
+  from {
+    opacity: 0.9;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 1.8;
+  }
+}
+@keyframes rm-flash {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  28% {
+    opacity: 0.3;
+  }
+  42% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* In, hold, out, across the toast's 2.2s. */
+@keyframes rm-toast {
+  0% {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+  12%,
+  85% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+@keyframes rm-live {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-alert-clear) 60%, transparent);
+  }
+  60% {
+    box-shadow: 0 0 0 5px transparent;
+  }
+}
+
+/* The Lightning and Hail heroes' backdrops (hero.tsx): the product slide
+   behind the headline, blurred and darkened to a texture so its baked-in
+   text never reads through the H1 or the card. */
+.products-lightning-backdrop,
+.products-hail-backdrop {
+  filter: blur(14px) brightness(0.6) saturate(0.8);
+}
+
+/*
+ * Lightning specs (components/products/lightning/spec-table.tsx), on the
+ * shared .motion system. The tiles are the home page's stat tiles and move
+ * as they do there (styles/home.css, `stat-*`). Each table row is its own
+ * block: rows that scroll in together fade up 50ms apart, and the row's
+ * small visual draws in while it lands. The markup is the final frame, so
+ * with reduced motion (or no JS) it is simply there.
+ */
+@layer components {
+  /* .motion's own 100ms default is declared later (globals.css), so match its weight and add one. */
+  .motion.spec-row {
+    --motion-stagger: 50ms;
+    --spec-at: calc(var(--motion-delay) + 200ms);
+  }
+  .motion[data-anim]:not([data-anim='reset']) > .spec-cell {
+    animation: motion-rise 0.5s var(--motion-ease) var(--motion-delay) both;
+  }
+
+  /* Planning outlook: the 6-hour bar fills, the hour ticks and the end land. */
+  .spec-6h-fill,
+  .spec-6h-end,
+  .spec-layer,
+  .spec-land {
+    transform-box: fill-box;
+  }
+  .spec-6h-fill {
+    transform-origin: 0 50%;
+  }
+  .spec-6h-end,
+  .spec-land {
+    transform-origin: center;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .spec-6h-fill {
+    animation: motion-grow-x 0.8s var(--motion-ease) var(--spec-at) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .spec-6h-ticks {
+    animation: motion-fade 0.3s ease-out calc(var(--spec-at) + 500ms) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .spec-6h-end {
+    animation: motion-pop-in 0.35s var(--motion-ease) calc(var(--spec-at) + 700ms) both;
+  }
+
+  /* Ground truth and the Mobile app chip: they pop in. */
+  .motion[data-anim]:not([data-anim='reset']) .spec-pop {
+    animation: motion-pop-in 0.4s var(--motion-ease) calc(var(--spec-at) + 50ms) both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .spec-pop-2 {
+    animation-delay: calc(var(--spec-at) + 150ms);
+  }
+
+  /* Inputs: the parameter layers drop in, bottom one first. */
+  .spec-layer {
+    --spec-l: 2;
+  }
+  .spec-layer-2 {
+    --spec-l: 1;
+  }
+  .spec-layer-3 {
+    --spec-l: 0;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .spec-layer {
+    animation: spec-drop 0.45s var(--motion-ease) calc(var(--spec-at) + var(--spec-l) * 90ms) both;
+  }
+
+  /* Coverage: Canada, the U.S., then Mexico. */
+  .spec-land-2 {
+    --spec-l: 1;
+  }
+  .spec-land-3 {
+    --spec-l: 2;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .spec-land {
+    animation: motion-pop-in 0.45s var(--motion-ease) calc(var(--spec-at) + var(--spec-l, 0) * 110ms) both;
+  }
+
+  /* Channels: the chips land 50ms apart. */
+  .spec-chip:nth-child(2) {
+    --spec-c: 1;
+  }
+  .spec-chip:nth-child(3) {
+    --spec-c: 2;
+  }
+  .spec-chip:nth-child(4) {
+    --spec-c: 3;
+  }
+  .spec-chip:nth-child(5) {
+    --spec-c: 4;
+  }
+  .spec-chip:nth-child(6) {
+    --spec-c: 5;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .spec-chip {
+    animation: motion-pop-in 0.35s var(--motion-ease) calc(var(--spec-at) + var(--spec-c, 0) * 50ms) both;
+  }
+
+  /* Mobile app: the radar arm sweeps once. */
+  .spec-radar-arm {
+    transform-box: view-box;
+    transform-origin: 6px 6px;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .spec-radar-arm {
+    animation: spec-sweep 0.9s var(--motion-ease) calc(var(--spec-at) + 200ms) both;
+  }
+
+  /* Hardware: the line through the sensor draws. */
+  .spec-strike {
+    stroke-dasharray: 1;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .spec-strike {
+    animation: motion-draw 0.4s var(--motion-ease) calc(var(--spec-at) + 150ms) both;
+  }
+}
+
+@keyframes spec-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes spec-sweep {
+  from {
+    transform: rotate(-360deg);
+  }
+}
+
+/*
+ * Ask Flash — "Ask about the next 60 minutes in plain language." on the
+ * Lightning page (components/products/lightning/ask-flash.tsx). The cards are
+ * played by ask-flash-player.tsx, which sets `data-chat` and `data-steps`; the
+ * answer's words stream on the `chat-word` rules and Replay shows on the
+ * `chat-replay` rule (styles/home.css). A card with no data-chat is finished
+ * (no JS, reduced motion): every rule below only holds pieces back while it
+ * plays, so the finished state is the plain markup. The section meets its
+ * neighbours on hard edges.
+ */
+@layer components {
+  /* The label, heading and intro rise in, 90ms apart. */
+  .motion[data-anim]:not([data-anim='reset']).ask-head > div > div:first-child > *,
+  .motion[data-anim]:not([data-anim='reset']).ask-head > div > div:nth-child(2) {
+    animation: motion-rise 0.7s var(--motion-ease) calc(var(--motion-delay) + var(--ask-i, 0) * 90ms) both;
+  }
+  .ask-head > div > div:first-child > :nth-child(2) {
+    --ask-i: 1;
+  }
+  .ask-head > div > div:nth-child(2) {
+    --ask-i: 2;
+  }
+
+  /* ------------------------------------------------ The schedule preview */
+  /* 8am to 6pm across, a faint rule every two hours. */
+  .ask-track {
+    background-color: rgb(255 255 255 / 0.04);
+    background-image: linear-gradient(to right, rgb(255 255 255 / 0.08) 1px, transparent 1px);
+    background-size: 20% 100%;
+  }
+  .ask-busy {
+    background-color: rgb(255 255 255 / 0.14);
+  }
+  .ask-busy-a {
+    left: 5%;
+    width: 25%;
+  }
+  .ask-busy-b {
+    left: 30%;
+    width: 20%;
+  }
+  /* Where the lift ends: 14:10 for 90 minutes. It starts at 10:00, which is
+     20% across: (61.667% - 20%) / 15% of its own width to the left. */
+  .ask-lift {
+    left: 61.667%;
+    width: 15%;
+    background-color: var(--color-alert-clear);
+  }
+  /* The label's old text shares a cell with the new; only the new one is
+     there when the card is finished. */
+  .ask-when-from {
+    opacity: 0;
+  }
+
+  /* ------------------------------------------------ Held while it plays */
+  .chat[data-chat] :is(.ask-preview, .ask-chip, .ask-action, .ask-confirm, .ask-row, .ask-when-to) {
+    opacity: 0;
+  }
+  .chat[data-chat] .ask-when-from {
+    opacity: 1;
+  }
+  .chat[data-chat] .ask-tick {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  .chat[data-chat] .ask-lift {
+    transform: translateX(-277.78%);
+    background-color: var(--color-brand-blue);
+  }
+
+  /* 1 · The answer streams (chat-word). 2 · The tool slides open under it,
+     and the context chips come in. */
+  .chat[data-steps~='tool'] .ask-preview {
+    animation: ask-open 0.5s var(--motion-ease) both;
+  }
+  .chat[data-steps~='tool'] .ask-chip {
+    animation: chat-rise 0.35s var(--motion-ease) 200ms both;
+  }
+
+  /* 3a · Schedule: the lift slides to its new slot and turns green, and its
+     label changes with it. */
+  .chat[data-steps~='move'] .ask-lift {
+    animation:
+      ask-lift-move 0.7s var(--motion-ease) both,
+      ask-lift-clear 0.35s ease-out 0.55s both;
+  }
+  .chat[data-steps~='move'] .ask-when-from {
+    animation: ask-fade-out 0.25s ease-out 0.4s both;
+  }
+  .chat[data-steps~='move'] .ask-when-to {
+    animation: chat-fade 0.3s ease-out 0.6s both;
+  }
+
+  /* 3b · Audit file: the six events tick in, one row at a time. */
+  .chat[data-steps~='rows'] .ask-row {
+    animation: chat-rise 0.3s var(--motion-ease) calc(var(--ask-row, 0) * 150ms) both;
+  }
+  .ask-row:nth-child(2) { --ask-row: 1; }
+  .ask-row:nth-child(3) { --ask-row: 2; }
+  .ask-row:nth-child(4) { --ask-row: 3; }
+  .ask-row:nth-child(5) { --ask-row: 4; }
+  .ask-row:nth-child(6) { --ask-row: 5; }
+
+  /* 4 · The tool confirms, and the Action chip lands with it; both tick. */
+  .chat[data-steps~='confirm'] .ask-confirm {
+    animation: chat-rise 0.35s var(--motion-ease) both;
+  }
+  .chat[data-steps~='confirm'] .ask-action {
+    animation: chat-rise 0.35s var(--motion-ease) 120ms both;
+  }
+  .chat[data-steps~='confirm'] .ask-tick {
+    animation: exchange-tick 0.3s var(--motion-ease) 250ms both;
+  }
+  .chat[data-steps~='confirm'] .ask-action .ask-tick {
+    animation-delay: 370ms;
+  }
+}
+
+@keyframes ask-open {
+  from {
+    opacity: 0;
+    clip-path: inset(0 0 100% 0 round 12px);
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 round 12px);
+    transform: none;
+  }
+}
+@keyframes ask-lift-move {
+  from {
+    transform: translateX(-277.78%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes ask-lift-clear {
+  from {
+    background-color: var(--color-brand-blue);
+  }
+  to {
+    background-color: var(--color-alert-clear);
+  }
+}
+@keyframes ask-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

@@ -1,0 +1,531 @@
+/*
+ * Industry pages: the hail size-class table beside a roof cross-section
+ * (components/industries/roof-damage.tsx, geometry in roof-geometry.ts),
+ * classes rdm-*. Roofing's "What each hail size class does to a roof".
+ *
+ * From 1024px the drawing sits left of the table and stays in view while the
+ * table scrolls past; below that the drawing comes first and the rows follow,
+ * and under 768px each row becomes a stacked block with its column names.
+ *
+ * The figure's data-level picks which class's damage shows: marks and pins
+ * fade in, cracks draw in (pathLength 1), holes open from a little smaller,
+ * the hail in the sky drops into place at that class's size. Leaving a class
+ * is instant. Reduced motion: every change is instant.
+ */
+@layer components {
+  .rdm {
+    display: grid;
+    gap: 32px;
+    margin-top: 40px;
+  }
+  @media (width >= 1024px) {
+    .rdm {
+      grid-template-columns: minmax(0, 11fr) minmax(0, 13fr);
+      align-items: start;
+      gap: 40px;
+    }
+  }
+
+  /* ---------- The drawing ---------- */
+
+  .rdm-figure {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px 16px 24px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-sunken);
+  }
+  @media (width >= 1024px) {
+    .rdm-figure {
+      position: sticky;
+      top: 96px;
+    }
+  }
+
+  /* One colour set per class: marks, pins and pin numerals. Gold marks on this light ground use gold-on-light. */
+  [data-level='severe'],
+  .rdm-damage[data-for='severe'] {
+    --rdm-tone: var(--color-viz-gold);
+    --rdm-mark: var(--color-gold-on-light);
+    --rdm-on-tone: var(--color-brand-navy);
+  }
+  [data-level='damaging'],
+  .rdm-damage[data-for='damaging'] {
+    --rdm-tone: var(--color-alert-watch);
+    --rdm-mark: var(--color-alert-watch);
+    --rdm-on-tone: var(--color-brand-navy);
+  }
+  [data-level='destructive'],
+  .rdm-damage[data-for='destructive'] {
+    --rdm-tone: var(--color-alert-warning);
+    --rdm-mark: var(--color-alert-warning);
+    --rdm-on-tone: var(--color-neutral-0);
+  }
+
+  .rdm-figure-head {
+    padding-inline: 4px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+  }
+  .rdm-eyebrow {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .rdm-state {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+  .rdm-state-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--rdm-tone);
+    transition: background-color 200ms ease;
+  }
+
+  .rdm-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  @media (width < 1024px) {
+    .rdm-svg {
+      max-width: 640px;
+      margin-inline: auto;
+    }
+  }
+
+  /* Roof parts: navy line work, light fills. */
+  .rdm-svg path {
+    fill: none;
+    stroke-linejoin: round;
+  }
+  .rdm-rafter {
+    stroke: var(--color-border-strong);
+    stroke-width: 1.25;
+  }
+  .rdm-svg .rdm-deck,
+  .rdm-svg .rdm-part {
+    fill: var(--color-neutral-0);
+    stroke: var(--color-brand-navy);
+    stroke-width: 1.25;
+  }
+  .rdm-svg .rdm-metal {
+    stroke-width: 1.5;
+  }
+  .rdm-seam {
+    stroke: var(--color-border-strong);
+    stroke-width: 1;
+  }
+  .rdm-felt {
+    stroke: var(--color-brand-blue);
+    stroke-width: 1.5;
+    stroke-dasharray: 5 3;
+  }
+  .rdm-svg .rdm-shingles {
+    fill: var(--color-border);
+    stroke: var(--color-brand-navy);
+    stroke-width: 1.25;
+  }
+  .rdm-rim {
+    stroke: var(--color-brand-navy);
+    stroke-width: 2;
+  }
+  .rdm-flange {
+    stroke: var(--color-brand-navy);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+  .rdm-svg .rdm-glass {
+    fill: color-mix(in srgb, var(--color-brand-blue) 16%, var(--color-neutral-0));
+    stroke: var(--color-brand-navy);
+    stroke-width: 1.25;
+  }
+  .rdm-glint {
+    stroke: var(--color-neutral-0);
+    stroke-width: 1.2;
+    stroke-linecap: round;
+  }
+  .rdm-flashing {
+    stroke: var(--color-text-muted);
+    stroke-width: 2;
+  }
+
+  .rdm-leader {
+    stroke: var(--color-text-subtle);
+    stroke-width: 1;
+  }
+  .rdm-label text {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    fill: var(--color-text-muted);
+  }
+  /* Too small to read on a phone; the legend carries the meaning there. */
+  @media (width < 640px) {
+    .rdm-label {
+      display: none;
+    }
+  }
+
+  /* ---------- Hail in the sky, at the class's size ---------- */
+
+  .rdm-streak {
+    stroke: var(--color-neutral-400);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+  .rdm-stone {
+    fill: var(--color-neutral-0);
+    stroke: var(--color-brand-navy);
+    stroke-width: 1.5;
+  }
+  .rdm-hail {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .rdm-hail > g {
+    opacity: 0;
+    transform: translate(-4px, -9px);
+  }
+
+  /* ---------- Damage ---------- */
+
+  .rdm-damage {
+    visibility: hidden;
+  }
+  .rdm-svg .rdm-mark {
+    stroke: var(--rdm-mark);
+    stroke-width: 2.25;
+    stroke-linecap: round;
+  }
+  .rdm-svg .rdm-dot {
+    stroke: var(--rdm-mark);
+    stroke-width: 2.75;
+    stroke-linecap: round;
+  }
+  .rdm-svg .rdm-fill {
+    fill: var(--rdm-mark);
+  }
+  .rdm-svg .rdm-crack {
+    stroke: var(--rdm-mark);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  .rdm-svg .rdm-hole {
+    fill: var(--color-surface-sunken);
+    stroke: var(--rdm-mark);
+    stroke-width: 1.5;
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(0.7);
+  }
+  .rdm-mark,
+  .rdm-dot,
+  .rdm-fill,
+  .rdm-hole,
+  .rdm-pin {
+    opacity: 0;
+  }
+  .rdm-pin circle {
+    fill: var(--rdm-tone);
+  }
+  .rdm-pin text {
+    font-size: 12px;
+    font-weight: 800;
+    text-anchor: middle;
+    dominant-baseline: central;
+    fill: var(--rdm-on-tone);
+  }
+  /* The drawing shrinks to ~0.65 on a phone: pins grow to stay tappable-looking and legible. */
+  @media (width < 640px) {
+    .rdm-pin circle {
+      r: 13px;
+    }
+    .rdm-pin text {
+      font-size: 16px;
+    }
+  }
+
+  /* The selected class: its hail and its damage, each piece in turn. */
+  .rdm-figure[data-level='severe'] [data-for='severe'],
+  .rdm-figure[data-level='damaging'] [data-for='damaging'],
+  .rdm-figure[data-level='destructive'] [data-for='destructive'] {
+    visibility: visible;
+    opacity: 1;
+  }
+  .rdm-figure [data-for] > * {
+    --rdm-delay: calc(var(--rdm-i, 0) * 70ms);
+  }
+  .rdm-figure[data-level='severe'] [data-for='severe'] > *,
+  .rdm-figure[data-level='damaging'] [data-for='damaging'] > *,
+  .rdm-figure[data-level='destructive'] [data-for='destructive'] > * {
+    opacity: 1;
+    transform: none;
+    stroke-dashoffset: 0;
+    transition:
+      opacity 320ms ease-out var(--rdm-delay),
+      transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1) var(--rdm-delay),
+      stroke-dashoffset 520ms ease-out calc(var(--rdm-delay) + 120ms);
+  }
+  /* Pins land after the marks they number. */
+  .rdm-figure [data-for] > .rdm-pin {
+    --rdm-delay: 420ms;
+  }
+  .rdm-i0 { --rdm-i: 0; }
+  .rdm-i1 { --rdm-i: 1; }
+  .rdm-i2 { --rdm-i: 2; }
+  .rdm-i3 { --rdm-i: 3; }
+  .rdm-i4 { --rdm-i: 4; }
+  .rdm-i5 { --rdm-i: 5; }
+  .rdm-i6 { --rdm-i: 6; }
+  .rdm-i7 { --rdm-i: 7; }
+  .rdm-i8 { --rdm-i: 8; }
+  .rdm-i9 { --rdm-i: 9; }
+
+  /* ---------- Legend under the drawing ---------- */
+
+  .rdm-legend-list {
+    padding-inline: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .rdm-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--color-text);
+    animation: rdm-legend-in 320ms ease-out both calc(var(--rdm-i, 0) * 70ms + 200ms);
+  }
+  .rdm-legend-n {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: var(--rdm-tone);
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 800;
+    color: var(--rdm-on-tone);
+  }
+  @keyframes rdm-legend-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+
+  /* ---------- The table ---------- */
+
+  .rdm-frame {
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-neutral-0);
+  }
+  .rdm-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  .rdm-table thead {
+    background: var(--color-surface-raised);
+  }
+  .rdm-col {
+    padding: 14px 20px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-muted);
+  }
+  .rdm-col-flash {
+    color: var(--color-brand-blue);
+  }
+
+  .rdm-row {
+    position: relative;
+    border-top: 1px solid var(--color-border);
+    vertical-align: top;
+    transition: background-color 200ms ease;
+  }
+  .rdm-row:hover {
+    background: var(--color-surface-sunken);
+  }
+  .rdm-row[data-selected] {
+    background: var(--color-surface-sunken);
+  }
+  /* Keyboard focus rings the whole row, not just the size-class cell. */
+  .rdm-row:has(.rdm-pick:focus-visible) {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: -2px;
+  }
+
+  .rdm-class {
+    padding: 18px 20px;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 24px;
+    /* The selected row's class colour runs down its left edge. */
+    box-shadow: inset 0 0 0 transparent;
+    transition: box-shadow 200ms ease;
+  }
+  .rdm-row[data-selected] .rdm-class {
+    box-shadow: inset 4px 0 0 var(--rdm-tone);
+  }
+  @media (width >= 1024px) {
+    .rdm-class {
+      width: 188px;
+    }
+  }
+
+  /* The size-class cell is the row's button; its ::after stretches over the whole row. */
+  .rdm-pick {
+    display: block;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+  }
+  .rdm-pick:focus-visible {
+    outline: none;
+  }
+  .rdm-pick::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .rdm-does,
+  .rdm-sends {
+    padding: 18px 20px;
+    font-size: 14px;
+    line-height: 24px;
+  }
+  @media (width >= 768px) {
+    .rdm-does,
+    .rdm-sends {
+      font-size: 15px;
+      line-height: 23px;
+    }
+  }
+  .rdm-does {
+    color: var(--color-text);
+  }
+  .rdm-sends {
+    color: var(--color-text-muted);
+    transition:
+      background-color 200ms ease,
+      color 200ms ease;
+  }
+  .rdm-row[data-selected] .rdm-sends {
+    background: color-mix(in srgb, var(--color-brand-blue) 6%, var(--color-neutral-0));
+    color: var(--color-text);
+  }
+
+  .rdm-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .rdm-chip {
+    padding: 3px 10px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 999px;
+    background: var(--color-neutral-0);
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--color-text-muted);
+    transition:
+      background-color 220ms ease var(--rdm-chip-delay, 0ms),
+      border-color 220ms ease var(--rdm-chip-delay, 0ms),
+      color 220ms ease var(--rdm-chip-delay, 0ms);
+  }
+  .rdm-row[data-selected] .rdm-chip {
+    --rdm-chip-delay: calc(var(--rdm-i, 0) * 60ms + 80ms);
+    border-color: var(--color-brand-blue);
+    background: var(--color-brand-blue);
+    color: var(--color-neutral-0);
+  }
+
+  /* Phones: each row a block, the column names written in. */
+  @media (width < 768px) {
+    .rdm-table thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .rdm-table tbody,
+    .rdm-row,
+    .rdm-class,
+    .rdm-does,
+    .rdm-sends {
+      display: block;
+    }
+    .rdm-row:first-child {
+      border-top: 0;
+    }
+    .rdm-class {
+      padding-bottom: 8px;
+    }
+    .rdm-does {
+      padding-block: 4px 12px;
+    }
+    .rdm-sends {
+      padding-block: 12px 18px;
+    }
+    .rdm-does::before,
+    .rdm-sends::before {
+      content: attr(data-label);
+      display: block;
+      margin-bottom: 4px;
+      font-size: 11px;
+      line-height: 16px;
+      font-weight: 600;
+      letter-spacing: var(--tracking-label);
+      color: var(--color-text-muted);
+    }
+    .rdm-row[data-selected] .rdm-class,
+    .rdm-row[data-selected] .rdm-does,
+    .rdm-row[data-selected] .rdm-sends {
+      box-shadow: inset 4px 0 0 var(--rdm-tone);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rdm *,
+    .rdm *::before,
+    .rdm *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+}

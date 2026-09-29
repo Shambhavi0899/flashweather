@@ -1,0 +1,518 @@
+/*
+ * Hail "Hail tracking or hail prediction?"
+ * (components/products/hail/prediction-vs-tracking.tsx, storm-comparison.tsx).
+ *
+ * One markup, three modes, picked by media query here and by the same
+ * queries in storm-comparison.tsx (keep the two equal):
+ *
+ *   still  the default: no JavaScript, reduced motion, or a desktop window
+ *          too short to pin. The final frame: the cloud at +3 h, both
+ *          columns at full strength, both chips, the car under the carport
+ *          and the dented car in the open.
+ *   pin    desktop with motion: the stage sticks while the cloud crosses
+ *          the timeline with the scroll.
+ *   stack  below 1024px with motion: the columns stack (prediction first)
+ *          under a sticky mini timeline.
+ *
+ * The script reports one number, --hc-u (0 → 1, the cloud's place on the
+ * rail: 0 –55 min, 0.25 –30, 0.5 IMPACT, 0.75 +1 h, 1 +3 h), and toggles
+ * data-on on every [data-at] part the cloud has passed. The car, the
+ * stones and the dents are scrubbed from --hc-u here; their start points
+ * are in the same units as AT in storm-comparison.tsx.
+ */
+@layer components {
+  .hc-track {
+    --hc-u: 1;
+  }
+  .hc-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    padding-top: 80px;
+    padding-bottom: 56px;
+  }
+
+  /* ------------------------------------------------------------ Timeline */
+  .hc-timeline {
+    padding-inline: 20px;
+  }
+  .hc-run {
+    position: relative;
+    height: 50px;
+    container-type: inline-size;
+  }
+  .hc-rail {
+    position: absolute;
+    top: 29px;
+    right: 0;
+    left: 0;
+    height: 2px;
+    border-radius: 1px;
+    background-color: var(--color-border-strong);
+  }
+  /* Blue while there is still time to act, grey once the reports start. */
+  .hc-rail-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: linear-gradient(
+      to right,
+      var(--color-brand-blue) 50%,
+      var(--color-neutral-500) 50%
+    );
+    clip-path: inset(0 calc(100% - var(--hc-u) * 100%) 0 0);
+  }
+  .hc-ticks {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: space-between;
+  }
+  .hc-tick {
+    position: relative;
+    width: 0;
+  }
+  .hc-tick-dot {
+    position: absolute;
+    top: 26px;
+    left: -4px;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-0);
+    box-shadow: inset 0 0 0 2px var(--color-border-strong);
+    transition:
+      background-color 0.35s var(--motion-ease),
+      box-shadow 0.35s var(--motion-ease);
+  }
+  .hc-tick-label {
+    position: absolute;
+    top: 38px;
+    left: 0;
+    translate: -50% 0;
+    color: var(--color-text-subtle);
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    transition: color 0.35s var(--motion-ease);
+  }
+  /* Passed ticks (and every tick in the still frame). */
+  .hc-tick[data-side='before'] .hc-tick-dot {
+    background-color: var(--color-brand-blue);
+    box-shadow: none;
+  }
+  .hc-tick[data-side='before'] .hc-tick-label {
+    color: var(--color-text);
+  }
+  .hc-tick[data-side='impact'] .hc-tick-dot {
+    top: 24px;
+    left: -6px;
+    width: 12px;
+    height: 12px;
+    background-color: var(--color-alert-warning);
+    box-shadow: 0 0 0 3px var(--color-neutral-0);
+  }
+  .hc-tick[data-side='impact'] .hc-tick-label {
+    color: var(--color-alert-warning);
+    font-weight: 800;
+    letter-spacing: 0.14em;
+  }
+  .hc-tick[data-side='after'] .hc-tick-dot {
+    background-color: var(--color-neutral-500);
+    box-shadow: none;
+  }
+  .hc-tick[data-side='after'] .hc-tick-label {
+    color: var(--color-text-muted);
+  }
+  .hc-track[data-live] .hc-tick:not([data-on]) .hc-tick-dot {
+    background-color: var(--color-neutral-0);
+    box-shadow: inset 0 0 0 2px var(--color-border-strong);
+  }
+  .hc-track[data-live] .hc-tick:not([data-on]) .hc-tick-label {
+    color: var(--color-text-subtle);
+  }
+  .hc-track[data-live] .hc-tick[data-side='impact'][data-on] .hc-tick-dot {
+    animation: hc-flash 0.9s var(--motion-ease);
+  }
+
+  /* The storm: rides the rail, its centre on the cloud's time. */
+  .hc-cloud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 22px;
+    height: 23px;
+    translate: -50% 0;
+    transform: translateX(calc(var(--hc-u) * 100cqw));
+  }
+  .hc-cloud-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .hc-cloud-body {
+    fill: var(--color-brand-navy);
+  }
+  .hc-cloud-hail {
+    fill: var(--color-brand-blue-soft);
+  }
+
+  /* ------------------------------------------------------------ Columns */
+  .hc-columns {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .hc-col {
+    display: flex;
+    flex-basis: 0;
+    flex-grow: 1;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+    padding-top: 28px;
+  }
+  .hc-col-tracking {
+    border-top: 1px solid var(--color-border-strong);
+  }
+  .hc-col-prediction {
+    order: -1;
+    border-top: 3px solid var(--color-brand-blue);
+  }
+  .hc-points {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .hc-point {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: opacity 0.45s var(--motion-ease);
+  }
+  .hc-point-dot {
+    position: relative;
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    margin-top: 9px;
+    border-radius: var(--radius-pill);
+  }
+  .hc-point-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: inherit;
+    opacity: 0;
+  }
+
+  /* Dim what the cloud has not reached yet; the script alone sets this.
+     The scene keeps its navy ground (a faded card turns grey), so only
+     the copy and the drawing fade. */
+  .hc-col > *,
+  .hc-art {
+    transition: opacity 0.5s var(--motion-ease);
+  }
+  .hc-track[data-live] .hc-col:not([data-on]) > :not(.hc-scene) {
+    opacity: 0.35;
+  }
+  .hc-track[data-live] .hc-col:not([data-on]) .hc-art {
+    opacity: 0.45;
+  }
+  .hc-track[data-live] .hc-point:not([data-on]) {
+    opacity: 0.4;
+  }
+  .hc-track[data-live] .hc-point[data-on] .hc-point-dot::after {
+    animation: motion-ping 1.2s ease-out;
+  }
+
+  /* ------------------------------------------------------------ Scene */
+  .hc-scene {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: clip;
+    padding: 14px 14px 0;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-brand-navy-deep);
+  }
+
+  .hc-chip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-self: flex-start;
+    gap: 4px 8px;
+    padding: 6px 12px;
+    border-radius: 14px;
+    background-color: color-mix(in srgb, var(--color-neutral-0) 7%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-neutral-0) 12%, transparent);
+    color: var(--color-text-on-dark);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    transition:
+      opacity 0.4s var(--motion-ease),
+      transform 0.5s var(--motion-ease);
+  }
+  .hc-chip-dot {
+    position: relative;
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-alert-watch);
+  }
+  .hc-chip[data-tone='tracking'] .hc-chip-dot {
+    background-color: var(--color-neutral-500);
+  }
+  .hc-chip-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: inherit;
+    opacity: 0;
+  }
+  .hc-chip-part {
+    display: inline-flex;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .hc-chip-sep {
+    color: color-mix(in srgb, var(--color-neutral-0) 35%, transparent);
+  }
+  .hc-chip-part[data-tone='strong'] {
+    font-weight: 800;
+  }
+  .hc-chip-part[data-tone='damaging'] {
+    color: var(--color-alert-watch);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+  .hc-chip-part[data-tone='muted'] {
+    color: var(--color-text-on-dark-muted);
+  }
+  .hc-track[data-live] .hc-chip:not([data-on]) {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  .hc-track[data-live] .hc-chip[data-tone='prediction'][data-on] .hc-chip-dot::after {
+    animation: motion-ping 1.6s ease-out 2;
+  }
+
+  /* The drawing: 480 × 110 user units, ground at y 100. */
+  .hc-art {
+    position: relative;
+    aspect-ratio: 480 / 110;
+    overflow: clip;
+    container-type: inline-size;
+  }
+  .hc-art-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .hc-ground {
+    stroke: color-mix(in srgb, var(--color-neutral-0) 16%, transparent);
+    stroke-width: 1.5;
+  }
+  .hc-bay {
+    stroke: color-mix(in srgb, var(--color-neutral-0) 40%, transparent);
+    stroke-width: 2;
+  }
+  .hc-carport-post {
+    stroke: var(--color-neutral-600);
+    stroke-width: 5;
+  }
+  .hc-carport-roof {
+    fill: var(--color-neutral-700);
+  }
+  .hc-car-body {
+    fill: var(--color-neutral-300);
+  }
+  .hc-car-glass {
+    fill: var(--color-neutral-700);
+  }
+  .hc-wheel {
+    fill: var(--color-neutral-900);
+    stroke: var(--color-neutral-600);
+    stroke-width: 1.5;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .hc-hub {
+    fill: var(--color-neutral-400);
+    stroke: none;
+  }
+  .hc-spoke {
+    stroke: var(--color-neutral-400);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  /* Before IMPACT the car leaves the bay for the carport: 230 units left,
+     eased in and out, the wheels turning with it. */
+  .hc-art-prediction {
+    --hc-drive: clamp(0, (var(--hc-u) - 0.385) / 0.085, 1);
+    --hc-drive-eased: calc(var(--hc-drive) * var(--hc-drive) * (3 - 2 * var(--hc-drive)));
+  }
+  .hc-drive {
+    transform: translateX(calc(var(--hc-drive-eased) * -230px));
+  }
+  .hc-art-prediction .hc-wheel {
+    rotate: calc(var(--hc-drive-eased) * -600deg);
+  }
+
+  /* Stones: the hero's hailstone, falling from above the box to (--x, --y),
+     the point its bottom lands on. Each takes 0.05 of the rail to fall
+     (linear, so it stays in view for more than a flick of the wheel); a
+     hit stone then melts away. */
+  .hc-stone {
+    --hc-fall: clamp(0, (var(--hc-u) - var(--at)) / 0.05, 1);
+    --hc-melt: 0;
+    position: absolute;
+    top: var(--y);
+    left: var(--x);
+    width: clamp(8px, 2.8cqw, 15px);
+    height: clamp(8px, 2.8cqw, 15px);
+    translate: -50% calc(-100% + (var(--hc-fall) - 1) * 30cqw);
+    scale: calc(1 - var(--hc-melt) * 0.5);
+    opacity: calc(clamp(0, (var(--hc-u) - var(--at)) * 80, 1) * (1 - var(--hc-melt)));
+  }
+  .hc-stone.hc-hit {
+    --hc-melt: clamp(0, (var(--hc-u) - var(--at) - 0.06) / 0.06, 1);
+  }
+  .hc-dent {
+    fill: var(--color-neutral-600);
+    opacity: clamp(0, (var(--hc-u) - var(--at) - 0.05) / 0.008, 1);
+  }
+
+  /* Prediction: seven stones on the empty bay, three on the carport roof. */
+  .hc-p1 { --x: 59.4%; --y: 90.9%; --at: 0.46; }
+  .hc-p2 { --x: 65%; --y: 90.9%; --at: 0.475; }
+  .hc-p3 { --x: 70.8%; --y: 90.9%; --at: 0.49; }
+  .hc-p4 { --x: 76.3%; --y: 90.9%; --at: 0.5; }
+  .hc-p5 { --x: 81.7%; --y: 90.9%; --at: 0.515; }
+  .hc-p6 { --x: 87.1%; --y: 90.9%; --at: 0.53; }
+  .hc-p7 { --x: 92%; --y: 90.9%; --at: 0.545; }
+  .hc-p8 { --x: 14.6%; --y: 26%; --at: 0.465; }
+  .hc-p9 { --x: 26%; --y: 24.3%; --at: 0.495; }
+  .hc-p10 { --x: 39.6%; --y: 22.2%; --at: 0.525; }
+
+  /* Tracking: six on the ground, four on the car, each leaving a dent. */
+  .hc-t1 { --x: 8.3%; --y: 90.9%; --at: 0.465; }
+  .hc-t2 { --x: 18.3%; --y: 90.9%; --at: 0.49; }
+  .hc-t3 { --x: 26.7%; --y: 90.9%; --at: 0.51; }
+  .hc-t4 { --x: 71.9%; --y: 90.9%; --at: 0.475; }
+  .hc-t5 { --x: 81.7%; --y: 90.9%; --at: 0.5; }
+  .hc-t6 { --x: 91.7%; --y: 90.9%; --at: 0.535; }
+  .hc-t7 { --x: 48.75%; --y: 52.7%; --at: 0.47; }
+  .hc-t8 { --x: 53.3%; --y: 52.7%; --at: 0.495; }
+  .hc-t9 { --x: 59.6%; --y: 66.7%; --at: 0.515; }
+  .hc-t10 { --x: 40.8%; --y: 67.5%; --at: 0.54; }
+  .hc-dent-1 { --at: 0.47; }
+  .hc-dent-2 { --at: 0.495; }
+  .hc-dent-3 { --at: 0.515; }
+  .hc-dent-4 { --at: 0.54; }
+
+  /* ------------------------------------------------------------ Hand-off
+   * The size-class table below picks up the prediction chip's class. */
+  .hc-picked {
+    background-color: color-mix(in srgb, var(--color-alert-watch) 7%, transparent);
+  }
+  .hc-picked > th {
+    box-shadow: inset 3px 0 0 var(--color-alert-watch);
+  }
+
+  /* ------------------------------------------------------------ Layout */
+  @media (width >= 1024px) {
+    .hc-stage {
+      padding-top: 120px;
+      padding-bottom: 72px;
+    }
+    .hc-timeline {
+      padding-inline: 28px;
+    }
+    .hc-run {
+      height: 72px;
+    }
+    .hc-rail {
+      top: 40px;
+    }
+    .hc-tick-dot {
+      top: 36px;
+      left: -5px;
+      width: 10px;
+      height: 10px;
+    }
+    .hc-tick[data-side='impact'] .hc-tick-dot {
+      top: 34px;
+      left: -7px;
+      width: 14px;
+      height: 14px;
+    }
+    .hc-tick-label {
+      top: 56px;
+      font-size: 12px;
+      line-height: 16px;
+    }
+    .hc-cloud {
+      width: 32px;
+      height: 33px;
+    }
+    .hc-columns {
+      flex-direction: row;
+      gap: 32px;
+    }
+    .hc-col-prediction {
+      order: 0;
+    }
+  }
+
+  /* Pin: the stage holds while the cloud crosses, 220vh of scroll. */
+  @media (width >= 1024px) and (height >= 760px) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+    .hc-track {
+      height: calc(100vh + 220vh);
+    }
+    .hc-stage {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      justify-content: center;
+      gap: 24px;
+      padding-top: calc(var(--site-header-h-compact) + 16px);
+      padding-bottom: 16px;
+    }
+  }
+
+  /* Stack: the timeline rides at the top as a mini bar, clear of the header. */
+  @media (width < 1024px) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+    .hc-timeline {
+      position: sticky;
+      z-index: 2;
+      top: calc(var(--site-header-h) + 8px);
+      padding: 8px 30px 6px;
+      border-radius: 14px;
+      background-color: color-mix(in srgb, var(--color-neutral-0) 94%, transparent);
+      box-shadow:
+        inset 0 0 0 1px var(--color-border),
+        0 10px 24px -14px color-mix(in srgb, var(--color-brand-navy) 40%, transparent);
+    }
+  }
+}
+
+/* The IMPACT dot as the cloud reaches it. */
+@keyframes hc-flash {
+  from {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--color-alert-warning) 0%, transparent);
+  }
+  30% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--color-alert-warning) 28%, transparent);
+  }
+}

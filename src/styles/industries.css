@@ -1,0 +1,73 @@
+/*
+ * industries — global styles for this area of the site.
+ *
+ * Components use these class names; no component carries inline style={...}.
+ * Classes sit in @layer components so a Tailwind utility on the same element
+ * still wins.
+ */
+
+@layer components {
+  /* Radial navy glow behind the /industries-we-serve/ hub hero. */
+  .industries-hub-glow {
+    background-image: radial-gradient(110% 90% at 90% 0%, oklab(33% -0.01 -0.15 / 55%) 0%, transparent 62%);
+  }
+
+  /* Radial navy glow behind the plain (undesigned) industry hero. */
+  .industry-hero-glow {
+    background-image: radial-gradient(120% 90% at 85% 0%, oklab(33% -0.01 -0.15 / 55%) 0%, transparent 60%);
+  }
+
+  /* Dark hero, small screens: an even navy wash over the whole photo. */
+  .industry-hero-wash {
+    background-color: oklab(17.1% -0.0005 -0.052 / 86%);
+  }
+
+  /* Dark hero photo grades, one per layout (copy side stays darkest). */
+  .industry-hero-grade-start {
+    background-image: linear-gradient(
+      in oklab 90deg,
+      oklab(17.1% -0.0005 -0.052 / 38%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 84%) 50%,
+      oklab(17.1% -0.0005 -0.052 / 97%) 100%
+    );
+  }
+  .industry-hero-grade-end {
+    background-image: linear-gradient(
+      in oklab 90deg,
+      oklab(17.1% -0.0005 -0.052 / 97%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 88%) 46%,
+      oklab(17.1% -0.0005 -0.052 / 42%) 100%
+    );
+  }
+  .industry-hero-grade-centered {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 96%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 80%) 50%,
+      oklab(17.1% -0.0005 -0.052 / 62%) 100%
+    );
+  }
+
+  /* Light hero: the bottom darkening under the photo card's aside. */
+  .industry-hero-photo-grade {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(14% -0.002 -0.036 / 0%) 34%,
+      oklab(14% -0.002 -0.036 / 74%) 100%
+    );
+  }
+
+  /* The bottom-darkening grade the design lays over every industry photo tile. */
+  .industry-photo-grade {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 15%) 40%,
+      oklab(17.1% -0.0005 -0.052 / 88%) 100%
+    );
+  }
+
+  /* Flash Agent answer charts: SVG text in the site face. */
+  .industry-agent-chart {
+    font-family: var(--font-manrope), system-ui, sans-serif;
+  }
+}

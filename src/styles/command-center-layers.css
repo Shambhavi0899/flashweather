@@ -1,0 +1,651 @@
+/*
+ * command-center-layers — "Products that pair with Weather Command Center"
+ * (components/products/detail/command-center-layers.tsx).
+ *
+ * A mini Command Center (the page's own screenshot, cropped to its map and
+ * dimmed) with one layer per pairing product. The root carries one data
+ * attribute per layer that is on (data-lightning, data-hail, data-edge,
+ * data-mobile), so the window's map and the phone's copy of it follow the
+ * same switches. `data-lead` names the layer whose card is hovered or
+ * focused; the others step back.
+ *
+ * The base rules are the still frame: every layer drawn, bolts shown, no
+ * motion. That is what reduced motion and no JavaScript get (the component
+ * starts with every layer on). Entrances, flashes and the swath's sheen all
+ * sit inside the no-preference query. Nothing here changes a box.
+ */
+
+@layer components {
+  /* ------------------------------------------------------------ Layout */
+
+  .ccl {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    @media (width >= 1024px) {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 48px;
+    }
+  }
+
+  /* The preview stays in view while the cards scroll past it: beside them
+     from 1024px, above them below that (where the screen is tall enough to
+     leave room for a card under it). */
+  .ccl-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    @media (width < 1024px) and (height >= 700px) {
+      position: sticky;
+      top: var(--site-header-h-compact);
+      z-index: 2;
+      margin-inline: -4px;
+      padding: 12px 4px 16px;
+      background-color: var(--color-brand-navy);
+    }
+    @media (width >= 1024px) {
+      position: sticky;
+      top: calc(var(--site-header-h-compact) + 32px);
+      width: 56%;
+      flex-shrink: 0;
+    }
+  }
+
+  .ccl-cards {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 14px;
+    @media (width >= 1024px) {
+      flex: 1 1 0;
+    }
+  }
+
+  /* ------------------------------------------------------------ The map */
+
+  .ccl-screen {
+    position: relative;
+    aspect-ratio: 790 / 510;
+    overflow: hidden;
+    /* The frame (WindowFrame) is 16px round with a 1px inset. */
+    border-radius: 0 0 15px 15px;
+    background-color: var(--color-brand-navy-deep);
+  }
+
+  /* The screenshot is the laptop render the page's hero uses; this frame
+     shows only its screen (790×510 at 66,166 of the 1600×900 image). */
+  .ccl-map {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .ccl-shot {
+    position: absolute;
+    top: -32.549%;
+    left: -8.354%;
+    width: 202.532%;
+    height: 176.471%;
+    filter: brightness(0.46) saturate(0.55);
+  }
+
+  .ccl-fx {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* Lightning: strike-risk areas over the storm cells, each with a bolt. */
+  .ccl-glow-core {
+    stop-color: var(--color-viz-gold);
+    stop-opacity: 0.85;
+  }
+  .ccl-glow-mid {
+    stop-color: var(--color-viz-gold);
+    stop-opacity: 0.32;
+  }
+  .ccl-glow-edge {
+    stop-color: var(--color-viz-gold);
+    stop-opacity: 0;
+  }
+  .ccl-area-body {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .ccl-area-ring {
+    fill: none;
+    stroke: var(--color-viz-gold);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 5;
+    opacity: 0.8;
+  }
+  .ccl-bloom {
+    fill: #fff8e1;
+    opacity: 0;
+  }
+  .ccl-bolt {
+    fill: #fff;
+  }
+
+  /* Hail: a soft swath along the line of storms, south-west to north-east. */
+  .ccl-swath-halo {
+    fill: none;
+    stroke: #6f9bff;
+    stroke-width: 64;
+    stroke-linecap: round;
+    opacity: 0.2;
+  }
+  .ccl-swath-body {
+    fill: none;
+    stroke: #b9d0ff;
+    stroke-width: 34;
+    stroke-linecap: round;
+    opacity: 0.26;
+  }
+  .ccl-swath-core {
+    fill: none;
+    stroke: #e6f0ff;
+    stroke-width: 10;
+    stroke-linecap: round;
+    opacity: 0.45;
+  }
+  .ccl-swath-sheen {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 30;
+    stroke-linecap: round;
+    stroke-dasharray: 90 1100;
+    opacity: 0;
+  }
+
+  /* Edge Model: a forecast tint, warm in the south-west to cool in the
+     north-east, with its key. */
+  .ccl-edge {
+    background-image: linear-gradient(
+      60deg,
+      rgb(255 110 60 / 55%),
+      rgb(230 186 45 / 22%) 36%,
+      rgb(90 140 255 / 22%) 62%,
+      rgb(50 90 255 / 55%)
+    );
+    background-size: 160% 160%;
+    background-position: 0% 100%;
+    mix-blend-mode: soft-light;
+  }
+
+  .ccl-tag {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 9999px;
+    background-color: rgb(4 8 24 / 78%);
+    padding: 3px 9px 3px 7px;
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--color-text-on-dark);
+    white-space: nowrap;
+    pointer-events: none;
+    @media (width < 480px) {
+      font-size: 9px;
+    }
+  }
+  .ccl-tag::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: var(--ccl-tag, var(--color-viz-gold));
+  }
+  .ccl-tag-lightning {
+    top: 5%;
+    left: 55%;
+  }
+  .ccl-tag-hail {
+    top: 78%;
+    left: 4%;
+    --ccl-tag: #b9d0ff;
+  }
+  .ccl-tag-edge {
+    top: 5%;
+    left: 3.5%;
+  }
+  .ccl-tag-edge::before {
+    width: 22px;
+    height: 5px;
+    background-image: linear-gradient(90deg, #ff7a45, var(--color-viz-gold), #6f9bff);
+  }
+
+  /* Mobile: a phone at the corner, showing the same map and layers. */
+  .ccl-phone {
+    position: absolute;
+    right: 3.5%;
+    bottom: 5%;
+    width: 21%;
+    aspect-ratio: 9 / 18;
+    border: 3px solid #2a3252;
+    border-radius: 18px;
+    background-color: var(--color-brand-navy-deep);
+    box-shadow:
+      0 18px 40px -10px rgb(0 0 0 / 70%),
+      0 0 0 1px rgb(255 255 255 / 8%);
+    overflow: hidden;
+    @media (width < 480px) {
+      border-width: 2px;
+      border-radius: 12px;
+    }
+  }
+  .ccl-phone::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    z-index: 1;
+    width: 30%;
+    height: 7px;
+    border-radius: 9999px;
+    background-color: #0b1020;
+    translate: -50% 0;
+  }
+  /* The phone's map: full height, the storm line centred. */
+  .ccl-phone .ccl-map {
+    inset: 0 auto 0 -114%;
+    aspect-ratio: 790 / 510;
+  }
+  .ccl-phone .ccl-tag {
+    display: none;
+  }
+
+  /* Layers that are off. */
+  .ccl-lightning,
+  .ccl-hail,
+  .ccl-edge,
+  .ccl-tag,
+  .ccl-phone {
+    transition: filter 300ms var(--motion-ease);
+  }
+  .ccl:not([data-lightning]) :is(.ccl-lightning, .ccl-tag-lightning),
+  .ccl:not([data-hail]) :is(.ccl-hail, .ccl-tag-hail),
+  .ccl:not([data-edge]) :is(.ccl-edge, .ccl-tag-edge),
+  .ccl:not([data-mobile]) .ccl-phone {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  /* The hovered card's layer leads; the others step back. A filter, so it
+     never lifts a layer that is off. */
+  .ccl[data-lead]:not([data-lead='lightning']) :is(.ccl-lightning, .ccl-tag-lightning),
+  .ccl[data-lead]:not([data-lead='hail']) :is(.ccl-hail, .ccl-tag-hail),
+  .ccl[data-lead]:not([data-lead='edge']) :is(.ccl-edge, .ccl-tag-edge),
+  .ccl[data-lead]:not([data-lead='mobile']) .ccl-phone {
+    filter: opacity(0.3);
+  }
+
+  /* ------------------------------------------------------------ Meter */
+
+  .ccl-meter {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 700;
+    color: var(--color-text-on-dark);
+  }
+  .ccl-pips {
+    display: flex;
+    gap: 5px;
+  }
+  .ccl-pip {
+    width: 18px;
+    height: 4px;
+    border-radius: 9999px;
+    background-color: rgb(255 255 255 / 16%);
+    transition: background-color 300ms var(--motion-ease);
+  }
+  .ccl-pip[data-on] {
+    background-color: var(--color-viz-gold);
+  }
+  .ccl-meter-note {
+    color: var(--color-text-on-dark-muted);
+    font-weight: 600;
+  }
+
+  /* ------------------------------------------------------------ Cards */
+
+  .ccl-card {
+    display: flex;
+    min-height: 100%;
+    border-radius: 12px;
+    border: 1px solid rgb(255 255 255 / 10%);
+    background-color: rgb(255 255 255 / 3%);
+    overflow: hidden;
+    cursor: pointer;
+    transition:
+      transform 350ms var(--motion-ease),
+      box-shadow 350ms var(--motion-ease),
+      border-color 300ms var(--motion-ease),
+      background-color 300ms var(--motion-ease);
+  }
+  .ccl-card[data-on] {
+    border-color: rgb(230 186 45 / 45%);
+    background-color: rgb(230 186 45 / 5%);
+  }
+  .ccl-card-media {
+    position: relative;
+    width: 104px;
+    flex-shrink: 0;
+    overflow: hidden;
+    @media (width >= 480px) {
+      width: 148px;
+    }
+    @media (width >= 1024px) {
+      width: 120px;
+    }
+    @media (width >= 1280px) {
+      width: 156px;
+    }
+  }
+  .ccl-card-body {
+    display: flex;
+    min-width: 0;
+    flex-grow: 1;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 16px 12px 18px;
+  }
+  .ccl-card-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 12px;
+    margin-top: auto;
+  }
+
+  /* The switch: a 36×20 track in a 44px-tall target. */
+  .ccl-switch {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--color-text-on-dark-muted);
+    cursor: pointer;
+    transition: color 250ms var(--motion-ease);
+  }
+  .ccl-switch[aria-checked='true'] {
+    color: var(--color-text-on-dark);
+  }
+  .ccl-switch:focus-visible {
+    outline: none;
+  }
+  .ccl-switch:focus-visible .ccl-track {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: 3px;
+  }
+  .ccl-track {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    background-color: rgb(255 255 255 / 14%);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 18%);
+    transition: background-color 250ms var(--motion-ease);
+  }
+  .ccl-knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    background-color: var(--color-text-on-dark);
+    transition: translate 250ms var(--motion-ease);
+  }
+  .ccl-switch[aria-checked='true'] .ccl-track {
+    background-color: var(--color-viz-gold);
+    box-shadow: none;
+  }
+  .ccl-switch[aria-checked='true'] .ccl-knob {
+    translate: 16px 0;
+    background-color: var(--color-brand-navy);
+  }
+
+  /* ------------------------------------------------------------ Motion */
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Off screen, the loops hold. */
+    .ccl:not([data-inview]) .ccl-loop {
+      animation-play-state: paused !important;
+    }
+
+    /* Layers come and go on transitions, so a switch can reverse midway. */
+    .ccl-lightning,
+    .ccl-hail,
+    .ccl-edge,
+    .ccl-tag,
+    .ccl-phone {
+      transition:
+        opacity 500ms var(--motion-ease),
+        visibility 0s linear 0s,
+        filter 300ms var(--motion-ease);
+    }
+    .ccl:not([data-lightning]) :is(.ccl-lightning, .ccl-tag-lightning),
+    .ccl:not([data-hail]) :is(.ccl-hail, .ccl-tag-hail),
+    .ccl:not([data-edge]) :is(.ccl-edge, .ccl-tag-edge),
+    .ccl:not([data-mobile]) .ccl-phone {
+      transition:
+        opacity 400ms var(--motion-ease),
+        visibility 0s linear 400ms,
+        filter 300ms var(--motion-ease);
+    }
+
+    /* Lightning: each area swells in from 60%, a step behind the last;
+       then its bolt flashes now and then, out of step with the others. */
+    .ccl-area-body {
+      transition:
+        opacity 500ms var(--motion-ease) calc(var(--i) * 160ms),
+        scale 800ms var(--motion-ease) calc(var(--i) * 160ms);
+    }
+    .ccl:not([data-lightning]) .ccl-area-body {
+      opacity: 0;
+      scale: 0.6;
+    }
+    .ccl-area:nth-child(1) {
+      --i: 0;
+      --flash: 3.4s;
+      --flash-at: 0.9s;
+    }
+    .ccl-area:nth-child(2) {
+      --i: 1;
+      --flash: 4.6s;
+      --flash-at: 2.1s;
+    }
+    .ccl-area:nth-child(3) {
+      --i: 2;
+      --flash: 5.3s;
+      --flash-at: 1.4s;
+    }
+    .ccl-flash {
+      animation: ccl-flash var(--flash) linear var(--flash-at) infinite both;
+    }
+    .ccl-bloom {
+      animation: ccl-bloom var(--flash) ease-out var(--flash-at) infinite both;
+    }
+    .ccl:not([data-lightning]) :is(.ccl-flash, .ccl-bloom) {
+      animation-play-state: paused;
+    }
+
+    /* Hail: the swath sweeps in west to east, then a sheen runs along it. */
+    .ccl-hail {
+      clip-path: inset(0 0 0 0);
+      transition:
+        opacity 500ms var(--motion-ease),
+        visibility 0s linear 0s,
+        filter 300ms var(--motion-ease),
+        clip-path 1400ms var(--motion-ease);
+    }
+    .ccl:not([data-hail]) .ccl-hail {
+      clip-path: inset(0 100% 0 0);
+      transition:
+        opacity 400ms var(--motion-ease),
+        visibility 0s linear 400ms,
+        filter 300ms var(--motion-ease),
+        clip-path 0s linear 400ms;
+    }
+    .ccl-swath-sheen {
+      animation: ccl-sheen 4.2s ease-in-out 1.2s infinite both;
+    }
+    .ccl:not([data-hail]) .ccl-swath-sheen {
+      animation-play-state: paused;
+    }
+
+    /* Edge Model: the tint fades over the map slowly, then drifts. */
+    .ccl-edge {
+      transition:
+        opacity 1200ms var(--motion-ease),
+        visibility 0s linear 0s,
+        filter 300ms var(--motion-ease);
+      animation: ccl-drift 14s ease-in-out infinite alternate both;
+    }
+    .ccl:not([data-edge]) .ccl-edge {
+      animation-play-state: paused;
+    }
+
+    /* Mobile: the phone slides in from the right edge. */
+    .ccl-phone {
+      transition:
+        opacity 400ms var(--motion-ease),
+        visibility 0s linear 0s,
+        filter 300ms var(--motion-ease),
+        translate 800ms var(--motion-ease);
+    }
+    .ccl:not([data-mobile]) .ccl-phone {
+      translate: 130% 0;
+      transition:
+        opacity 300ms var(--motion-ease) 200ms,
+        visibility 0s linear 500ms,
+        filter 300ms var(--motion-ease),
+        translate 500ms var(--motion-ease);
+    }
+
+    /* The shared card hover (styles/parameter-card.css) lifts the card and
+       grows the photo; here the whole card is the target, so its link's
+       arrow slides too. */
+    @media (hover: hover) {
+      .ccl-card:hover .pc-link > span {
+        transform: translateX(4px);
+      }
+    }
+
+    /* Reveal: the cards rise in turn, then the industry chips fade in. */
+    .motion.ccl-item {
+      --motion-stagger: 90ms;
+    }
+    .motion.ccl-item[data-anim]:not([data-anim='reset']) > .ccl-card {
+      animation: ccl-rise 650ms var(--motion-ease) var(--motion-delay) backwards;
+    }
+    .motion.ccl-chips {
+      --motion-stagger: 90ms;
+    }
+    .motion.ccl-chips[data-anim]:not([data-anim='reset']) :is(.ccl-chips-label, .ccl-chip) {
+      animation: ccl-rise-soft 500ms var(--motion-ease) calc(var(--motion-delay) + 350ms + var(--c, 0) * 60ms) backwards;
+    }
+    .ccl-chip:nth-child(2) {
+      --c: 1;
+    }
+    .ccl-chip:nth-child(3) {
+      --c: 2;
+    }
+    .ccl-chip:nth-child(4) {
+      --c: 3;
+    }
+    .ccl-chip:nth-child(5) {
+      --c: 4;
+    }
+    .ccl-chip:nth-child(6) {
+      --c: 5;
+    }
+    .ccl-chip:nth-child(7) {
+      --c: 6;
+    }
+    .ccl-chip:nth-child(8) {
+      --c: 7;
+    }
+    .ccl-chip:nth-child(9) {
+      --c: 8;
+    }
+    .ccl-chip:nth-child(n + 10) {
+      --c: 9;
+    }
+  }
+}
+
+@keyframes ccl-flash {
+  0%,
+  9%,
+  100% {
+    opacity: 0;
+  }
+  1.5% {
+    opacity: 1;
+  }
+  3.5% {
+    opacity: 0.25;
+  }
+  5% {
+    opacity: 0.95;
+  }
+}
+@keyframes ccl-bloom {
+  0%,
+  12%,
+  100% {
+    opacity: 0;
+  }
+  1.5% {
+    opacity: 0.55;
+  }
+}
+@keyframes ccl-sheen {
+  from {
+    stroke-dashoffset: 180;
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.35;
+  }
+  70% {
+    opacity: 0.35;
+  }
+  to {
+    stroke-dashoffset: -960;
+    opacity: 0;
+  }
+}
+@keyframes ccl-drift {
+  to {
+    background-position: 100% 0%;
+  }
+}
+@keyframes ccl-rise {
+  from {
+    opacity: 0;
+    translate: 0 20px;
+  }
+}
+@keyframes ccl-rise-soft {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}

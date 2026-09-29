@@ -1,0 +1,317 @@
+/*
+ * Flash Agent page: "Is it the same engine as the API?" — the engine twins
+ * (components/agent/engine-twins.tsx), classes sen-*.
+ *
+ * One "Flash engine" node forks into two panels that answer from the same
+ * cell and run: the agent's sentence and the API's JSON. The values that
+ * match are twins (`data-twin`); they light gold together.
+ *
+ * One <Motion replay={false}> on the figure; the sequence is CSS off
+ * `--motion-delay` (ms after scroll-in):
+ *      0  the engine node pops, a ring pings out
+ *    350  the stem draws down, 600 the bar out to both sides, 900 the drops
+ *   1150  both panels fade in together (stacked: the rail runs 600–1300)
+ *   1900  the twins glow together, 3 times, 3.4s apart (paused off screen)
+ * Hovering a value lights its twin in the other panel (CSS :has, no script).
+ * No JavaScript: the finished frame. Reduced motion: the frame with every
+ * twin lit.
+ *
+ * Geometry: from 768px the fork is an elbow over two side-by-side panels;
+ * below it the panels stack and a rail runs down their left edge with a tick
+ * into each.
+ */
+
+@layer components {
+  .sen {
+    --sen-core: 36px;
+    --sen-line: var(--color-border-strong);
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+  }
+
+  /* ---------- The engine node ---------- */
+
+  .sen-engine {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    @media (width >= 768px) {
+      align-self: center;
+    }
+  }
+  .sen-core {
+    position: relative;
+    display: flex;
+    width: var(--sen-core);
+    height: var(--sen-core);
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+  }
+  .sen-ping {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1.5px solid var(--color-gold-on-light);
+    opacity: 0;
+  }
+
+  /* ---------- The fork ---------- */
+
+  .sen-fork {
+    position: relative;
+    height: 20px;
+    @media (width >= 768px) {
+      height: 44px;
+    }
+  }
+  .sen-stem,
+  .sen-bar,
+  .sen-drop {
+    position: absolute;
+    background-color: var(--sen-line);
+  }
+  .sen-stem {
+    top: 0;
+    left: calc(var(--sen-core) / 2 - 0.5px);
+    width: 1px;
+    height: 100%;
+    transform-origin: top;
+    @media (width >= 768px) {
+      left: calc(50% - 0.5px);
+      height: 18px;
+    }
+  }
+  .sen-bar,
+  .sen-drop {
+    display: none;
+    @media (width >= 768px) {
+      display: block;
+    }
+  }
+  /* Panel centres sit 25% / 75% of the row, nudged by half the 16px gap. */
+  .sen-bar {
+    top: 18px;
+    left: calc(25% - 4px);
+    width: calc(50% + 8px);
+    height: 1px;
+  }
+  .sen-drop {
+    top: 18px;
+    width: 1px;
+    height: 26px;
+    transform-origin: top;
+  }
+  .sen-drop-l {
+    left: calc(25% - 4.5px);
+  }
+  .sen-drop-r {
+    left: calc(75% + 3.5px);
+  }
+
+  /* ---------- The panels ---------- */
+
+  .sen-panels {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-left: calc(var(--sen-core) - 4px);
+    @media (width >= 768px) {
+      flex-direction: row;
+      gap: 16px;
+      padding-left: 0;
+    }
+  }
+  .sen-panel {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    flex: 1 1 0;
+    flex-direction: column;
+    border-radius: 14px;
+  }
+  /* Stacked: a rail down the left edge (each panel draws its own stretch,
+     through the gap below it; the last stops at its tick) and a tick into
+     each panel's header. */
+  .sen-panel::before,
+  .sen-panel::after {
+    content: '';
+    position: absolute;
+    background-color: var(--sen-line);
+    @media (width >= 768px) {
+      display: none;
+    }
+  }
+  .sen-panel::before {
+    top: 22px;
+    left: calc(var(--sen-core) / 2 + 0.5px - var(--sen-core) + 4px - 1px);
+    width: calc(var(--sen-core) / 2 - 4px);
+    height: 1px;
+  }
+  .sen-panel::after {
+    top: 0;
+    bottom: -14px;
+    left: calc(var(--sen-core) / 2 - 0.5px - var(--sen-core) + 4px - 1px);
+    width: 1px;
+    transform-origin: top;
+  }
+  .sen-panel:last-child::after {
+    bottom: auto;
+    height: 23px;
+  }
+
+  .sen-agent {
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface-sunken);
+  }
+  .sen-api {
+    border: 1px solid rgb(255 255 255 / 10%);
+    background-color: var(--color-brand-navy);
+  }
+  .sen-head {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+  }
+  .sen-agent .sen-head {
+    border-bottom: 1px solid var(--color-border);
+  }
+  .sen-api .sen-head {
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+  }
+  .sen-pre {
+    margin: 0;
+    overflow-x: auto;
+    padding: 14px 16px 16px;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 12.5px;
+    line-height: 21px;
+    color: #8f9ab8;
+  }
+
+  /* ---------- The twins ---------- */
+
+  .sen-v {
+    position: relative;
+    z-index: 0;
+    border-radius: 4px;
+    transition:
+      color 200ms var(--motion-ease),
+      background-color 200ms var(--motion-ease);
+  }
+  .sen-v::before {
+    content: '';
+    position: absolute;
+    inset: -1px -3px;
+    z-index: -1;
+    border-radius: 4px;
+    background-color: rgb(230 186 45 / 30%);
+    box-shadow: 0 0 0 1px rgb(230 186 45 / 55%);
+    opacity: 0;
+  }
+  .sen-agent .sen-v {
+    font-weight: 700;
+  }
+  .sen-api .sen-v {
+    color: #dce2f0;
+  }
+
+  /* Lit: hovered (with its twin) or, with reduced motion, always. */
+  .sen:has([data-twin='risk']:hover) [data-twin='risk'],
+  .sen:has([data-twin='time']:hover) [data-twin='time'],
+  .sen:has([data-twin='cell']:hover) [data-twin='cell'],
+  .sen:has([data-twin='run']:hover) [data-twin='run'] {
+    background-color: rgb(230 186 45 / 24%);
+    box-shadow: 0 0 0 1px rgb(230 186 45 / 60%);
+  }
+  .sen:has([data-twin='risk']:hover) .sen-agent [data-twin='risk'],
+  .sen:has([data-twin='time']:hover) .sen-agent [data-twin='time'],
+  .sen:has([data-twin='cell']:hover) .sen-agent [data-twin='cell'],
+  .sen:has([data-twin='run']:hover) .sen-agent [data-twin='run'] {
+    color: var(--color-gold-on-light);
+  }
+  .sen:has([data-twin='risk']:hover) .sen-api [data-twin='risk'],
+  .sen:has([data-twin='time']:hover) .sen-api [data-twin='time'],
+  .sen:has([data-twin='cell']:hover) .sen-api [data-twin='cell'],
+  .sen:has([data-twin='run']:hover) .sen-api [data-twin='run'] {
+    color: var(--color-viz-gold);
+  }
+  .sen-v:hover {
+    cursor: default;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sen-v {
+      background-color: rgb(230 186 45 / 24%);
+      box-shadow: 0 0 0 1px rgb(230 186 45 / 60%);
+    }
+    .sen-agent .sen-v {
+      color: var(--color-gold-on-light);
+    }
+    .sen-api .sen-v {
+      color: var(--color-viz-gold);
+    }
+  }
+
+  /* ---------- Motion ---------- */
+
+  @media (prefers-reduced-motion: no-preference) {
+    .motion.sen[data-anim]:not([data-anim='reset']) {
+      .sen-core {
+        animation: motion-pop 600ms var(--motion-ease) var(--motion-delay) both;
+      }
+      .sen-ping {
+        animation: motion-ping 1200ms ease-out var(--motion-delay) 1;
+      }
+      .sen-stem {
+        animation: motion-grow-y 250ms ease-out calc(var(--motion-delay) + 350ms) both;
+      }
+      .sen-panel::after {
+        animation: motion-grow-y 350ms ease-out calc(var(--motion-delay) + 600ms) both;
+      }
+      .sen-panel:last-child::after {
+        animation-delay: calc(var(--motion-delay) + 950ms);
+      }
+      .sen-bar {
+        animation: motion-grow-x 300ms ease-out calc(var(--motion-delay) + 600ms) both;
+      }
+      .sen-drop {
+        animation: motion-grow-y 250ms ease-out calc(var(--motion-delay) + 900ms) both;
+      }
+      .sen-panel {
+        animation: sen-in 500ms var(--motion-ease) calc(var(--motion-delay) + 1150ms) both;
+      }
+      .sen-v::before {
+        animation: sen-glow 3400ms ease-in-out calc(var(--motion-delay) + 1900ms) 3;
+      }
+    }
+    /* The glow holds while the figure is off screen. */
+    .motion.sen:not([data-inview]) .sen-v::before {
+      animation-play-state: paused !important;
+    }
+  }
+}
+
+@keyframes sen-in {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+/* On for a beat, twice as long off: all twins together. */
+@keyframes sen-glow {
+  0%,
+  45%,
+  100% {
+    opacity: 0;
+  }
+  12%,
+  28% {
+    opacity: 1;
+  }
+}

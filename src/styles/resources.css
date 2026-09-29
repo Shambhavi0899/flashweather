@@ -1,0 +1,54 @@
+/*
+ * resources — global styles for this area of the site: the /resources/ hub
+ * and the /why-flash/ hub (why-flash.css belongs to the section's subpages).
+ *
+ * Components use these class names; no component carries inline style={...}.
+ * Classes sit in @layer components so a Tailwind utility on the same element
+ * still wins.
+ */
+
+@layer components {
+  /* /resources/ hero: a soft blue lift from the top right on the sunken ground. */
+  .resources-hero {
+    background-color: var(--color-surface-sunken);
+    background-image: radial-gradient(90% 120% at 100% 0%, oklab(90% -0.01 -0.05 / 60%) 0%, transparent 60%);
+  }
+
+  /* Resource cards lift slightly on hover. */
+  .resources-card {
+    box-shadow: 0 1px 2px #0b13220d;
+  }
+  .resources-card:hover {
+    box-shadow: 0 1px 2px #0b13220d, 0 16px 32px #0b13221f;
+  }
+
+  /* Post cover on the hub: a bottom grade so the category chip reads. */
+  .resources-post-grade {
+    background-image: linear-gradient(180deg, rgb(7 13 38 / 0.04) 40%, rgb(7 13 38 / 0.6) 100%);
+  }
+
+  /* /why-flash/ hero: navy from the copy side, opening toward the photo. */
+  .why-flash-hub-hero-grade {
+    background-image: linear-gradient(in oklab 90deg, oklab(17.1% -0.0005 -0.052 / 96%) 0%, oklab(17.1% -0.0005 -0.052 / 82%) 50%, oklab(17.1% -0.0005 -0.052 / 45%) 100%);
+  }
+
+  /* The "Prediction. This is Flash." card: navy with a blue glow. */
+  .why-flash-hub-flash-card {
+    background-color: var(--color-brand-navy);
+    background-image: radial-gradient(120% 100% at 100% 0%, oklab(33% -0.01 -0.15 / 70%) 0%, transparent 65%);
+    box-shadow: 0 24px 48px #070d2640;
+  }
+
+  /* The Flash column of the comparison: lifted off the navy ground. */
+  .why-flash-hub-win-card {
+    background-color: var(--color-brand-navy-deep);
+    border: 1px solid oklab(76.7% 0.004 0.15 / 45%);
+    box-shadow: 0 0 0 1px oklab(76.7% 0.004 0.15 / 10%), 0 24px 48px #04081880;
+  }
+
+  /* "For everyday life" band: blue into navy. */
+  .why-flash-hub-everyday {
+    background-color: var(--color-brand-navy);
+    background-image: linear-gradient(in oklab 135deg, var(--color-brand-blue) 0%, var(--color-brand-navy) 70%);
+  }
+}

@@ -1,0 +1,223 @@
+/*
+ * Flash Agent conversations: the one interaction every agent interface on the
+ * site shares. <AgentConversation> is the panel and <AgentChat> the player
+ * (components/agent-conversation/); the home hero card, the platform exchange
+ * and the Lightning spec card reuse these hooks on their own markup.
+ */
+@layer components {
+  /*
+   * A panel (.chat) with no data-chat is the finished conversation: no JS,
+   * reduced motion, or a tab that is not playing. While it plays, `data-steps` lists the steps
+   * reached and each piece arrives on its step; until then it is transparent
+   * but keeps its space, so the panel never changes height.
+   */
+  /* The tab row scrolls below lg without showing a bar. */
+  .chat-tabs {
+    scrollbar-width: none;
+  }
+  .chat-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * The stage holds the five panels; one is open at a time. The script sets
+   * --chat-height to the open panel's own height and keeps it current, so
+   * switching tabs eases from the old height to the new. With no JS there is
+   * no variable and the stage is just as tall as its content.
+   */
+  .chat-stage {
+    height: var(--chat-height, auto);
+    overflow: hidden;
+    transition: height 0.45s var(--motion-ease);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .chat-stage {
+      transition: none;
+    }
+  }
+
+  .chat-dots,
+  .chat-caret,
+  .chat-replay {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .chat[data-chat] :is(.chat-bubble, .chat-agent, .chat-badge, .chat-chart, .chat-chip, .chat-actions) {
+    opacity: 0;
+  }
+  .chat[data-chat] .chat-word {
+    opacity: 0;
+    filter: blur(4px);
+    transition:
+      opacity 0.35s var(--motion-ease),
+      filter 0.35s var(--motion-ease);
+  }
+  .chat[data-chat] .chat-word.is-in {
+    opacity: 1;
+    filter: none;
+  }
+
+  /* 1 · The query types into the composer, then sends as a bubble. */
+  .chat[data-typing] .chat-placeholder {
+    display: none;
+  }
+  .chat[data-typing] .chat-caret {
+    visibility: visible;
+    opacity: 1;
+    animation: chat-caret 0.9s steps(1) infinite;
+  }
+  /* A question chip typed a question in and left it unsent: the caret stays,
+     and the panel's ask note (the demo link) shows under the composer. */
+  .chat[data-asked] .chat-placeholder {
+    display: none;
+  }
+  .chat[data-asked] .chat-caret {
+    visibility: visible;
+    opacity: 1;
+  }
+  .chat-ask-note {
+    display: none;
+  }
+  .chat[data-asked] .chat-ask-note {
+    display: flex;
+    animation: chat-rise 0.4s var(--motion-ease) both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .chat[data-asked] .chat-ask-note {
+      animation: none;
+    }
+  }
+  .chat[data-steps~='sent'] .chat-bubble {
+    animation: chat-rise 0.4s var(--motion-ease) both;
+  }
+
+  /* 2 · Flash Agent's header arrives with typing dots, ~0.8s. */
+  .chat[data-steps~='thinking'] .chat-agent {
+    animation: chat-rise 0.35s var(--motion-ease) both;
+  }
+  .chat[data-steps~='thinking']:not([data-steps~='badge']) .chat-dots {
+    visibility: visible;
+    opacity: 1;
+  }
+  /* The dots only run while they show. */
+  .chat[data-steps~='thinking']:not([data-steps~='badge']) .chat-dots > span {
+    /* Longhands, so the delays below still stagger the three. */
+    animation-name: chat-dot;
+    animation-duration: 0.9s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+  .chat-dots > span:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .chat-dots > span:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  /* 3 · The status badge pops in. */
+  .chat[data-steps~='badge'] .chat-badge {
+    animation: chat-pop 0.4s var(--motion-ease) both;
+  }
+
+  /* 4 · The answer streams in word by word (the .is-in transition above). */
+
+  /* 5 · The chart builds: bars grow, lines draw, then limits and labels fade. */
+  .chat .chat-bar {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+  }
+  .chat[data-chat] .chat-annot {
+    opacity: 0;
+  }
+  .chat[data-steps~='chart'] .chat-chart {
+    animation: chat-fade 0.25s ease-out both;
+  }
+  .chat[data-steps~='chart'] .chat-bar {
+    animation: motion-grow-y 0.8s var(--motion-ease) both;
+  }
+  .chat[data-steps~='chart'] .chat-line {
+    animation: chat-draw 0.9s var(--motion-ease) both;
+  }
+  .chat[data-steps~='chart'] .chat-annot {
+    animation: chat-fade 0.4s ease-out 0.7s both;
+  }
+
+  /* 6 · The context chips fade in. */
+  .chat[data-steps~='chips'] .chat-chip {
+    animation: chat-rise 0.35s var(--motion-ease) both;
+  }
+  .chat[data-steps~='chips'] .chat-chip:nth-child(2) {
+    animation-delay: 80ms;
+  }
+  .chat[data-steps~='chips'] .chat-chip:nth-child(3) {
+    animation-delay: 160ms;
+  }
+
+  /* 7 · Actions and follow-ups last; then Replay. */
+  .chat[data-steps~='actions'] .chat-actions {
+    animation: chat-rise 0.45s var(--motion-ease) both;
+  }
+  .chat[data-chat='done'] .chat-replay {
+    visibility: visible;
+    animation: chat-fade 0.3s ease-out both;
+  }
+}
+
+@keyframes chat-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes chat-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes chat-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+/* Lines draw left to right; the negative insets keep round caps uncut. */
+@keyframes chat-draw {
+  from {
+    clip-path: inset(-6px 100% -6px -6px);
+  }
+  to {
+    clip-path: inset(-6px -6px -6px -6px);
+  }
+}
+@keyframes chat-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+@keyframes chat-caret {
+  50% {
+    opacity: 0;
+  }
+}

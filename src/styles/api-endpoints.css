@@ -1,0 +1,231 @@
+/*
+ * Flash API "Which endpoints does the API expose?"
+ * (components/products/api/endpoint-explorer.tsx).
+ *
+ * From 1280px (narrower, three columns and the panel do not fit side by
+ * side): the endpoint table, then the response panel beside it
+ * (sticky, a dark code window holding every sample stacked in one place, the
+ * picked one shown). The picked row (`data-on`) has a pale ground and a blue
+ * rule down its left edge; the panel crossfades between samples.
+ *
+ * Below 1280px the table's rows stack as blocks (its header is kept for
+ * screen readers only), there is no side panel, and the picked row opens its
+ * sample in the row right after it (`.ape-expand`).
+ *
+ * `data-armed` / `data-in` on `.ape`: rows fade in once, staggered, as the
+ * table scrolls in. Nothing fades with reduced motion. The section keeps hard
+ * edges: no fades in or out.
+ */
+@layer components {
+  .ape {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ------------------------------------------------------------ Table, stacked */
+  .ape-table {
+    display: block;
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .ape-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .ape-table tbody {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--color-border-strong);
+  }
+  .ape-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 16px 18px;
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    transition:
+      background-color 0.25s var(--motion-ease),
+      box-shadow 0.25s var(--motion-ease);
+  }
+  .ape-cell {
+    display: block;
+  }
+  .ape-row:hover {
+    background-color: var(--color-neutral-50);
+  }
+  .ape-row[data-on] {
+    background-color: var(--color-surface-sunken);
+    box-shadow: inset 3px 0 0 var(--color-brand-blue);
+  }
+  /* The endpoint is the row's button; the rest of the row picks it too. */
+  .ape-pick {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 32px;
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+  }
+  .ape-pick code {
+    overflow-wrap: anywhere;
+  }
+  .ape-expand {
+    display: block;
+    padding: 4px 0 20px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .ape-expand > td {
+    display: block;
+  }
+
+  /* ------------------------------------------------------------ Code window */
+  .ape-window {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 20px;
+    background: var(--color-brand-navy-deep);
+  }
+  .ape-sample-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  }
+  .ape-panel {
+    display: none;
+  }
+
+  /* ------------------------------------------------------------ Wide (1280px+): table + panel */
+  @media (width >= 1280px) {
+    .ape {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 40px;
+    }
+    .ape-table {
+      display: table;
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .ape-table thead {
+      position: static;
+      width: auto;
+      height: auto;
+      overflow: visible;
+      clip-path: none;
+      white-space: normal;
+    }
+    .ape-table tbody {
+      display: table-row-group;
+      border-top: 0;
+    }
+    .ape-row {
+      display: table-row;
+      padding: 0;
+    }
+    .ape-cell {
+      display: table-cell;
+      padding: 18px 24px 18px 0;
+      vertical-align: top;
+    }
+    .ape-cell-endpoint {
+      padding-left: 16px;
+    }
+    /* A path reads as one token: never broken mid-word beside the panel. */
+    .ape-pick code {
+      white-space: nowrap;
+      overflow-wrap: normal;
+    }
+    .ape-col-endpoint {
+      width: 37%;
+      padding-left: 16px;
+    }
+    .ape-col-returns {
+      width: 36%;
+    }
+    .ape-expand {
+      display: none;
+    }
+    /* Beside the table, held in view while its rows are read. */
+    .ape-panel {
+      position: sticky;
+      top: calc(var(--site-header-h) + 24px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: min(460px, 36%);
+      flex-shrink: 0;
+    }
+    /* Every sample in one place: the window is as tall as the longest. */
+    .ape-stack {
+      display: grid;
+    }
+    .ape-sample {
+      grid-area: 1 / 1;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity 0.25s ease-out,
+        visibility 0s linear 0.25s;
+    }
+    .ape-sample[data-on] {
+      opacity: 1;
+      visibility: visible;
+      transition:
+        opacity 0.25s ease-out,
+        visibility 0s;
+    }
+  }
+
+  /* ------------------------------------------------------------ Rows fade in once */
+  .ape[data-armed] .ape-row {
+    opacity: 0;
+  }
+  /* opacity 1 is the end frame motion-rise resolves to (it only defines `from`). */
+  .ape[data-in] .ape-row {
+    opacity: 1;
+    animation: motion-rise 0.5s var(--motion-ease) both;
+  }
+  /* Staggered in row order (data-i); the expand rows are rows too, so not nth-of-type. */
+  .ape-row[data-i='1'] {
+    --ape-i: 1;
+  }
+  .ape-row[data-i='2'] {
+    --ape-i: 2;
+  }
+  .ape-row[data-i='3'] {
+    --ape-i: 3;
+  }
+  .ape-row[data-i='4'] {
+    --ape-i: 4;
+  }
+  .ape-row[data-i='5'] {
+    --ape-i: 5;
+  }
+  .ape[data-in] .ape-row {
+    animation-delay: calc(var(--ape-i, 0) * 70ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ape * {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}

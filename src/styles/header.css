@@ -1,0 +1,217 @@
+/*
+ * header — the fixed site header (components/site-header.tsx).
+ *
+ * The bar's colours are variables set by its `data-theme`: the page's tone,
+ * fixed for the page, except over the page's ending (the closing band and
+ * the footer), where a light page's bar takes the dark theme. `data-grounded` (past 24px, where its text leaves the
+ * spacer) gives it a translucent, blurred ground; `data-scrolled` (past 40px)
+ * compacts it. At the very top it is transparent over the spacer. The
+ * changes ease over 200ms.
+ */
+
+@layer components {
+  :root {
+    --site-header-h: 76px;
+    --site-header-h-compact: 64px;
+    /* Anchor targets land clear of the bar at its tallest. */
+    scroll-padding-top: var(--site-header-h);
+  }
+
+  .site-header-spacer {
+    height: var(--site-header-h);
+  }
+
+  .site-header {
+    --hdr-ease: 200ms var(--motion-ease);
+    position: fixed;
+    inset: 0 0 auto;
+    /* Above every section and the Flash Agent launcher (z-30). */
+    z-index: 50;
+    color: var(--hdr-fg);
+    transition:
+      background-color var(--hdr-ease),
+      box-shadow var(--hdr-ease),
+      backdrop-filter var(--hdr-ease),
+      -webkit-backdrop-filter var(--hdr-ease);
+  }
+  .site-header[data-theme='dark'] {
+    --hdr-fg: var(--color-text-on-dark);
+    --hdr-muted: var(--color-text-on-dark-muted);
+    --hdr-ground: color-mix(in srgb, var(--color-brand-navy) 82%, transparent);
+    --hdr-solid: var(--color-brand-navy-deep);
+    --hdr-rule: var(--color-border-on-dark);
+    --hdr-panel-hover: rgb(255 255 255 / 5%);
+    --hdr-toggle: rgb(255 255 255 / 20%);
+  }
+  .site-header[data-theme='light'] {
+    --hdr-fg: var(--color-text);
+    --hdr-muted: var(--color-text-muted);
+    /* 92%: "Log in" (text-muted) keeps 4.5:1 even over a navy section. */
+    --hdr-ground: color-mix(in srgb, var(--color-neutral-0) 92%, transparent);
+    --hdr-solid: var(--color-neutral-0);
+    --hdr-rule: var(--color-border);
+    --hdr-panel-hover: var(--color-neutral-50);
+    --hdr-toggle: var(--color-border-strong);
+  }
+  /* The rule is a shadow, not a border, so the bar is exactly 76 / 64px. */
+  .site-header[data-grounded] {
+    box-shadow: 0 1px 0 var(--hdr-rule);
+    background-color: var(--hdr-ground);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+  }
+
+  .site-header-bar {
+    height: var(--site-header-h);
+    transition: height 250ms var(--motion-ease);
+  }
+  .site-header[data-scrolled] .site-header-bar {
+    height: var(--site-header-h-compact);
+  }
+
+  /* Logo: 44px on phones, 56 from md, 48 once compact. */
+  .site-header-logo-img {
+    height: 44px;
+    transition: height 250ms var(--motion-ease);
+    @media (width >= 768px) {
+      height: 56px;
+    }
+  }
+  .site-header[data-scrolled] .site-header-logo-img {
+    @media (width >= 768px) {
+      height: 48px;
+    }
+  }
+  /* A light page carries both logo files; the theme in force shows its own. */
+  .site-header[data-theme='dark'] .logo-for-light,
+  .site-header[data-theme='light'] .logo-for-dark {
+    display: none;
+  }
+
+  .site-header-link {
+    color: var(--hdr-fg);
+    transition: opacity 150ms;
+  }
+  .site-header-link:hover {
+    opacity: 0.8;
+  }
+  .site-header-muted {
+    color: var(--hdr-muted);
+    transition: opacity 150ms;
+  }
+  .site-header-muted:hover {
+    opacity: 0.8;
+  }
+
+  .site-header-panel {
+    border-color: var(--hdr-rule);
+    background-color: var(--hdr-solid);
+    color: var(--hdr-muted);
+  }
+  .site-header-panel a:hover {
+    background-color: var(--hdr-panel-hover);
+    color: var(--hdr-fg);
+  }
+
+  /* Book a demo: the gold button over dark (C01), the blue one over light (C02). */
+  .site-header-demo {
+    transition:
+      background-color 150ms,
+      filter 150ms;
+  }
+  .site-header[data-theme='dark'] .site-header-demo {
+    border-radius: var(--radius-pill);
+    background-color: var(--color-gold-metallic-mid);
+    background-image: linear-gradient(
+      in oklab 160deg,
+      var(--color-gold-metallic-mid) 0%,
+      var(--color-gold-300) 35%,
+      var(--color-gold-100) 50%,
+      var(--color-gold-button-mid) 70%,
+      var(--color-gold-button-edge) 100%
+    );
+    color: var(--color-brand-navy);
+    font-weight: 600;
+  }
+  .site-header[data-theme='dark'] .site-header-demo:hover {
+    filter: brightness(1.06);
+  }
+  .site-header[data-theme='light'] .site-header-demo {
+    border-radius: var(--radius-xs);
+    background-color: var(--color-brand-blue);
+    color: var(--color-text-on-dark);
+    font-weight: 800;
+  }
+  .site-header[data-theme='light'] .site-header-demo:hover {
+    background-color: var(--color-brand-blue-hover);
+  }
+
+  .site-header-toggle {
+    border-color: var(--hdr-toggle);
+    color: var(--hdr-fg);
+  }
+  .site-header-rule {
+    border-color: var(--hdr-rule);
+  }
+
+  /*
+   * The mobile menu: the whole screen below the bar, in the bar's theme.
+   * While it is open the bar is solid too, and drops its blur: a filter
+   * would make the bar, not the screen, the box a fixed menu fills.
+   */
+  .site-header-menu {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    padding-top: calc(var(--site-header-h) + 8px);
+    background-color: var(--hdr-solid);
+    color: var(--hdr-muted);
+    overscroll-behavior: contain;
+  }
+  .site-header[data-scrolled] .site-header-menu {
+    padding-top: calc(var(--site-header-h-compact) + 8px);
+  }
+  .site-header:has(details[open]) {
+    box-shadow: 0 1px 0 var(--hdr-rule);
+    background-color: var(--hdr-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .site-menu-open,
+  .site-menu-open body {
+    overflow: hidden;
+  }
+
+  /*
+   * The Flash Agent launcher (components/agent-launcher.tsx). `data-aside`:
+   * something marked data-launcher-clear would be under it, so it slides
+   * out of view and out of the tab order until that has passed.
+   */
+  .agent-launcher {
+    transition:
+      translate 350ms var(--motion-ease),
+      opacity 250ms var(--motion-ease),
+      visibility 0s,
+      filter 150ms;
+  }
+  .agent-launcher[data-aside] {
+    translate: 0 calc(100% + 40px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      translate 350ms var(--motion-ease),
+      opacity 250ms var(--motion-ease),
+      visibility 0s 350ms,
+      filter 150ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-header,
+    .site-header *,
+    .site-header-logo-img,
+    .agent-launcher {
+      transition: none !important;
+    }
+  }
+}

@@ -1,0 +1,301 @@
+/*
+ * Flash Agent page: "How does the harness work?" (components/agent/
+ * harness-loop.tsx, markup in agent-sections.tsx), classes hl-*.
+ *
+ * One <Motion> block runs a CSS timeline. The three cards (and the ⇄
+ * arrows between them) fade up left to right; then a glowing request token
+ * makes one loop:
+ *
+ *     0    token appears on the Google Calendar chip, which lights gold
+ *   930    reaches harness row 1 (via the first arrow), row 2 at 1210
+ *   973    ✓ Permissions per connector      1227  ✓ Memory of your sites
+ *  2031    reaches the engine; 1×1 km and 60 min rows light up
+ *  3045    back on harness row 3, row 4 at 3320
+ *  3088    ✓ Audit log                      3342  ✓ Human confirmation
+ *  4146    back on the chip, which flashes "Done" until ~5000
+ *
+ * The token's waypoints are measured by the script (--hl-x0…y7, listed at
+ * the hl-token keyframes), so the same keyframes run across the
+ * row on desktop and down the stack on mobile. `--hl-start` is when the loop
+ * begins: after the cards on scroll-in, at once on a hover replay (the
+ * script sets data-loop reset → go, which restarts the loop but not the
+ * cards). The markup is the finished frame: every tick shown, no token,
+ * which is what reduced motion and a browser without JavaScript see.
+ */
+@layer components {
+  .hl {
+    --hl-start: calc(var(--motion-delay) + 1000ms);
+  }
+  .hl[data-loop='go'] {
+    --hl-start: 0ms;
+  }
+
+  /* ---------- Cards and arrows rise left to right ---------- */
+
+  .hl-k1 {
+    --hl-k: 1;
+  }
+  .hl-k2 {
+    --hl-k: 2;
+  }
+  .hl-k3 {
+    --hl-k: 3;
+  }
+  .hl-k4 {
+    --hl-k: 4;
+  }
+  .motion.hl[data-anim]:not([data-anim='reset']) .hl-rise {
+    animation: hl-rise 700ms var(--motion-ease) calc(var(--motion-delay) + var(--hl-k, 0) * 110ms) both;
+  }
+
+  /* ---------- The token ---------- */
+
+  .hl-token {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border-radius: 50%;
+    background: var(--color-viz-gold);
+    box-shadow:
+      0 0 0 4px rgb(230 186 45 / 0.22),
+      0 0 18px 4px rgb(230 186 45 / 0.55);
+    opacity: 0;
+    pointer-events: none;
+    translate: var(--hl-x0, 0) var(--hl-y0, 0);
+  }
+
+  /* Every loop rule shares this guard: the block has scrolled in, and a
+     replay is not mid-reset. */
+  .motion.hl[data-anim]:not([data-anim='reset']):not([data-loop='reset']) .hl-token {
+    animation: hl-token 4.4s linear var(--hl-start) both;
+  }
+
+  /* ---------- Your tools: the chip lights, then flashes Done ---------- */
+
+  .hl-chip {
+    position: relative;
+  }
+  .hl-chip-done {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-weight: 700;
+    color: var(--color-alert-clear);
+    opacity: 0;
+  }
+  .motion.hl[data-anim]:not([data-anim='reset']):not([data-loop='reset']) .hl-chip {
+    animation: hl-chip 5.4s var(--motion-ease) var(--hl-start) both;
+  }
+  .motion.hl[data-anim]:not([data-anim='reset']):not([data-loop='reset']) .hl-chip-label {
+    animation: hl-chip-label 5.4s var(--motion-ease) var(--hl-start) both;
+  }
+  .motion.hl[data-anim]:not([data-anim='reset']):not([data-loop='reset']) .hl-chip-done {
+    animation: hl-chip-done 5.4s var(--motion-ease) var(--hl-start) both;
+  }
+
+  /* ---------- Harness: the list ticks one by one ---------- */
+
+  .hl-tick {
+    stroke-dasharray: 1;
+  }
+  .hl-c1 {
+    --hl-at: 973ms;
+  }
+  .hl-c2 {
+    --hl-at: 1227ms;
+  }
+  .hl-c3 {
+    --hl-at: 3088ms;
+  }
+  .hl-c4 {
+    --hl-at: 3342ms;
+  }
+  .motion.hl[data-anim]:not([data-anim='reset']):not([data-loop='reset']) .hl-check .hl-tick {
+    animation: motion-draw 320ms var(--motion-ease) calc(var(--hl-start) + var(--hl-at)) both;
+  }
+  .motion.hl[data-anim]:not([data-anim='reset']):not([data-loop='reset']) .hl-check-label {
+    animation: hl-lit 320ms var(--motion-ease) calc(var(--hl-start) + var(--hl-at)) both;
+  }
+
+  /* ---------- Engine: the lines the answer reads light up ---------- */
+
+  .hl-row {
+    position: relative;
+  }
+  .hl-row::before {
+    content: '';
+    position: absolute;
+    inset: 3px -10px;
+    z-index: -1;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--color-gold-on-light) 9%, transparent);
+    opacity: 0;
+  }
+  .hl-engine {
+    isolation: isolate;
+  }
+  .motion.hl[data-anim]:not([data-anim='reset']):not([data-loop='reset']) .hl-row::before {
+    animation: hl-row 5.4s var(--motion-ease) var(--hl-start) both;
+  }
+  .motion.hl[data-anim]:not([data-anim='reset']):not([data-loop='reset']) .hl-row dt {
+    animation: hl-row-value 5.4s var(--motion-ease) var(--hl-start) both;
+  }
+}
+
+@keyframes hl-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+/* Waypoints (--hl-xN/yN): 0 chip, 1 arrow 1, 2–3 harness rows 1–2,
+   4 arrow 2, 5 engine, 6–7 harness rows 3–4. The token rides each card's
+   left gutter, landing on a harness row as it ticks. Legs ease in to an
+   arrow and out of it, so it keeps its speed through the arrow. */
+@keyframes hl-token {
+  0% {
+    opacity: 0;
+    scale: 0.4;
+    translate: var(--hl-x0) var(--hl-y0);
+    animation-timing-function: var(--motion-ease);
+  }
+  4.8% {
+    opacity: 1;
+    scale: 1;
+    translate: var(--hl-x0) var(--hl-y0);
+    animation-timing-function: cubic-bezier(0.45, 0, 1, 1);
+  }
+  13.5% {
+    translate: var(--hl-x1) var(--hl-y1);
+    animation-timing-function: cubic-bezier(0, 0, 0.55, 1);
+  }
+  21.2%,
+  24% {
+    translate: var(--hl-x2) var(--hl-y2);
+    animation-timing-function: var(--motion-ease);
+  }
+  27.5%,
+  31.7% {
+    translate: var(--hl-x3) var(--hl-y3);
+    animation-timing-function: cubic-bezier(0.45, 0, 1, 1);
+  }
+  38.5% {
+    translate: var(--hl-x4) var(--hl-y4);
+    animation-timing-function: cubic-bezier(0, 0, 0.55, 1);
+  }
+  46.2%,
+  55.8% {
+    translate: var(--hl-x5) var(--hl-y5);
+    animation-timing-function: cubic-bezier(0.45, 0, 1, 1);
+  }
+  62.5% {
+    translate: var(--hl-x4) var(--hl-y4);
+    animation-timing-function: cubic-bezier(0, 0, 0.55, 1);
+  }
+  69.2%,
+  72% {
+    translate: var(--hl-x6) var(--hl-y6);
+    animation-timing-function: var(--motion-ease);
+  }
+  75.5%,
+  79.8% {
+    translate: var(--hl-x7) var(--hl-y7);
+    animation-timing-function: cubic-bezier(0.45, 0, 1, 1);
+  }
+  86.5% {
+    translate: var(--hl-x1) var(--hl-y1);
+    animation-timing-function: cubic-bezier(0, 0, 0.55, 1);
+  }
+  94.2% {
+    opacity: 1;
+    scale: 1;
+    translate: var(--hl-x0) var(--hl-y0);
+  }
+  100% {
+    opacity: 0;
+    scale: 2.2;
+    translate: var(--hl-x0) var(--hl-y0);
+  }
+}
+
+/* 5.4s: the token's 4.4s plus the Done flash. */
+@keyframes hl-chip {
+  0%,
+  100% {
+    border-color: var(--color-border-strong);
+    background-color: transparent;
+  }
+  3%,
+  76% {
+    border-color: var(--color-gold-on-light);
+    background-color: color-mix(in srgb, var(--color-gold-on-light) 10%, transparent);
+  }
+  78%,
+  92% {
+    border-color: var(--color-alert-clear);
+    background-color: color-mix(in srgb, var(--color-alert-clear) 10%, transparent);
+  }
+}
+@keyframes hl-chip-label {
+  0%,
+  76%,
+  97%,
+  100% {
+    opacity: 1;
+  }
+  78%,
+  93% {
+    opacity: 0;
+  }
+}
+@keyframes hl-chip-done {
+  0%,
+  76%,
+  97%,
+  100% {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  78%,
+  93% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hl-lit {
+  from {
+    opacity: 0.45;
+  }
+}
+@keyframes hl-row {
+  0%,
+  37.6%,
+  90%,
+  100% {
+    opacity: 0;
+  }
+  40%,
+  76% {
+    opacity: 1;
+  }
+}
+@keyframes hl-row-value {
+  0%,
+  37.6%,
+  90%,
+  100% {
+    color: var(--color-text);
+  }
+  40%,
+  76% {
+    color: var(--color-gold-on-light);
+  }
+}

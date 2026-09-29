@@ -1,0 +1,280 @@
+/*
+ * Flash Agent "What stops it doing the wrong thing?"
+ * (components/agent/agent-guardrails.tsx).
+ *
+ * The four guardrails, each opening with a slot the proposed action card can
+ * dock in; the card passes them in order and each one lights up (a green
+ * check, what it checked, a green rule). The guardrails stack below 1024px,
+ * where the card travels down; from 1024px they stand in a row and it travels
+ * across.
+ *
+ * The default rules are the still state (no JS, reduced motion): the card
+ * docked in the last slot, done and green, every guardrail lit. The component
+ * adds `data-armed` and then drives:
+ *   data-hidden        the card is being put back at the start, unseen
+ *   data-phase         run (passing) · waiting (at the last, Confirm shown) · done
+ *   data-lit           on each guardrail the card has passed
+ * and --agr-x / --agr-y / --agr-w on the list: the slot the card is over.
+ * The section keeps hard edges: no fades in or out.
+ */
+@layer components {
+  .agr {
+    --agr-green: #5fd3a3;
+    --agr-green-line: #128a5e;
+    --agr-slot-h: 148px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  /* Below the list where the guardrails stack, so Replay is beside where the card ends. */
+  .agr-bar {
+    order: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 36px;
+  }
+  .agr-note {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: #8f9ab8;
+  }
+  .agr-replay {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+  }
+  .agr[data-phase='done'] .agr-replay {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  /* ------------------------------------------------------------ Guardrails */
+  /* Positioned, so the lifted card is placed against the list. */
+  .agr-list {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .agr-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  /* Where the card docks: an empty dashed berth until it arrives. */
+  .agr-slot {
+    height: var(--agr-slot-h);
+    border: 1px dashed rgb(255 255 255 / 0.14);
+    border-radius: 14px;
+  }
+  .agr-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding-top: 18px;
+    border-top: 1px solid var(--agr-green-line);
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 700;
+    color: var(--agr-green);
+    /* A guardrail's check-in: 200ms (CHECK_MS in the component). */
+    transition:
+      border-color 0.2s var(--motion-ease),
+      color 0.2s var(--motion-ease);
+  }
+  .agr-status > * {
+    transition: opacity 0.2s var(--motion-ease);
+  }
+  .agr-status-wait {
+    display: none;
+  }
+  .agr-check {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  .agr-check circle {
+    fill: var(--agr-green-line);
+  }
+  .agr-check path {
+    fill: none;
+    stroke: var(--color-neutral-0);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .agr-icon * {
+    transition: stroke 0.2s var(--motion-ease);
+  }
+  .agr-icon * {
+    stroke: var(--agr-green);
+  }
+
+  /* Armed, a guardrail the card has not passed is plain: grey rule, no check. */
+  .agr[data-armed] .agr-rail:not([data-lit]) .agr-status {
+    border-top-color: rgb(255 255 255 / 0.14);
+  }
+  .agr[data-armed] .agr-rail:not([data-lit]) .agr-status > * {
+    opacity: 0;
+  }
+  .agr[data-armed] .agr-rail:not([data-lit]) .agr-icon * {
+    stroke: var(--color-text-on-dark-muted);
+  }
+  .agr[data-armed] .agr-rail[data-lit] .agr-check {
+    animation: motion-pop-in 0.2s var(--motion-ease) both;
+  }
+
+  /* The last guardrail while it waits for a person: gold, a pulsing dot, no check. */
+  .agr[data-phase='waiting'] .agr-rail:last-child .agr-status {
+    border-top-color: var(--color-viz-gold);
+    color: var(--color-viz-gold);
+  }
+  .agr[data-phase='waiting'] .agr-rail:last-child .agr-status > * {
+    opacity: 1;
+  }
+  .agr[data-phase='waiting'] .agr-rail:last-child :is(.agr-check, .agr-status-text) {
+    display: none;
+  }
+  .agr[data-phase='waiting'] .agr-rail:last-child .agr-status-wait {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .agr-status-wait::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-viz-gold);
+    animation: motion-pulse 1.6s ease-in-out infinite;
+  }
+
+  /* ------------------------------------------------------------ The card */
+  /* Still state: docked in the last slot, done. */
+  .agr-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 100%;
+    padding: 14px 16px;
+    border: 1px solid color-mix(in srgb, var(--agr-green-line) 50%, transparent);
+    border-radius: 14px;
+    background:
+      linear-gradient(color-mix(in srgb, var(--agr-green-line) 18%, transparent)),
+      var(--color-brand-navy-deep);
+    box-shadow: 0 18px 40px -18px #00000099;
+    /* A move between guardrails: 250ms, ease-out (MOVE_MS in the component). */
+    transition:
+      transform 0.25s var(--motion-ease),
+      opacity 0.2s ease-out,
+      border-color 0.25s var(--motion-ease),
+      background 0.25s var(--motion-ease);
+  }
+  .agr-card-label {
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: #8f9ab8;
+  }
+  .agr-card-title {
+    font-size: 15px;
+    line-height: 21px;
+    font-weight: 700;
+    color: var(--color-text-on-dark);
+  }
+  /* The tool on its own line under the action. */
+  .agr-card-tool {
+    display: block;
+    font-weight: 500;
+    color: var(--color-text-on-dark-muted);
+  }
+  /* Confirm and the done line share one place at the foot of the card. */
+  .agr-card-foot {
+    display: grid;
+    align-items: center;
+    justify-items: start;
+    margin-top: auto;
+  }
+  .agr-card-foot > * {
+    grid-area: 1 / 1;
+  }
+  .agr-confirm {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+  }
+  .agr-done {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    color: var(--agr-green);
+  }
+
+  /* Armed: lifted out of the slot and placed over the one it has reached. */
+  .agr[data-armed] .agr-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    width: var(--agr-w);
+    height: var(--agr-slot-h);
+    transform: translate(var(--agr-x), var(--agr-y));
+  }
+  .agr[data-hidden] .agr-card {
+    opacity: 0;
+    transition: none;
+  }
+  .agr[data-armed]:not([data-phase='done']) .agr-card {
+    border-color: rgb(255 255 255 / 0.16);
+    background: var(--color-brand-navy-deep);
+  }
+  .agr[data-armed]:not([data-phase='done']) .agr-card-label {
+    color: var(--color-viz-gold);
+  }
+  .agr[data-phase='waiting'] .agr-card {
+    border-color: color-mix(in srgb, var(--color-viz-gold) 60%, transparent);
+  }
+  .agr[data-armed]:not([data-phase='done']) .agr-done {
+    visibility: hidden;
+  }
+  .agr[data-phase='waiting'] .agr-confirm {
+    visibility: visible;
+    opacity: 1;
+  }
+  .agr[data-phase='done'] .agr-done {
+    animation: chat-rise 0.25s var(--motion-ease) both;
+  }
+
+  /* ------------------------------------------------------------ Wide: a row */
+  @media (width >= 1024px) {
+    .agr-bar {
+      order: 0;
+    }
+    .agr-list {
+      flex-direction: row;
+      gap: 24px;
+    }
+    .agr-rail {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .agr * {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}

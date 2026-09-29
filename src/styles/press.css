@@ -1,0 +1,38 @@
+/*
+ * press — global styles for this area of the site.
+ *
+ * Components use these class names; no component carries inline style={...}.
+ * Classes sit in @layer components so a Tailwind utility on the same element
+ * still wins.
+ */
+
+@layer components {
+  /* Hero: navy wash from the headline side (left) across the hail-sky photo. */
+  .press-hero-grade-left {
+    background-image: linear-gradient(
+      in oklab 90deg,
+      oklab(17.1% -0.0005 -0.052 / 95%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 80%) 46%,
+      oklab(17.1% -0.0005 -0.052 / 18%) 100%
+    );
+  }
+
+  /* Hero: top-to-bottom grade that darkens at the foot of the section. */
+  .press-hero-grade-bottom {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 22%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 0%) 40%,
+      oklab(17.1% -0.0005 -0.052 / 92%) 100%
+    );
+  }
+
+  /* Testimonials banner photo ("In the field"): navy under the caption. */
+  .press-testimonials-grade {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 12%) 35%,
+      oklab(17.1% -0.0005 -0.052 / 88%) 100%
+    );
+  }
+}

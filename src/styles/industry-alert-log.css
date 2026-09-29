@@ -1,0 +1,295 @@
+/*
+ * Industry pages: an interactive alert log (components/industries/alert-log.tsx),
+ * classes ial-*. Construction's "Downtime you can defend".
+ *
+ * Site chips and the export button sit above the table frame, which scrolls
+ * sideways on its own on small screens. Filtering fades the rows out and back
+ * in; hovering (or tapping) a row lifts it and slides its detail line out
+ * underneath. The bar and the frame fade up once when they scroll in.
+ * Reduced motion: no fades, no slides, everything switches at once.
+ */
+@layer components {
+  /* ---------- Bar: chips left, export right ---------- */
+
+  .ial-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  @media (width >= 1024px) {
+    .ial-bar {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+  }
+
+  .ial-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ial-chip {
+    height: 36px;
+    padding-inline: 16px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 999px;
+    background: var(--color-neutral-0);
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease;
+  }
+  /* Hover only where there is one: a tap must not leave a chip or the
+     button stuck in its hover look. */
+  @media (hover: hover) {
+    .ial-chip:hover {
+      border-color: var(--color-brand-navy);
+      color: var(--color-brand-navy);
+    }
+    .ial-button:hover {
+      background: var(--color-brand-navy);
+      color: var(--color-text-on-dark);
+    }
+  }
+  .ial-chip[aria-pressed='true'] {
+    border-color: var(--color-brand-navy);
+    background: var(--color-brand-navy);
+    color: var(--color-text-on-dark);
+  }
+
+  .ial-count {
+    padding-left: 8px;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ial-chip:focus-visible,
+  .ial-button:focus-visible {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: 2px;
+  }
+
+  /* The file chip appears to the button's left; the button never moves. */
+  .ial-export {
+    display: flex;
+    flex-wrap: wrap-reverse;
+    align-items: center;
+    gap: 12px;
+  }
+  @media (width >= 1024px) {
+    .ial-export {
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+    }
+  }
+  .ial-file-slot:empty {
+    display: none;
+  }
+
+  .ial-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: 36px;
+    padding-inline: 18px;
+    border: 1.5px solid var(--color-brand-navy);
+    border-radius: 999px;
+    background: var(--color-neutral-0);
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--color-brand-navy);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+  .ial-button[aria-busy='true'] {
+    cursor: progress;
+  }
+
+  .ial-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 999px;
+    animation: ial-spin 700ms linear infinite;
+  }
+
+  .ial-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding-inline: 12px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface-sunken);
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    color: var(--color-text);
+    white-space: nowrap;
+    animation: ial-file-in 260ms var(--motion-ease) both;
+  }
+  .ial-file-icon {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: var(--color-text-muted);
+    stroke-width: 1.3;
+    stroke-linejoin: round;
+  }
+  .ial-file-tick {
+    font-weight: 800;
+    color: var(--color-alert-clear);
+  }
+
+  /* ---------- Rows ---------- */
+
+  /* Fixed columns (the Paper widths plus padding), so filtering never
+     reflows them; the decision column takes the rest. */
+  .ial-table {
+    table-layout: fixed;
+  }
+  .ial-table thead th:nth-child(1) {
+    width: 116px;
+  }
+  .ial-table thead th:nth-child(2) {
+    width: 232px;
+  }
+  .ial-table thead th:nth-child(3) {
+    width: 152px;
+  }
+  .ial-table thead th:nth-child(5) {
+    width: 268px;
+  }
+
+  .ial-entry {
+    transition:
+      opacity 140ms ease,
+      background-color 160ms ease;
+  }
+  .ial-table[data-fading] .ial-entry {
+    opacity: 0;
+  }
+  .ial-entry:focus {
+    outline: none;
+  }
+
+  /* The detail line: collapsed to nothing, it slides out under the row. */
+  .ial-detail-cell {
+    padding: 0 24px;
+  }
+  .ial-detail {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 200ms var(--motion-ease);
+  }
+  .ial-detail-line {
+    min-height: 0;
+    overflow: hidden;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+    translate: 0 -6px;
+    transition:
+      opacity 200ms ease,
+      translate 200ms var(--motion-ease),
+      padding-bottom 200ms var(--motion-ease);
+  }
+
+  .ial-entry:focus-within,
+  .ial-entry:focus {
+    background: var(--color-neutral-50);
+  }
+  .ial-entry:focus .ial-detail,
+  .ial-entry:focus-within .ial-detail {
+    grid-template-rows: 1fr;
+  }
+  .ial-entry:focus .ial-detail-line,
+  .ial-entry:focus-within .ial-detail-line {
+    padding-bottom: 16px;
+    opacity: 1;
+    translate: 0 0;
+  }
+  @media (hover: hover) {
+    .ial-entry:hover {
+      background: var(--color-neutral-50);
+    }
+    .ial-entry:hover .ial-detail {
+      grid-template-rows: 1fr;
+    }
+    .ial-entry:hover .ial-detail-line {
+      padding-bottom: 16px;
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  /* ---------- Reveal: bar, then frame, fade up once ---------- */
+
+  .motion[data-anim]:not([data-anim='reset']) .ial-rise {
+    animation: ial-rise 700ms var(--motion-ease) both;
+    animation-delay: var(--motion-delay);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .ial-frame {
+    animation-delay: calc(var(--motion-delay) + 90ms);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ial-chip,
+    .ial-button,
+    .ial-entry,
+    .ial-detail,
+    .ial-detail-line {
+      transition: none;
+    }
+    .ial-file,
+    .ial-rise {
+      animation: none;
+    }
+    /* A still marker instead of a spin. */
+    .ial-spinner {
+      animation: none;
+      border-right-color: currentColor;
+      opacity: 0.5;
+    }
+  }
+}
+
+@keyframes ial-rise {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+}
+@keyframes ial-file-in {
+  from {
+    opacity: 0;
+    translate: 8px 0;
+  }
+}
+@keyframes ial-spin {
+  to {
+    rotate: 1turn;
+  }
+}

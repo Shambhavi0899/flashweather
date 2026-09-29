@@ -1,0 +1,269 @@
+/*
+ * heat-states — "Which state heat policy applies to you?" on the Heat and
+ * WBGT page (components/products/heat/state-policy.tsx, state-map.ts).
+ *
+ * The policy card and the states that pick it. Georgia's card is always in
+ * the flow and sets the height; a sibling's card sits over it when chosen,
+ * so switching never moves the page. The states are a small flat map from
+ * 768px and a row of chips below.
+ *
+ * The finished frame is the base (bar full, rules and caption shown). With
+ * motion, on the section's .motion block (`hst-section`):
+ *   fill     the bar fills left to right, a band every 400ms, and each band's
+ *            temperature and rule rise as it fills
+ *   caption  the photo's caption fades in once the bar is full
+ *   swap     cards and state fills crossfade (instant with reduced motion)
+ */
+
+@layer components {
+  .hst {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ------------------------------------------------------------- Cards */
+
+  .hst-cards {
+    position: relative;
+  }
+  .hst-card {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background-color: var(--color-neutral-0);
+    box-shadow:
+      0 1px 2px #0b13220d,
+      0 12px 32px #0b13220f;
+    @media (width >= 768px) {
+      padding: 28px;
+    }
+  }
+  .hst-card:not([data-on]) {
+    visibility: hidden;
+    opacity: 0;
+  }
+  .hst-card-sibling {
+    position: absolute;
+    inset: 0;
+    justify-content: center;
+    gap: 8px;
+    overflow: hidden;
+  }
+  .hst-card-sibling > :not(svg) {
+    position: relative;
+  }
+  /* The state's own outline, faint, behind the card's text. */
+  .hst-card-shape {
+    position: absolute;
+    top: 50%;
+    right: 28px;
+    height: 78%;
+    width: auto;
+    translate: 0 -50%;
+    fill: color-mix(in oklab, var(--color-viz-gold) 24%, var(--color-neutral-0));
+    overflow: visible;
+  }
+
+  /* The heat bar: one gradient, gold to red, cut into the four bands. */
+  .hst-bands {
+    display: flex;
+    gap: 3px;
+  }
+  .hst-band {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .hst-seg {
+    height: 12px;
+    margin-bottom: 6px;
+    background-image: linear-gradient(
+      90deg,
+      var(--color-viz-gold),
+      var(--color-alert-watch) 66%,
+      var(--color-alert-warning)
+    );
+    background-size: 400% 100%;
+  }
+  .hst-band[data-band='0'] .hst-seg {
+    border-radius: 6px 0 0 6px;
+    background-position: 0% 0;
+  }
+  .hst-band[data-band='1'] .hst-seg {
+    background-position: 33.333% 0;
+  }
+  .hst-band[data-band='2'] .hst-seg {
+    background-position: 66.667% 0;
+  }
+  .hst-band[data-band='3'] .hst-seg {
+    border-radius: 0 6px 6px 0;
+    background-position: 100% 0;
+  }
+  .hst-temp {
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--color-text);
+  }
+  .hst-rule {
+    padding-right: 10px;
+    font-size: 12px;
+    line-height: 17px;
+    color: var(--color-text-muted);
+    text-wrap: pretty;
+    @media (width >= 640px) {
+      font-size: 13px;
+      line-height: 18px;
+    }
+  }
+
+  /* ------------------------------------------------------------- States */
+
+  .hst-pick {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    @media (width >= 768px) {
+      flex-direction: row;
+      align-items: center;
+      gap: 40px;
+    }
+  }
+  .hst-map {
+    display: none;
+    @media (width >= 768px) {
+      display: block;
+      width: 220px;
+      height: auto;
+      flex-shrink: 0;
+      overflow: visible;
+    }
+  }
+  .hst-state {
+    cursor: pointer;
+    outline: none;
+  }
+  .hst-shape {
+    fill: var(--color-neutral-200);
+    stroke: var(--color-surface-sunken);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    transition: fill 0.25s var(--motion-ease);
+  }
+  .hst-state:hover .hst-shape {
+    fill: color-mix(in oklab, var(--color-viz-gold) 35%, var(--color-neutral-200));
+  }
+  .hst-state[data-on] .hst-shape {
+    fill: var(--color-viz-gold);
+  }
+  .hst-state:focus-visible .hst-shape {
+    stroke: var(--color-brand-blue);
+    stroke-width: 2.5;
+  }
+  .hst-abbr {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    fill: var(--color-text-muted);
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
+  }
+  .hst-state[data-on] .hst-abbr {
+    fill: var(--color-brand-navy);
+  }
+
+  .hst-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    @media (width >= 768px) {
+      display: none;
+    }
+  }
+  .hst-chip {
+    padding: 8px 14px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-0);
+    color: var(--color-text);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .hst-chip[aria-checked='true'] {
+    border-color: var(--color-brand-navy);
+    background-color: var(--color-brand-navy);
+    color: var(--color-text-on-dark);
+  }
+  .hst-chip:focus-visible {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: 2px;
+  }
+
+  .hst-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    @media (width >= 640px) {
+      flex-direction: row;
+      flex-wrap: wrap;
+      column-gap: 24px;
+    }
+  }
+
+  /* ------------------------------------------------------------- Motion */
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hst-band[data-band='1'] {
+      --b: 1;
+    }
+    .hst-band[data-band='2'] {
+      --b: 2;
+    }
+    .hst-band[data-band='3'] {
+      --b: 3;
+    }
+    .hst-section[data-anim]:not([data-anim='reset']) {
+      .hst-seg {
+        animation: hst-fill 0.4s linear calc(var(--motion-delay) + 250ms + var(--b, 0) * 400ms) both;
+      }
+      .hst-temp,
+      .hst-rule {
+        animation: motion-rise 0.5s var(--motion-ease) calc(var(--motion-delay) + 450ms + var(--b, 0) * 400ms) both;
+      }
+      .hst-caption {
+        animation: hst-fade 0.7s ease-out calc(var(--motion-delay) + 1900ms) both;
+      }
+    }
+    .hst-card,
+    .hst-card-shape {
+      transition:
+        opacity 0.3s var(--motion-ease),
+        visibility 0.3s;
+    }
+  }
+}
+
+@keyframes hst-fill {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes hst-fade {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}

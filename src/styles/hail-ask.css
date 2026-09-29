@@ -1,0 +1,522 @@
+/*
+ * Hail page — "Ask where the hail will be, and where it was."
+ * (components/products/hail/ask-flash.tsx → ask-hail.tsx, map data in
+ * ask-hail-map.ts). A shared time slider over the two Flash Agent cards.
+ *
+ * The markup is the finished frame. Once the script runs it sets
+ * `data-live` on `.ha`, `--ha-t` (the slider, 0 = last night, 0.5 = Now,
+ * 1 = +60 min) and `data-on` on each piece as the slider passes it; the
+ * rules below hold back only what is not `data-on`, and only under
+ * `[data-live]`. Every transition and keyframe sits in the no-preference
+ * query: with reduced motion the slider still scrubs, it just does not ease.
+ */
+@layer components {
+  .ha {
+    --ha-t: 1;
+    --ha-gold: var(--color-viz-gold);
+    --ha-track: #6f9bff;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ------------------------------------------------------ The slider */
+
+  .ha-time {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  /* On a phone it sticks above the stacked cards, opaque so they pass under it. */
+  @media (width < 1024px) {
+    .ha-time {
+      position: sticky;
+      top: calc(var(--site-header-h) + 8px);
+      z-index: 5;
+      margin-inline: -10px;
+      padding: 6px 10px 8px;
+      border: 1px solid rgb(255 255 255 / 8%);
+      border-radius: 14px;
+      background-color: var(--color-brand-navy-deep);
+      box-shadow: 0 10px 24px rgb(4 8 24 / 70%);
+    }
+  }
+
+  .ha-scrub {
+    position: relative;
+    height: 56px;
+  }
+  .ha-rail,
+  .ha-fill {
+    position: absolute;
+    top: 39px;
+    height: 2px;
+    border-radius: 1px;
+  }
+  .ha-rail {
+    inset-inline: 0;
+    background-color: rgb(255 255 255 / 14%);
+  }
+  /* From Now out to the thumb, either way. */
+  .ha-fill {
+    left: calc(min(var(--ha-t), 0.5) * 100%);
+    width: calc(max(var(--ha-t) - 0.5, 0.5 - var(--ha-t)) * 100%);
+    background-color: var(--ha-gold);
+  }
+  .ha-now-tick {
+    position: absolute;
+    top: 33px;
+    left: 50%;
+    width: 2px;
+    height: 14px;
+    margin-left: -1px;
+    border-radius: 1px;
+    background-color: rgb(255 255 255 / 50%);
+  }
+  .ha-thumb {
+    position: absolute;
+    top: 31px;
+    left: calc(var(--ha-t) * 100%);
+    width: 18px;
+    height: 18px;
+    margin-left: -9px;
+    border: 4px solid var(--ha-gold);
+    border-radius: 50%;
+    background-color: var(--color-text-on-dark);
+    box-shadow: 0 0 0 4px rgb(4 8 24 / 65%);
+    pointer-events: none;
+  }
+  .ha-scrub:has(.ha-range:focus-visible) .ha-thumb {
+    outline: 2px solid var(--color-alert-info);
+    outline-offset: 3px;
+  }
+  /* The reading rides the thumb, held inside the rail at both ends. */
+  .ha-readout {
+    position: absolute;
+    top: 0;
+    left: clamp(72px, calc(var(--ha-t) * 100%), calc(100% - 72px));
+    translate: -50% 0;
+    padding: 3px 10px;
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: 999px;
+    background-color: rgb(255 255 255 / 7%);
+    color: var(--color-text-on-dark);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  /* The native slider over the drawn one takes the input: keys, touch, drag. */
+  .ha-range {
+    position: absolute;
+    inset: 22px 0 0;
+    width: 100%;
+    height: calc(100% - 22px);
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .ha-range:disabled {
+    cursor: default;
+  }
+
+  .ha-ticks {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--color-text-on-dark-muted);
+  }
+  .ha-ticks > :last-child {
+    justify-self: end;
+  }
+  .ha-tick-now {
+    color: var(--color-text-on-dark);
+  }
+  .ha-arrow {
+    color: var(--ha-gold);
+  }
+
+  /* ------------------------------------------------------- The cards */
+
+  /* The side being scrubbed comes into focus: the other card's content fades (never its fill). */
+  .ha[data-focus='past'] .ha-card[data-side='past'],
+  .ha[data-focus='next'] .ha-card[data-side='next'] {
+    border-color: color-mix(in srgb, var(--ha-gold) 55%, transparent);
+  }
+  .ha[data-focus='past'] .ha-card[data-side='next'] > *,
+  .ha[data-focus='next'] .ha-card[data-side='past'] > * {
+    opacity: 0.38;
+  }
+
+  .ha-replay {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 5px;
+    height: 28px;
+    margin-block: -4px;
+    padding-inline: 10px;
+    border: 1px solid rgb(255 255 255 / 16%);
+    border-radius: 999px;
+    color: var(--color-text-on-dark-muted);
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .ha-replay:hover {
+    border-color: rgb(255 255 255 / 35%);
+    color: var(--color-text-on-dark);
+  }
+
+  .ha[data-live] .ha-action:not([data-on]) {
+    opacity: 0;
+    translate: 0 4px;
+  }
+
+  /* ------------------------------------------------------- The maps */
+
+  .ha-figure {
+    display: grid;
+    gap: 10px 16px;
+    margin: 0;
+  }
+  @media (width >= 480px) {
+    .ha-figure-past {
+      grid-template-columns: minmax(0, 1fr) 12.5rem;
+    }
+    .ha-figure-past .ha-caption {
+      grid-column: 1 / -1;
+    }
+  }
+  .ha-map {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 8%);
+    border-radius: 12px;
+    background-color: #0f1216;
+  }
+  .ha-map-past {
+    aspect-ratio: 360 / 270;
+  }
+  /* Side by side, the past card's map takes the height the forecast card sets, cropping its edges (slice). */
+  @media (width >= 1024px) {
+    .ha-figure-past {
+      flex-grow: 1;
+      grid-template-rows: minmax(0, 1fr) auto;
+    }
+    .ha-map-past {
+      height: 100%;
+      min-height: 15rem;
+      aspect-ratio: auto;
+    }
+  }
+  .ha-map-next {
+    aspect-ratio: 480 / 270;
+  }
+  .ha-map-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Local streets: plain under the swath, darkened over it like the arterials. */
+  .ha-local path,
+  .ha-local-over path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-width: 0.8;
+  }
+  .ha-local path {
+    stroke: #272d36;
+  }
+  .ha-local-over path {
+    stroke: #05070a;
+    stroke-opacity: 0.4;
+  }
+
+  /* The streets that took an inch or more. */
+  .ha-hit-casing {
+    fill: none;
+    stroke: #05070a;
+    stroke-opacity: 0.75;
+    stroke-width: 3.8;
+    stroke-linecap: round;
+  }
+  .ha-hit-line {
+    fill: none;
+    stroke: #fff4dc;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+  .ha-hit-bulb {
+    fill: #fff4dc;
+    stroke: #05070a;
+    stroke-opacity: 0.75;
+    stroke-width: 1.2;
+  }
+  .ha[data-live] .ha-hit:not([data-on]) {
+    opacity: 0;
+  }
+  .ha[data-live] .ha-hit:not([data-on]) .ha-hit-line {
+    stroke-dashoffset: 1;
+  }
+
+  /* The street list beside the map; its rows are all there from the start, so nothing moves. */
+  .ha-list {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ha-list-head {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: #8f9ab8;
+  }
+  .ha-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 30px;
+    padding-inline: 4px;
+    border-bottom: 1px solid rgb(255 255 255 / 7%);
+    border-radius: 4px 4px 0 0;
+    color: var(--color-text-on-dark);
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .ha-row-name {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ha-row-size {
+    color: var(--color-text-on-dark-muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ha-row-more {
+    border-bottom: 0;
+    color: var(--color-text-on-dark-muted);
+    font-size: 12px;
+  }
+  .ha-dot {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+  }
+  .ha[data-live] .ha-row:not([data-on]) {
+    opacity: 0;
+    translate: -6px 0;
+  }
+
+  /* The ramp, as HAIL_BANDS in ask-hail-map.ts. */
+  .ha-swatch-severe {
+    background-color: #e6ba2d;
+  }
+  .ha-swatch-damaging,
+  .ha-size-100,
+  .ha-size-125 {
+    background-color: #d9722b;
+  }
+  .ha-swatch-large,
+  .ha-size-150 {
+    background-color: #a93f1c;
+  }
+  .ha-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    color: var(--color-text-on-dark-muted);
+    font-size: 11px;
+    line-height: 14px;
+  }
+  .ha-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ha-swatch {
+    width: 14px;
+    height: 6px;
+    border-radius: 1px;
+  }
+  .ha-legend-track {
+    width: 14px;
+    border-top: 1.5px dashed var(--ha-track);
+  }
+
+  /* The forecast: the track ahead, the lots and their calls. */
+  .ha-track {
+    fill: none;
+    stroke: var(--ha-track);
+    stroke-opacity: 0.75;
+    stroke-width: 1.4;
+    stroke-dasharray: 5 5;
+  }
+  .ha-pin-dot {
+    fill: var(--color-alert-clear);
+    stroke: var(--color-text-on-dark);
+    stroke-width: 1.5;
+  }
+  .ha-pin-ring,
+  .ha-pin-ping {
+    fill: none;
+    stroke: var(--color-alert-clear);
+    stroke-width: 2;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .ha-pin-ring {
+    opacity: 0.55;
+  }
+  .ha-pin-ping {
+    opacity: 0;
+  }
+  .ha-pin[data-hit] :is(.ha-pin-ring, .ha-pin-ping) {
+    stroke: var(--color-alert-warning);
+  }
+  .ha-pin[data-hit] .ha-pin-dot {
+    fill: var(--color-alert-warning);
+  }
+  .ha[data-live] .ha-pin[data-hit]:not([data-on]) .ha-pin-dot {
+    fill: var(--color-alert-clear);
+  }
+  .ha[data-live] .ha-pin[data-hit]:not([data-on]) .ha-pin-ring {
+    stroke: var(--color-alert-clear);
+  }
+
+  /* Lot labels: pinned to the lot (its map px as % of the 480 × 270 map), name then call. */
+  .ha-lot {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    translate: 13px -9px;
+    pointer-events: none;
+  }
+  .ha-lot-sandy {
+    left: calc(168 / 480 * 100%);
+    top: calc(202 / 270 * 100%);
+  }
+  .ha-lot-roswell {
+    left: calc(288 / 480 * 100%);
+    top: calc(90 / 270 * 100%);
+  }
+  .ha-lot-norcross {
+    left: calc(410 / 480 * 100%);
+    top: calc(212 / 270 * 100%);
+    flex-direction: column-reverse;
+    align-items: center;
+    translate: -50% calc(-100% - 12px);
+  }
+  .ha-lot-name {
+    padding: 2px 6px;
+    border-radius: var(--radius-xs);
+    background-color: rgb(15 18 22 / 85%);
+    color: var(--color-text-on-dark);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .ha-badge {
+    padding: 1px 6px;
+    border-radius: var(--radius-xs);
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ha-lot[data-hit] .ha-badge {
+    background-color: var(--color-alert-warning);
+    color: var(--color-text-on-dark);
+  }
+  .ha-lot:not([data-hit]) .ha-badge {
+    background-color: #173a31;
+    color: #5fd3a3;
+  }
+  .ha[data-live] .ha-lot:not([data-on]) .ha-badge {
+    opacity: 0;
+    scale: 0.85;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ha-card > *,
+    .ha-card {
+      transition:
+        opacity 300ms var(--motion-ease),
+        border-color 300ms var(--motion-ease);
+    }
+    .ha-action,
+    .ha-row {
+      transition:
+        opacity 260ms var(--motion-ease),
+        translate 260ms var(--motion-ease);
+    }
+    .ha[data-live] .ha-row[data-on] {
+      animation: ha-row-lit 1s var(--motion-ease);
+    }
+    .ha-hit {
+      transition: opacity 160ms linear;
+    }
+    .ha-hit-line {
+      transition: stroke-dashoffset 380ms var(--motion-ease);
+    }
+    .ha-pin-dot,
+    .ha-pin-ring {
+      transition:
+        fill 200ms linear,
+        stroke 200ms linear;
+    }
+    .ha[data-live] .ha-pin[data-hit][data-on] .ha-pin-ping {
+      animation: ha-ping 900ms var(--motion-ease);
+    }
+    .ha-badge {
+      transition:
+        opacity 220ms var(--motion-ease),
+        scale 220ms var(--motion-ease);
+    }
+  }
+
+  @keyframes ha-row-lit {
+    from {
+      background-color: color-mix(in srgb, var(--color-viz-gold) 22%, transparent);
+    }
+    to {
+      background-color: transparent;
+    }
+  }
+  @keyframes ha-ping {
+    from {
+      opacity: 1;
+      scale: 0.7;
+    }
+    to {
+      opacity: 0;
+      scale: 2.4;
+    }
+  }
+}

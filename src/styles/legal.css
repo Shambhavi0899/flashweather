@@ -1,0 +1,36 @@
+/*
+ * legal — global styles for this area of the site.
+ *
+ * Components use these class names; no component carries inline style={...}.
+ * Classes sit in @layer components so a Tailwind utility on the same element
+ * still wins.
+ */
+
+@layer components {
+  /* The sticky "On this page" rail, held 24px under the fixed header: never
+     taller than the space left, so a long contents list scrolls inside
+     itself instead of running off-screen. */
+  .legal-toc-rail {
+    max-height: calc(100vh - 112px);
+  }
+
+  /* The "In Short:" line that opens each privacy section. */
+  .legal-in-short {
+    border-left: 3px solid var(--color-brand-blue);
+    background-color: var(--color-surface-sunken);
+    padding: 12px 16px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+
+  /* Links inside legal running text: underlined, so they read as links
+     without relying on colour alone. */
+  .legal-link {
+    color: var(--color-brand-blue);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    overflow-wrap: anywhere;
+  }
+  .legal-link:hover {
+    color: var(--color-brand-blue-hover);
+  }
+}

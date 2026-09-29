@@ -1,0 +1,57 @@
+/*
+ * pricing — global styles for this area of the site.
+ *
+ * Components use these class names; no component carries inline style={...}.
+ * Classes sit in @layer components so a Tailwind utility on the same element
+ * still wins.
+ */
+
+@layer components {
+  /* Hero: navy wash from the copy side (left) across the lightning photo. */
+  .pricing-hero-grade-left {
+    background-image: linear-gradient(
+      in oklab 90deg,
+      oklab(17.1% -0.0005 -0.052 / 95%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 80%) 44%,
+      oklab(17.1% -0.0005 -0.052 / 26%) 100%
+    );
+  }
+
+  /* Hero: top-to-bottom grade, darker at the top edge and the foot. */
+  .pricing-hero-grade-bottom {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 45%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 0%) 40%,
+      oklab(17.1% -0.0005 -0.052 / 82%) 100%
+    );
+  }
+
+  /* "Included at every site" devices photo: navy under the caption. */
+  .pricing-included-grade {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 10%) 45%,
+      oklab(17.1% -0.0005 -0.052 / 82%) 100%
+    );
+  }
+
+  /* Cost-of-ownership banner (rooftop sensor mast). */
+  .pricing-sensor-grade {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(14% -0.002 -0.036 / 30%) 0%,
+      oklab(14% -0.002 -0.036 / 20%) 38%,
+      oklab(14% -0.002 -0.036 / 92%) 100%
+    );
+  }
+
+  /* "Trusted on the field" strip photo tile (shared by Pricing and About). */
+  .pricing-trusted-photo-grade {
+    background-image: linear-gradient(
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 25%) 30%,
+      oklab(17.1% -0.0005 -0.052 / 90%) 100%
+    );
+  }
+}

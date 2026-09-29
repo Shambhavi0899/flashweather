@@ -1,0 +1,239 @@
+/*
+ * Industries hub hero — the industry cycle card (components/industries/
+ * industry-cycle.tsx), `ihc-*`. One photo card beside the headline that
+ * steps through every vertical: the photo crossfades in and settles from
+ * 1.05, the name and its line rise into place, the counter in the corner
+ * follows.
+ *
+ *   ihc          the card, a link to the industry on show
+ *   ihc-slide    one photo; data-state on | prev | (none). The one coming in
+ *                fades over the one going out, which stays whole underneath,
+ *                so the crossfade never shows the navy through two half photos
+ *   ihc-text     one name + line, stacked in one grid cell so the card never
+ *                changes height; same data-state
+ *   ihc-clock    the cycle's clock: its animation's `animationend` moves the
+ *                card on, so a hover pause holds the clock and the zoom alike
+ *
+ * data-auto on the card: run | paused (hover, focus). Absent: no cycle
+ * (reduced motion, off screen, no JavaScript), and the first industry shows.
+ */
+
+@layer components {
+  .ihc {
+    --ihc-dwell: 2500ms;
+    --ihc-fade: 800ms;
+    position: relative;
+    isolation: isolate;
+    display: block;
+    width: 100%;
+    max-width: 560px;
+    min-height: 240px;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 10%);
+    border-radius: 20px;
+    background-color: var(--color-brand-navy-deep);
+    box-shadow: 0 30px 80px rgb(0 0 0 / 45%);
+  }
+  .ihc:focus-visible {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: 4px;
+  }
+  @media (width >= 1024px) {
+    .ihc {
+      width: 380px;
+      aspect-ratio: 11 / 12;
+    }
+  }
+  @media (width >= 1280px) {
+    .ihc {
+      width: 440px;
+    }
+  }
+
+  .ihc-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+  }
+  .ihc-slide[data-state='prev'] {
+    z-index: 1;
+    opacity: 1;
+  }
+  .ihc-slide[data-state='on'] {
+    z-index: 2;
+    opacity: 1;
+  }
+
+  /* Navy at the top for the counter, deeper at the foot for the name. */
+  .ihc-grade {
+    z-index: 3;
+    background-image:
+      linear-gradient(in oklab 180deg, oklab(17.1% -0.0005 -0.052 / 55%) 0%, transparent 24%),
+      linear-gradient(in oklab 0deg, oklab(14% -0.0005 -0.05 / 92%) 0%, oklab(17.1% -0.0005 -0.052 / 40%) 38%, transparent 62%);
+  }
+
+  .ihc-count {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 4;
+    padding: 5px 10px;
+    border-radius: 9999px;
+    background-color: rgb(4 8 24 / 55%);
+    backdrop-filter: blur(6px);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.14em;
+    color: var(--color-neutral-0);
+  }
+  .ihc-count-total {
+    color: var(--color-text-on-dark-muted);
+  }
+
+  .ihc-foot {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 4;
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 20px;
+  }
+  @media (width >= 768px) {
+    .ihc-foot {
+      padding: 24px;
+    }
+  }
+  .ihc-texts {
+    display: grid;
+    flex-grow: 1;
+    min-width: 0;
+  }
+  .ihc-text {
+    grid-area: 1 / 1;
+    align-self: end;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ihc-text > * {
+    opacity: 0;
+    translate: 0 16px;
+  }
+  .ihc-text[data-state='on'] > * {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .ihc-name {
+    font-size: 26px;
+    line-height: 32px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--color-neutral-0);
+  }
+  .ihc-line {
+    max-width: 34ch;
+    font-size: 15px;
+    line-height: 22px;
+    text-wrap: pretty;
+    color: #c9d1e3;
+  }
+  @media (width >= 1280px) {
+    .ihc-name {
+      font-size: 28px;
+      line-height: 34px;
+    }
+  }
+
+  .ihc-arrow {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgb(255 255 255 / 28%);
+    border-radius: 9999px;
+    font-size: 16px;
+    color: var(--color-neutral-0);
+    transition:
+      background-color 0.25s ease-out,
+      border-color 0.25s ease-out,
+      color 0.25s ease-out;
+  }
+  .ihc:hover .ihc-arrow,
+  .ihc:focus-visible .ihc-arrow {
+    border-color: var(--color-viz-gold);
+    background-color: var(--color-viz-gold);
+    color: var(--color-brand-navy);
+  }
+
+  .ihc-clock {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The photo coming in fades over the one going out, and settles from 1.05
+       over its whole time on screen. */
+    .ihc-slide[data-state='on'] {
+      transition: opacity var(--ihc-fade) ease-out;
+    }
+    .ihc-slide[data-state='on'] img {
+      animation: ihc-zoom calc(var(--ihc-dwell) + var(--ihc-fade)) ease-out both;
+    }
+
+    /* The name, then its line, rise into place; the pair going out lifts away. */
+    .ihc-text[data-state='on'] > * {
+      transition:
+        opacity 0.5s ease-out 0.15s,
+        translate 0.6s var(--motion-ease) 0.15s;
+    }
+    .ihc-text[data-state='on'] > .ihc-line {
+      transition-delay: 0.23s;
+    }
+    .ihc-text[data-state='prev'] > * {
+      translate: 0 -12px;
+      transition:
+        opacity 0.3s ease-out,
+        translate 0.4s var(--motion-ease);
+    }
+
+    .ihc-arrow {
+      transition:
+        background-color 0.25s ease-out,
+        border-color 0.25s ease-out,
+        color 0.25s ease-out,
+        translate 0.4s var(--motion-ease);
+    }
+    .ihc:hover .ihc-arrow {
+      translate: 3px 0;
+    }
+
+    .ihc[data-auto] .ihc-clock {
+      animation: ihc-tick var(--ihc-dwell) linear;
+    }
+    .ihc[data-auto='paused'] .ihc-clock,
+    .ihc[data-auto='paused'] .ihc-slide img {
+      animation-play-state: paused;
+    }
+  }
+}
+
+@keyframes ihc-zoom {
+  from {
+    scale: 1.05;
+  }
+}
+@keyframes ihc-tick {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+  }
+}

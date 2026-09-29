@@ -1,0 +1,305 @@
+/*
+ * Mobile App "What does the Flash mobile app do?" (components/products/
+ * detail/mobile-app-tiers.tsx). The copy with its features marked, and a
+ * Free / Premium toggle above the phones. The toggle is two radios; every
+ * state below hangs off `.mat:has([value='premium']:checked)`.
+ *
+ *   Free     free features in text colour; Premium-only ones in the body
+ *            colour (a step back, still AA) with a closed lock.
+ *   Premium  the price highlights (0ms, 600ms swipe), then the locks open
+ *            one by one from 250ms, 170ms apart, each feature lighting up
+ *            with a brief gold glow as its lock opens.
+ *
+ * Scroll-in (one Motion block, plays once): text fades up 0 / 150ms, the
+ * phones focus in from 550ms, the toggle appears at 1350ms.
+ *
+ * Layout: phones and toggle on the right from 1024px; below that the heading,
+ * then toggle and phones, then the paragraphs. No grid motifs, no section
+ * transitions.
+ */
+@layer components {
+  .mat {
+    display: grid;
+    grid-template-areas:
+      'head'
+      'stage'
+      'body';
+    row-gap: 32px;
+  }
+  .mat-head {
+    grid-area: head;
+  }
+  .mat-body {
+    grid-area: body;
+  }
+  .mat-stage {
+    grid-area: stage;
+  }
+  @media (width >= 1024px) {
+    .mat {
+      grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
+      grid-template-areas:
+        'head stage'
+        'body stage';
+      column-gap: 64px;
+      row-gap: 24px;
+    }
+    .mat-stage {
+      gap: 32px;
+    }
+  }
+  @media (width >= 1280px) {
+    .mat {
+      grid-template-columns: 620px minmax(0, 1fr);
+    }
+  }
+
+  /* ------------------------------------------------------------ The toggle */
+  .mat-toggle {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .mat-switch {
+    position: relative;
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 4px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-0);
+  }
+  .mat-thumb {
+    position: absolute;
+    inset: 4px auto 4px 4px;
+    width: calc(50% - 4px);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-brand-navy);
+  }
+  .mat-option {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 112px;
+    height: 40px;
+    padding-inline: 20px;
+    border-radius: var(--radius-pill);
+    color: var(--color-text-muted);
+    font-size: var(--text-body-s);
+    line-height: var(--leading-caption);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .mat-option:hover {
+    color: var(--color-text);
+  }
+  .mat-option:has(:checked) {
+    color: var(--color-text-on-dark);
+  }
+  .mat-option:has(:focus-visible) {
+    outline: 2px solid var(--color-alert-info);
+    outline-offset: 2px;
+  }
+  .mat:has([value='premium']:checked) .mat-thumb {
+    transform: translateX(100%);
+  }
+
+  /* ---------------------------------------------------------- The features */
+  .mat-feat {
+    margin-inline: -0.12em;
+    padding-inline: 0.12em;
+    border-radius: 4px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    color: var(--color-text);
+    font-weight: 600;
+  }
+  .mat-locked {
+    color: var(--color-text-muted);
+  }
+  .mat-lock {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15em;
+    height: 1.15em;
+    margin-right: 0.28em;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-surface-raised);
+    vertical-align: -0.18em;
+  }
+  .mat-lock-icon {
+    width: 0.72em;
+    height: 0.72em;
+    overflow: visible;
+    fill: none;
+    stroke: var(--color-text-muted);
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .mat-lock-body {
+    fill: var(--color-text-muted);
+  }
+  .mat-shackle {
+    transform-box: view-box;
+    transform-origin: 5.25px 7.25px;
+  }
+
+  .mat-price {
+    padding-inline: 0.08em;
+    background-color: transparent;
+    background-image: linear-gradient(
+      100deg,
+      color-mix(in oklab, var(--color-viz-gold) 55%, transparent),
+      color-mix(in oklab, var(--color-viz-gold) 68%, transparent) 50%,
+      color-mix(in oklab, var(--color-viz-gold) 58%, transparent)
+    );
+    background-position: 0 88%;
+    background-repeat: no-repeat;
+    background-size: 0% 74%;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+    color: inherit;
+  }
+
+  /* Premium: every lock open, every feature lit, the price highlighted. */
+  .mat:has([value='premium']:checked) {
+    .mat-locked {
+      color: var(--color-text);
+    }
+    .mat-lock {
+      background-color: color-mix(in srgb, var(--color-gold-on-light) 14%, transparent);
+    }
+    .mat-lock-icon {
+      stroke: var(--color-gold-on-light);
+    }
+    .mat-lock-body {
+      fill: var(--color-gold-on-light);
+    }
+    .mat-shackle {
+      transform: translateY(-1.25px) rotate(-24deg);
+    }
+    .mat-price {
+      background-size: 100% 74%;
+      color: var(--color-text);
+    }
+  }
+
+  /* -------------------------------------------------------------- Motion */
+  @media (prefers-reduced-motion: no-preference) {
+    .mat-thumb {
+      transition: transform 300ms var(--motion-ease);
+    }
+    .mat-option {
+      transition: color 200ms var(--motion-ease);
+    }
+    .mat-locked,
+    .mat-lock,
+    .mat-lock-icon,
+    .mat-lock-body {
+      transition-property: color, background-color, stroke, fill;
+      transition-duration: 250ms;
+      transition-timing-function: var(--motion-ease);
+    }
+    .mat-shackle {
+      transition: transform 220ms var(--motion-ease);
+    }
+    .mat-price {
+      transition:
+        background-size 0.6s cubic-bezier(0.45, 0, 0.3, 1),
+        color 250ms var(--motion-ease);
+    }
+
+    /* When each lock opens, on the way to Premium. Back to Free is instant-ish, all at once. */
+    .mat-locked[data-i='0'] {
+      --mat-at: 250ms;
+    }
+    .mat-locked[data-i='1'] {
+      --mat-at: 420ms;
+    }
+    .mat-locked[data-i='2'] {
+      --mat-at: 590ms;
+    }
+    .mat-locked[data-i='3'] {
+      --mat-at: 760ms;
+    }
+    .mat-locked[data-i='4'] {
+      --mat-at: 930ms;
+    }
+    .mat-locked[data-i='5'] {
+      --mat-at: 1100ms;
+    }
+    .mat-locked[data-i='6'] {
+      --mat-at: 1270ms;
+    }
+    .mat-locked[data-i='7'] {
+      --mat-at: 1440ms;
+    }
+    .mat:has([value='premium']:checked) {
+      .mat-locked,
+      .mat-lock,
+      .mat-lock-icon,
+      .mat-lock-body {
+        transition-delay: var(--mat-at);
+      }
+      /* The shackle lifts and swings open with a little overshoot. */
+      .mat-shackle {
+        transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1) var(--mat-at);
+      }
+      .mat-lock {
+        animation: motion-pop 360ms var(--motion-ease) var(--mat-at) both;
+      }
+      .mat-locked {
+        animation: mat-glow 1100ms ease-out var(--mat-at) both;
+      }
+    }
+
+    /* Scroll-in: text, then phones, then toggle. */
+    .mat[data-anim]:not([data-anim='reset']) {
+      .mat-head {
+        animation: mat-rise 700ms var(--motion-ease) var(--motion-delay) both;
+      }
+      .mat-body {
+        animation: mat-rise 700ms var(--motion-ease) calc(var(--motion-delay) + 150ms) both;
+      }
+      .mat-figure {
+        animation: mat-focus 1000ms var(--motion-ease) calc(var(--motion-delay) + 550ms) both;
+      }
+      .mat-toggle {
+        animation: mat-rise 500ms var(--motion-ease) calc(var(--motion-delay) + 1350ms) both;
+      }
+    }
+  }
+}
+
+@keyframes mat-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+@keyframes mat-focus {
+  from {
+    opacity: 0;
+    filter: blur(14px);
+    transform: scale(1.04);
+  }
+  40% {
+    opacity: 1;
+  }
+}
+@keyframes mat-glow {
+  from {
+    background-color: transparent;
+  }
+  30% {
+    background-color: color-mix(in oklab, var(--color-viz-gold) 30%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}

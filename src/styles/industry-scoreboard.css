@@ -1,0 +1,472 @@
+/*
+ * Industry pages: a column timeline with a scoreboard
+ * (components/industries/practice-scoreboard.tsx), classes sb-*. Schools'
+ * "A practice day with Flash, hour by hour".
+ *
+ * From 1024px: the scoreboard and the photo card are one column on the left,
+ * pinned under the header while the timeline scrolls past on the right.
+ * Under 1024px: the photo, then the scoreboard as a compact bar pinned under
+ * the header, then the timeline. The entry in view is `active` (full, dot
+ * filled with its tone), the ones before it `past` (muted, dot grey), the
+ * ones after it `next` (dimmed, dot hollow), and each scoreboard value that
+ * changes flips like a split-flap board.
+ * `data-mode` is set by the component: `live` follows the scroll, `still`
+ * (server HTML, reduced motion) shows the final state, every entry in full
+ * and nothing pinned.
+ */
+@layer components {
+  .sb {
+    --sb-ground: var(--color-surface);
+    --sb-panel: var(--color-brand-navy);
+    --sb-tile: color-mix(in srgb, var(--color-neutral-0) 7%, var(--color-brand-navy));
+    display: flex;
+    flex-direction: column;
+    margin-top: 32px;
+  }
+
+  .sb [data-tone='clear'] {
+    --sb-tone: var(--color-alert-clear);
+  }
+  .sb [data-tone='advisory'] {
+    --sb-tone: var(--color-viz-gold);
+  }
+  .sb [data-tone='watch'] {
+    --sb-tone: var(--color-alert-watch);
+  }
+  .sb [data-tone='warning'] {
+    --sb-tone: var(--color-alert-warning);
+  }
+  .sb [data-tone='info'] {
+    --sb-tone: var(--color-alert-info);
+  }
+  .sb [data-tone='brand'] {
+    --sb-tone: var(--color-brand-blue);
+  }
+
+  /* ---------- Layout ---------- */
+
+  .sb-media {
+    position: relative;
+    height: 250px;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--color-brand-navy);
+  }
+
+  @media (width < 1024px) {
+    /* The column dissolves, so the bar is pinned for as long as the timeline runs. */
+    .sb-stick {
+      display: contents;
+    }
+    .sb-media {
+      order: 1;
+    }
+    .sb-bar {
+      z-index: 3;
+      order: 2;
+      margin-top: 16px;
+      padding-block: 8px;
+      background: var(--sb-ground);
+    }
+    .sb[data-mode='live'] .sb-bar {
+      position: sticky;
+      top: var(--site-header-h-compact);
+    }
+    .sb-steps {
+      order: 3;
+      margin-top: 20px;
+    }
+  }
+
+  @media (width >= 1024px) {
+    .sb {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 64px;
+      margin-top: 48px;
+    }
+    .sb-stick {
+      display: flex;
+      flex: 0 1 400px;
+      flex-direction: column;
+      gap: 18px;
+      min-width: 320px;
+    }
+    .sb-steps {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+  /* Pinned only where the board and the photo fit under the header together. */
+  @media (width >= 1024px) and (height >= 660px) {
+    .sb[data-mode='live'] .sb-stick {
+      position: sticky;
+      top: calc(var(--site-header-h-compact) + 24px);
+    }
+  }
+
+  /* ---------- Board ---------- */
+
+  .sb-board {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1.4fr) minmax(0, 1fr);
+    grid-template-areas:
+      'title note row0'
+      'row1 row2 row3';
+    /* On the bar the values sit on the panel; from 1024px each has its own tile. */
+    --sb-leaf: var(--sb-panel);
+    gap: 8px 10px;
+    align-items: center;
+    padding: 10px 12px 11px;
+    border-radius: var(--radius-md);
+    background: var(--sb-panel);
+    color: var(--color-text-on-dark);
+    font-variant-numeric: tabular-nums;
+  }
+  .sb-rows {
+    display: contents;
+  }
+
+  .sb-title {
+    grid-area: title;
+    color: var(--color-viz-gold);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    letter-spacing: 0.13em;
+  }
+
+  .sb-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .sb-row[data-row='0'] {
+    grid-area: row0;
+  }
+  .sb-row[data-row='1'] {
+    grid-area: row1;
+  }
+  .sb-row[data-row='2'] {
+    grid-area: row2;
+  }
+  .sb-row[data-row='3'] {
+    grid-area: row3;
+  }
+
+  .sb-label {
+    overflow: hidden;
+    color: var(--color-text-on-dark-muted);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 14px;
+    letter-spacing: 0.1em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  /* On the bar the time sits beside the title and needs no label. */
+  .sb-row[data-row='0'] .sb-label {
+    position: absolute;
+    overflow: hidden;
+    clip-path: inset(50%);
+    width: 1px;
+    height: 1px;
+    white-space: nowrap;
+  }
+
+  .sb-value {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    margin: 0;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 18px;
+  }
+  @media (width < 380px) {
+    .sb-value {
+      gap: 5px;
+      font-size: 12px;
+    }
+  }
+  .sb-row[data-row='0'] .sb-value {
+    justify-content: flex-end;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: var(--tracking-display);
+  }
+
+  .sb-lamp {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--sb-tone, var(--color-neutral-500));
+    transition: background-color 0.25s linear;
+  }
+
+  .sb-full {
+    display: none;
+  }
+
+  .sb-note {
+    display: flex;
+    grid-area: note;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    white-space: nowrap;
+  }
+  /* A lamp on the board: unlit until the state that carries the note. */
+  .sb-note-text {
+    opacity: 0.32;
+    transition: opacity 0.25s linear 0.1s;
+  }
+  .sb-check {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--sb-tile);
+    color: var(--color-text-on-dark-muted);
+    transition:
+      background-color 0.25s linear 0.1s,
+      color 0.25s linear 0.1s;
+  }
+  .sb-note[data-on] .sb-note-text {
+    opacity: 1;
+  }
+  .sb-note[data-on] .sb-check {
+    background: var(--color-alert-clear);
+    color: var(--color-neutral-0);
+  }
+
+  @media (width >= 1024px) {
+    .sb-board {
+      --sb-leaf: var(--sb-tile);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      align-items: stretch;
+      padding: 16px 22px 2px;
+      border-radius: var(--radius-lg);
+    }
+    .sb-title {
+      padding-bottom: 12px;
+      font-size: 12px;
+    }
+    .sb-rows {
+      display: flex;
+      flex-direction: column;
+    }
+    .sb-row {
+      flex-direction: row;
+      gap: 16px;
+      align-items: center;
+      padding-block: 7px;
+      border-top: 1px solid var(--color-border-on-dark);
+    }
+    .sb-label,
+    .sb-row[data-row='0'] .sb-label {
+      position: static;
+      flex: none;
+      clip-path: none;
+      width: 104px;
+      height: auto;
+      font-size: 11px;
+      line-height: 16px;
+    }
+    .sb-value {
+      flex: 1 1 0;
+      gap: 9px;
+      padding: 6px 12px;
+      background: var(--sb-tile);
+      font-size: 16px;
+      line-height: 22px;
+    }
+    .sb-row[data-row='0'] .sb-value {
+      justify-content: flex-start;
+      font-size: 22px;
+      line-height: 26px;
+    }
+    .sb-full {
+      display: inline;
+    }
+    .sb-full + .sb-compact {
+      display: none;
+    }
+    .sb-note {
+      gap: 8px;
+      padding-block: 12px;
+      border-top: 1px solid var(--color-border-on-dark);
+      font-size: 13px;
+      line-height: 18px;
+    }
+    .sb-check {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  /* ---------- Split flap ---------- */
+
+  .sb-flap {
+    position: relative;
+    display: block;
+    flex: 1 1 0;
+    min-width: 0;
+    perspective: 240px;
+    white-space: nowrap;
+  }
+  .sb-row[data-row='0'] .sb-flap {
+    flex: none;
+  }
+  .sb-flap-now {
+    display: block;
+    /* A blank value still holds its line. */
+    min-height: 1lh;
+  }
+  .sb-flap[data-flip] .sb-flap-now {
+    clip-path: inset(0 0 50% 0);
+  }
+  .sb-flap-leaf {
+    position: absolute;
+    inset: 0;
+    display: block;
+    background: var(--sb-leaf);
+    backface-visibility: hidden;
+  }
+  .sb-flap-leaf[data-leaf='was-bottom'] {
+    clip-path: inset(50% 0 0 0);
+  }
+  .sb-flap-leaf[data-leaf='was-top'] {
+    clip-path: inset(0 0 50% 0);
+    animation: sb-leaf-fall 0.14s cubic-bezier(0.55, 0, 1, 0.45) both;
+  }
+  .sb-flap-leaf[data-leaf='now-bottom'] {
+    clip-path: inset(50% 0 0 0);
+    animation: sb-leaf-land 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.14s both;
+  }
+  /* The seam between the two leaves. */
+  .sb-flap[data-flip]::after {
+    position: absolute;
+    inset: calc(50% - 0.5px) 0 auto;
+    height: 1px;
+    background: var(--sb-panel);
+    content: '';
+  }
+  @media (width >= 1024px) {
+    .sb-row[data-row='0'] .sb-flap {
+      flex: 1 1 0;
+    }
+  }
+
+  @keyframes sb-leaf-fall {
+    from {
+      transform: rotateX(0deg);
+    }
+    to {
+      transform: rotateX(-90deg);
+    }
+  }
+  @keyframes sb-leaf-land {
+    from {
+      transform: rotateX(90deg);
+    }
+    to {
+      transform: rotateX(0deg);
+    }
+  }
+  /* ---------- Timeline ---------- */
+
+  .sb-step {
+    display: flex;
+    gap: 16px;
+  }
+  .sb-step-time {
+    flex: none;
+    width: 72px;
+  }
+  .sb-step-rail {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    width: 16px;
+    padding-top: 5px;
+  }
+  .sb-step-dot {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--sb-tone);
+    border-radius: 50%;
+    background: var(--sb-tone);
+    transition:
+      background-color 0.3s var(--motion-ease),
+      border-color 0.3s var(--motion-ease),
+      box-shadow 0.3s var(--motion-ease);
+  }
+  .sb-step-line {
+    flex: 1 1 0;
+    width: 2px;
+    background: var(--color-border-strong);
+  }
+  .sb-step-copy {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding-bottom: 32px;
+  }
+  .sb-step:last-child .sb-step-copy {
+    padding-bottom: 0;
+  }
+  @media (width >= 640px) {
+    .sb-step {
+      gap: 20px;
+    }
+    .sb-step-time {
+      width: 88px;
+    }
+  }
+  /* Room between the entries, so the board is pinned while most of them pass. */
+  @media (width >= 1024px) {
+    .sb-step-copy {
+      gap: 6px;
+      padding-bottom: 80px;
+    }
+  }
+
+  .sb[data-mode='live'] .sb-step-time,
+  .sb[data-mode='live'] .sb-step-copy > * {
+    transition: opacity 0.3s var(--motion-ease);
+  }
+  .sb[data-mode='live'] .sb-step[data-state='past'] :is(.sb-step-time, .sb-step-copy > *) {
+    opacity: 0.6;
+  }
+  .sb[data-mode='live'] .sb-step[data-state='next'] :is(.sb-step-time, .sb-step-copy > *) {
+    opacity: 0.36;
+  }
+  .sb[data-mode='live'] .sb-step[data-state='past'] .sb-step-dot {
+    border-color: var(--color-neutral-400);
+    background: var(--color-neutral-400);
+  }
+  .sb[data-mode='live'] .sb-step[data-state='next'] .sb-step-dot {
+    border-color: var(--color-neutral-400);
+    background: transparent;
+  }
+  .sb[data-mode='live'] .sb-step[data-state='active'] .sb-step-dot {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--sb-tone) 20%, transparent);
+  }
+}

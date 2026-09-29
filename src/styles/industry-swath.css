@@ -1,0 +1,574 @@
+/*
+ * Roofing "The swath report: which streets took what, cell by cell"
+ * (components/industries/swath-report.tsx, data in content/roofing-swath.ts).
+ *
+ * The map is the Paper "Swath map panel" at any width: the stage is a
+ * container and --u is one Paper pixel (784 across), so labels, chip and
+ * tooltip anchors sit where Paper puts them. Label type has a floor so it
+ * stays legible on a phone.
+ *
+ * Reveal (once, off the <Motion> block's data-anim): each cell paints at its
+ * step along the storm track (150ms apart), gold first, then up through the
+ * heavier classes to its own. The fill is animated with fill-opacity so the
+ * filter and street highlights can keep using opacity. No JS or reduced
+ * motion: every cell is painted, the panel and dims just switch.
+ *
+ * No section transitions: hard edges.
+ */
+@layer components {
+  /* ------------------------------------------------------------ Legend keys */
+  .swr-key {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-inline: -10px;
+    padding: 5px 10px;
+    border-radius: var(--radius-md);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      box-shadow 0.2s,
+      opacity 0.2s;
+  }
+  .swr-key:hover {
+    background-color: rgb(255 255 255 / 0.06);
+  }
+  .swr-key[aria-pressed='true'] {
+    background-color: rgb(255 255 255 / 0.1);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.2);
+  }
+  .swr-keys[data-filtering] .swr-key[aria-pressed='false'] {
+    opacity: 0.5;
+  }
+  .swr-keys[data-filtering] .swr-key[aria-pressed='false']:hover {
+    opacity: 1;
+  }
+  .swr-swatch {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+  /* The pressed key shows how to clear it: press it again. */
+  .swr-key-clear {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    margin-left: auto;
+    color: var(--color-text-on-dark-muted);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .swr-key[aria-pressed='true'] .swr-key-clear {
+    opacity: 1;
+  }
+
+  /* ------------------------------------------------------------ Rank button */
+  /* The component sheet's outline-dark button at sm, as a <button>. */
+  .swr-rank-button {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 10px;
+    height: 44px;
+    padding-inline: 20px;
+    border: 1px solid rgb(255 255 255 / 0.45);
+    border-radius: var(--radius-xs);
+    color: var(--color-text-on-dark);
+    font-size: var(--text-body-s);
+    line-height: 18px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      border-color 0.2s;
+  }
+  .swr-rank-button:hover {
+    background-color: rgb(255 255 255 / 0.08);
+  }
+  .swr-rank-button[aria-expanded='true'] {
+    border-color: var(--color-neutral-0);
+    background-color: var(--color-neutral-0);
+    color: var(--color-brand-navy);
+  }
+
+  /* ------------------------------------------------------------ Map + panel */
+  /* Under 1280px the list opens below the map; from 1280px it slides in beside it. */
+  .swr-view {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 0fr;
+    transition: grid-template-rows 0.45s var(--motion-ease);
+  }
+  .swr-view[data-open] {
+    grid-template-rows: auto 1fr;
+  }
+  .swr-panel {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .swr-panel-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 12px;
+    padding: 16px 16px 8px;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 20px;
+    background-color: #040818b8;
+    opacity: 0;
+    translate: 0 -8px;
+    transition:
+      opacity 0.3s,
+      translate 0.45s var(--motion-ease);
+  }
+  .swr-view[data-open] .swr-panel-inner {
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: 0.1s;
+  }
+  @media (min-width: 1280px) {
+    .swr-view {
+      grid-template-columns: minmax(0, 1fr) 0px;
+      grid-template-rows: none;
+      column-gap: 0;
+      align-items: stretch;
+      transition:
+        grid-template-columns 0.5s var(--motion-ease),
+        column-gap 0.5s var(--motion-ease);
+    }
+    .swr-view[data-open] {
+      grid-template-columns: minmax(0, 1fr) 272px;
+      grid-template-rows: none;
+      column-gap: 16px;
+    }
+    .swr-panel {
+      min-width: 0;
+    }
+    .swr-panel-inner {
+      width: 272px;
+      height: 100%;
+      margin-top: 0;
+      translate: 24px 0;
+    }
+    .swr-view[data-open] .swr-panel-inner {
+      translate: 0 0;
+    }
+  }
+
+  /* ------------------------------------------------------------ Stage */
+  .swr-stage {
+    position: relative;
+    container-type: inline-size;
+    aspect-ratio: 784 / 480;
+    overflow: clip;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 20px;
+    background-color: #040818b8;
+  }
+  /* Declared on the stage's children, so 100cqw is the stage's width. */
+  .swr-stage > * {
+    --u: calc(100cqw / 784);
+  }
+  .swr-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .swr-svg > :not(.swr-cell) {
+    pointer-events: none;
+  }
+  .swr-cell {
+    transition: opacity 0.25s;
+  }
+  .swr-cell:focus {
+    outline: none;
+  }
+  .swr-ring {
+    fill: none;
+    stroke: var(--color-neutral-0);
+    stroke-width: 2;
+  }
+
+  /* Filter: one class stays, the rest step back and stop answering. */
+  .swr-stage[data-filter] .swr-cell {
+    opacity: 0.14;
+    pointer-events: none;
+  }
+  .swr-stage[data-filter='advisory'] .swr-cell[data-tone='advisory'],
+  .swr-stage[data-filter='watch'] .swr-cell[data-tone='watch'],
+  .swr-stage[data-filter='warning'] .swr-cell[data-tone='warning'] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  /* A ranked street under the pointer: its cells stay, the rest dim. */
+  .swr-stage[data-hot] .swr-cell:not([data-hot]) {
+    opacity: 0.3;
+  }
+
+  /* ------------------------------------------------------------ Labels (Paper px) */
+  .swr-chip {
+    position: absolute;
+    top: calc(16 * var(--u));
+    left: calc(16 * var(--u));
+    display: flex;
+    align-items: center;
+    height: calc(24 * var(--u));
+    min-height: 16px;
+    padding-inline: max(6px, calc(10 * var(--u)));
+    border-radius: 6px;
+    background-color: var(--color-brand-navy);
+    color: var(--color-text-on-dark-muted);
+    font-size: max(7px, calc(10 * var(--u)));
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    white-space: nowrap;
+  }
+  .swr-label {
+    position: absolute;
+    color: var(--color-text-on-dark-muted);
+    font-size: max(8px, calc(12 * var(--u)));
+    line-height: 1.33;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .swr-label-strong {
+    color: var(--color-neutral-0);
+    font-weight: 600;
+  }
+  .swr-label-elm {
+    top: calc(232 * var(--u));
+    left: calc(24 * var(--u));
+  }
+  .swr-label-peachtree {
+    top: calc(48 * var(--u));
+    left: calc(430 * var(--u));
+  }
+  .swr-label-site {
+    top: calc(262 * var(--u));
+    left: calc(348 * var(--u));
+  }
+  .swr-label-peak {
+    top: calc(130 * var(--u));
+    left: calc(404 * var(--u));
+  }
+  /* Anchored by its right edge (Paper: left 636, 78 wide) so a floored size grows inward. */
+  .swr-label-route {
+    top: calc(82 * var(--u));
+    right: calc(70 * var(--u));
+  }
+  .swr-footnote {
+    position: absolute;
+    right: calc(16 * var(--u));
+    bottom: calc(16 * var(--u));
+    color: var(--color-text-subtle);
+    font-size: max(7px, calc(11 * var(--u)));
+    line-height: 1.27;
+    white-space: nowrap;
+  }
+
+  /* ------------------------------------------------------------ Tooltip */
+  /* Anchored to its cell from data-col / data-row: above rows 2-3, below rows 0-1;
+     edge columns align to the cell's outer edge so the tip stays on the map. */
+  .swr-tip {
+    --c: 0;
+    --r: 0;
+    position: absolute;
+    z-index: 1;
+    left: calc((var(--c) + 0.5) * 98 * var(--u));
+    top: calc(var(--r) * 98 * var(--u));
+    translate: -50% calc(-100% - 8px);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: max-content;
+    max-width: min(240px, 90cqw);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-neutral-0);
+    box-shadow: 0 8px 24px rgb(4 8 24 / 0.35);
+    color: var(--color-text);
+    pointer-events: none;
+  }
+  .swr-tip[data-row='0'],
+  .swr-tip[data-row='1'] {
+    top: calc((var(--r) + 1) * 98 * var(--u));
+    translate: -50% 8px;
+  }
+  .swr-tip[data-col='1'],
+  .swr-tip[data-col='2'] {
+    left: calc(var(--c) * 98 * var(--u));
+    translate: 0 calc(-100% - 8px);
+  }
+  .swr-tip[data-col='6'] {
+    left: calc((var(--c) + 1) * 98 * var(--u));
+    translate: -100% calc(-100% - 8px);
+  }
+  .swr-tip:is([data-col='1'], [data-col='2']):is([data-row='0'], [data-row='1']) {
+    translate: 0 8px;
+  }
+  .swr-tip[data-col='6']:is([data-row='0'], [data-row='1']) {
+    translate: -100% 8px;
+  }
+  /* From 560px across there is room above row 1, so only row 0 flips below. */
+  @container (min-width: 560px) {
+    .swr-tip[data-row='1'] {
+      top: calc(var(--r) * 98 * var(--u));
+      translate: -50% calc(-100% - 8px);
+    }
+    .swr-tip[data-row='1']:is([data-col='1'], [data-col='2']) {
+      translate: 0 calc(-100% - 8px);
+    }
+    .swr-tip[data-row='1'][data-col='6'] {
+      translate: -100% calc(-100% - 8px);
+    }
+  }
+  .swr-tip[data-col='1'] {
+    --c: 1;
+  }
+  .swr-tip[data-col='2'] {
+    --c: 2;
+  }
+  .swr-tip[data-col='3'] {
+    --c: 3;
+  }
+  .swr-tip[data-col='4'] {
+    --c: 4;
+  }
+  .swr-tip[data-col='5'] {
+    --c: 5;
+  }
+  .swr-tip[data-col='6'] {
+    --c: 6;
+  }
+  .swr-tip[data-row='1'] {
+    --r: 1;
+  }
+  .swr-tip[data-row='2'] {
+    --r: 2;
+  }
+  .swr-tip[data-row='3'] {
+    --r: 3;
+  }
+  .swr-tip-title {
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .swr-tip-title strong {
+    font-weight: 700;
+  }
+  .swr-tip-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--color-text-muted);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .swr-tip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+
+  /* ------------------------------------------------------------ Ranked list */
+  .swr-panel-eyebrow {
+    color: var(--color-text-on-dark-muted);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+  }
+  .swr-panel-title {
+    padding-bottom: 8px;
+    color: var(--color-neutral-0);
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 600;
+  }
+  .swr-ranks {
+    display: flex;
+    flex-direction: column;
+  }
+  .swr-rank + .swr-rank {
+    border-top: 1px solid rgb(255 255 255 / 0.1);
+  }
+  .swr-rank {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 4px;
+  }
+  .swr-rank:hover {
+    background-color: rgb(255 255 255 / 0.05);
+  }
+  .swr-rank-n {
+    flex-shrink: 0;
+    width: 16px;
+    color: var(--color-text-on-dark-muted);
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .swr-rank-street {
+    white-space: nowrap;
+    color: var(--color-neutral-0);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+  }
+  .swr-rank-sub {
+    color: var(--color-text-on-dark-muted);
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .swr-badge {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    background-color: rgb(255 255 255 / 0.08);
+    color: var(--color-neutral-0);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .swr-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+  /* Rows follow the panel in, one after another. */
+  .swr-rank {
+    opacity: 0;
+    translate: 12px 0;
+    transition:
+      background-color 0.2s,
+      opacity 0.3s calc(0.15s + var(--i, 0) * 60ms),
+      translate 0.4s var(--motion-ease) calc(0.15s + var(--i, 0) * 60ms);
+  }
+  .swr-view[data-open] .swr-rank {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .swr-rank:nth-child(2) {
+    --i: 1;
+  }
+  .swr-rank:nth-child(3) {
+    --i: 2;
+  }
+  .swr-rank:nth-child(4) {
+    --i: 3;
+  }
+  .swr-rank:nth-child(5) {
+    --i: 4;
+  }
+
+  /* ------------------------------------------------------------ Reveal */
+  .swr-cell[data-step='1'] {
+    --swr-step: 1;
+  }
+  .swr-cell[data-step='2'] {
+    --swr-step: 2;
+  }
+  .swr-cell[data-step='3'] {
+    --swr-step: 3;
+  }
+  .swr-cell[data-step='4'] {
+    --swr-step: 4;
+  }
+  .swr-cell[data-step='5'] {
+    --swr-step: 5;
+  }
+  .swr-cell[data-step='6'] {
+    --swr-step: 6;
+  }
+  .swr-cell[data-step='7'] {
+    --swr-step: 7;
+  }
+  .swr-cell[data-step='8'] {
+    --swr-step: 8;
+  }
+  .swr-map[data-anim]:not([data-anim='reset']) .swr-cell {
+    animation: swr-paint-advisory 0.45s linear calc(var(--swr-step, 0) * 150ms) both;
+  }
+  .swr-map[data-anim]:not([data-anim='reset']) .swr-cell[data-tone='watch'] {
+    animation-name: swr-paint-watch;
+    animation-duration: 0.7s;
+  }
+  .swr-map[data-anim]:not([data-anim='reset']) .swr-cell[data-tone='warning'] {
+    animation-name: swr-paint-warning;
+    animation-duration: 0.95s;
+  }
+  /* The peak label lands once its cell (step 5, destructive) has painted. */
+  .swr-map[data-anim]:not([data-anim='reset']) .swr-label-peak {
+    animation: swr-fade 0.4s ease-out 1.7s both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .swr-view,
+    .swr-panel-inner,
+    .swr-rank,
+    .swr-cell,
+    .swr-key,
+    .swr-key-clear {
+      transition: none !important;
+    }
+  }
+}
+
+@keyframes swr-paint-advisory {
+  from {
+    fill: var(--color-viz-gold);
+    fill-opacity: 0;
+  }
+  to {
+    fill: var(--color-viz-gold);
+    fill-opacity: 1;
+  }
+}
+@keyframes swr-paint-watch {
+  0% {
+    fill: var(--color-viz-gold);
+    fill-opacity: 0;
+  }
+  45% {
+    fill: var(--color-viz-gold);
+    fill-opacity: 1;
+  }
+  100% {
+    fill: var(--color-alert-watch);
+    fill-opacity: 1;
+  }
+}
+@keyframes swr-paint-warning {
+  0% {
+    fill: var(--color-viz-gold);
+    fill-opacity: 0;
+  }
+  30% {
+    fill: var(--color-viz-gold);
+    fill-opacity: 1;
+  }
+  62% {
+    fill: var(--color-alert-watch);
+  }
+  100% {
+    fill: var(--color-alert-warning);
+    fill-opacity: 1;
+  }
+}
+@keyframes swr-fade {
+  from {
+    opacity: 0;
+  }
+}

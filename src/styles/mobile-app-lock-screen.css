@@ -1,0 +1,335 @@
+/*
+ * Flash Mobile App: "What comes with the Flash mobile app?"
+ * (components/products/detail/mobile-app-lock-screen.tsx), classes mls-*.
+ *
+ * Copy on the left, a phone on the right whose lock screen receives the four
+ * points as push notifications. The whole phone always sits inside the
+ * section, centred against the copy.
+ *
+ * Size: `.mls-phone` is a size container and everything inside it is drawn
+ * in `--u`, 1/420 of the phone's width (the design's phone is 420 wide), so
+ * bezel, clock and notifications scale together. The phone is 884u tall, so
+ * its width is capped at 80svh × 420 / 884: the full device is never taller
+ * than 80% of the viewport. Small text keeps a px floor so it stays readable
+ * on a small phone.
+ *
+ * Arrival, on the screen's <Motion> block: each row opens its slot (grid
+ * rows 0fr → 1fr, which pushes the cards below it down) while its card drops
+ * in from above and gives a small shake as it lands. `--mls-at` orders them
+ * last to first, 500ms apart, so the stack ends in reading order. The
+ * markup is the finished stack; without data-anim nothing moves.
+ *
+ * Hover (fine pointers only): the notification grows a little.
+ */
+@layer components {
+  .mls {
+    --mls-w: min(100%, 340px, calc(80svh * 420 / 884));
+  }
+  @media (width >= 1024px) {
+    .mls {
+      --mls-w: min(420px, calc(80svh * 420 / 884));
+    }
+  }
+
+  /* ---------- Layout ---------- */
+
+  .mls-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    padding-block: 80px;
+  }
+  @media (width >= 1024px) {
+    .mls-inner {
+      flex-direction: row;
+      align-items: center;
+      gap: 64px;
+      padding-block: 120px;
+    }
+    .mls-copy {
+      width: 440px;
+      flex-shrink: 0;
+    }
+  }
+  @media (width >= 1280px) {
+    .mls-inner {
+      gap: 96px;
+    }
+    .mls-copy {
+      width: 480px;
+    }
+  }
+  .mls-intro {
+    margin-top: 20px;
+    max-width: 480px;
+    font-size: 17px;
+    line-height: var(--leading-h4);
+    color: var(--color-text-muted);
+    text-wrap: pretty;
+  }
+
+  .mls-stage {
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+    flex-grow: 1;
+  }
+
+  /* ---------- The phone ---------- */
+
+  .mls-phone {
+    width: var(--mls-w);
+    flex-shrink: 0;
+    container-type: inline-size;
+  }
+  /* Declared below the container, so 100cqw is the phone's width. */
+  .mls-bezel {
+    --u: calc(100cqw / 420);
+    padding: calc(11 * var(--u));
+    border-radius: calc(58 * var(--u));
+    background: var(--color-brand-navy-deep);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.1),
+      0 calc(40 * var(--u)) calc(80 * var(--u)) calc(-30 * var(--u)) rgb(7 13 38 / 0.45);
+  }
+  .mls-screen {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: 9 / 19.5;
+    overflow: clip;
+    padding: calc(12 * var(--u)) calc(12 * var(--u)) 0;
+    border-radius: calc(47 * var(--u));
+    /* A soft storm-dusk wallpaper: navy sky, a low gold glow. */
+    background-color: var(--color-brand-blue);
+    background-image:
+      radial-gradient(110% 40% at 78% 80%, color-mix(in srgb, var(--color-viz-gold) 42%, transparent), transparent 70%),
+      radial-gradient(90% 50% at 8% 0%, color-mix(in srgb, var(--color-brand-blue-soft) 55%, transparent), transparent 75%),
+      linear-gradient(180deg, var(--color-brand-navy) 0%, var(--color-brand-blue) 58%, var(--color-brand-blue-soft) 100%);
+  }
+  .mls-island {
+    position: absolute;
+    top: calc(11 * var(--u));
+    left: 50%;
+    width: 30%;
+    height: calc(30 * var(--u));
+    border-radius: 9999px;
+    background: #000;
+    translate: -50% 0;
+  }
+  .mls-status {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    height: calc(32 * var(--u));
+    padding-inline: calc(18 * var(--u));
+    color: var(--color-text-on-dark);
+  }
+  .mls-status-icons {
+    display: flex;
+    align-items: center;
+    gap: calc(6 * var(--u));
+  }
+  .mls-status-icons svg {
+    height: calc(11 * var(--u));
+    width: auto;
+  }
+  .mls-battery {
+    position: relative;
+    display: flex;
+    width: calc(24 * var(--u));
+    height: calc(12 * var(--u));
+    padding: calc(2 * var(--u));
+    border: 1px solid rgb(255 255 255 / 0.45);
+    border-radius: calc(4 * var(--u));
+  }
+  .mls-battery::after {
+    content: '';
+    position: absolute;
+    top: calc(3 * var(--u));
+    right: calc(-3.5 * var(--u));
+    width: calc(2 * var(--u));
+    height: calc(4 * var(--u));
+    border-radius: 0 1px 1px 0;
+    background: rgb(255 255 255 / 0.45);
+  }
+  .mls-battery span {
+    width: 72%;
+    border-radius: 1.5px;
+    background: var(--color-text-on-dark);
+  }
+
+  .mls-clock {
+    padding-top: calc(22 * var(--u));
+    text-align: center;
+    color: var(--color-text-on-dark);
+  }
+  .mls-date {
+    font-size: max(13px, calc(17 * var(--u)));
+    line-height: max(17px, calc(22 * var(--u)));
+    font-weight: 600;
+    color: rgb(255 255 255 / 0.88);
+  }
+  .mls-time {
+    font-size: calc(88 * var(--u));
+    line-height: calc(96 * var(--u));
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+
+  /* ---------- Notifications ---------- */
+
+  .mls-list {
+    display: flex;
+    flex-direction: column;
+    padding-top: calc(28 * var(--u));
+  }
+  .mls-row {
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+  /* The one that arrives last is drawn over the ones it pushes down. */
+  .mls-r1 {
+    --mls-at: 1500ms;
+    z-index: 4;
+  }
+  .mls-r2 {
+    --mls-at: 1000ms;
+    z-index: 3;
+  }
+  .mls-r3 {
+    --mls-at: 500ms;
+    z-index: 2;
+  }
+  .mls-r4 {
+    --mls-at: 0ms;
+    z-index: 1;
+  }
+  /* min-height 0 lets a closed row collapse to nothing; the gap is the
+     card's margin, inside the row, so it opens with it. */
+  .mls-drop {
+    min-height: 0;
+  }
+  .mls-note {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(11 * var(--u));
+    margin-bottom: calc(9 * var(--u));
+    padding: calc(13 * var(--u)) calc(14 * var(--u)) calc(14 * var(--u));
+    border-radius: calc(20 * var(--u));
+    background: rgb(255 255 255 / 0.8);
+    box-shadow: 0 calc(8 * var(--u)) calc(22 * var(--u)) calc(-10 * var(--u)) rgb(4 8 24 / 0.45);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    backdrop-filter: blur(20px) saturate(1.6);
+    transition:
+      scale 0.32s var(--motion-ease),
+      background-color 0.32s var(--motion-ease),
+      box-shadow 0.32s var(--motion-ease);
+  }
+  .mls-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(38 * var(--u));
+    height: calc(38 * var(--u));
+    flex-shrink: 0;
+    border-radius: calc(9 * var(--u));
+    background: var(--color-brand-navy);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+  }
+  .mls-bolt {
+    width: calc(16 * var(--u));
+    height: calc(21 * var(--u));
+  }
+  .mls-text {
+    min-width: 0;
+    flex: 1;
+  }
+  .mls-meta {
+    font-size: max(11px, calc(12 * var(--u)));
+    line-height: max(14px, calc(16 * var(--u)));
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--color-text-muted);
+  }
+  .mls-title {
+    padding-top: calc(2 * var(--u));
+    font-size: max(13px, calc(15 * var(--u)));
+    line-height: max(18px, calc(20 * var(--u)));
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--color-text);
+  }
+  /* The full text, wrapping to two lines where it needs them. */
+  .mls-body {
+    font-size: max(12px, calc(14 * var(--u)));
+    line-height: max(17px, calc(20 * var(--u)));
+    color: var(--color-neutral-700);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .mls-note:hover {
+      scale: 1.03;
+      background-color: rgb(255 255 255 / 0.94);
+      box-shadow: 0 calc(16 * var(--u)) calc(34 * var(--u)) calc(-12 * var(--u)) rgb(4 8 24 / 0.55);
+    }
+  }
+
+  /* ---------- Arrival ---------- */
+
+  .motion[data-anim]:not([data-anim='reset']) .mls-row {
+    animation: mls-open 460ms var(--motion-ease) both;
+    animation-delay: calc(var(--motion-delay) + 200ms + var(--mls-at));
+  }
+  .motion[data-anim]:not([data-anim='reset']) .mls-drop {
+    animation: mls-land 860ms both;
+    animation-delay: calc(var(--motion-delay) + 200ms + var(--mls-at));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mls-note {
+      transition: none;
+    }
+    .mls-note:hover {
+      scale: none;
+    }
+  }
+}
+
+@keyframes mls-open {
+  from {
+    grid-template-rows: 0fr;
+  }
+}
+/* Drops in from above over the first half, then a tiny shake as it lands. */
+@keyframes mls-land {
+  0% {
+    opacity: 0;
+    transform: translateY(-70%) scale(0.94);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  28% {
+    opacity: 1;
+  }
+  50% {
+    transform: none;
+    animation-timing-function: ease-in-out;
+  }
+  60% {
+    transform: translateX(-3px) rotate(-0.6deg);
+  }
+  70% {
+    transform: translateX(3px) rotate(0.5deg);
+  }
+  80% {
+    transform: translateX(-2px) rotate(-0.3deg);
+  }
+  90% {
+    transform: translateX(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -1,0 +1,187 @@
+/*
+ * The Heat & WBGT hero's "6-hour WBGT outlook" (components/products/heat/
+ * wbgt-chart.tsx), on the shared hero timings (styles/hero.css): the card
+ * slides in at --hero-visual-at (750ms), then its own intro plays.
+ *
+ *   1300ms  the baseline and the four band lines draw left to right, 90ms
+ *           apart, each label arriving as its line reaches it (CSS)
+ *   2200ms  the bars rise like thermometer liquid, Now to 6 pm, 120ms apart,
+ *           750ms each; each takes the colour of the band its top is in and
+ *           its value counts up with it (the script: data-live, then
+ *           data-done)
+ *   3430ms  the 4 pm bar lands: the caption fades in and the peak glows
+ *   after   the sensor dot pulses, the Now reading drifts by 0.1 °F every
+ *           few seconds, and a faint heat shimmer rises through the bars
+ *           above 87; all of it holds while the hero is off screen
+ *
+ * The times are plain values here because the script reads them
+ * (--ho-bars-at, --ho-bar-gap, --ho-bar-ms); keep the others in step.
+ * Outside the no-preference query nothing moves: the markup is the finished
+ * chart, with no shimmer. Hard edges, no grid.
+ */
+@layer components {
+  .ho {
+    --ho-at: 1300ms;
+    --ho-band-gap: 90ms;
+    --ho-band-ms: 650ms;
+    --ho-bars-at: 2200ms;
+    --ho-bar-gap: 120ms;
+    --ho-bar-ms: 750ms;
+    --ho-peak-at: 3430ms;
+  }
+
+  /* The bars take the colour of the band their top is in. */
+  .ho-bar[data-band='below'] .ho-fill {
+    fill: rgb(255 255 255 / 0.85);
+  }
+  .ho-bar[data-band='gold'] .ho-fill {
+    fill: var(--color-viz-gold);
+  }
+  .ho-bar[data-band='watch'] .ho-fill {
+    fill: var(--color-alert-watch);
+  }
+  .ho-bar[data-band='sensor'] .ho-fill {
+    fill: rgb(255 255 255 / 0.85);
+  }
+  /* The peak keeps a soft glow. */
+  .ho-bar[data-peak] .ho-fill {
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-alert-watch) 45%, transparent));
+  }
+  .ho-shimmer {
+    display: none;
+  }
+  .ho-bar[data-idle] .ho-value {
+    opacity: 0;
+  }
+
+  /* Hover: the bar under the pointer lifts, and its tooltip. */
+  .ho-hit {
+    fill: transparent;
+    cursor: default;
+  }
+  .ho-bar:has(.ho-hit:hover) .ho-fill {
+    filter: brightness(1.15);
+  }
+  .ho-tip {
+    position: absolute;
+    left: var(--ho-x, 50%);
+    top: var(--ho-y, 0%);
+    z-index: 2;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-neutral-900);
+    box-shadow:
+      inset 0 0 0 1px var(--color-neutral-700),
+      0 10px 24px -12px rgb(0 0 0 / 0.6);
+    color: var(--color-text-on-dark);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    transform: translate(-50%, calc(-100% - 26px));
+    pointer-events: none;
+  }
+  .ho-tip-rule {
+    color: var(--color-viz-gold);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* 1300ms: the lines draw in, left to right; a label shows as its line reaches it. */
+    .ho-line {
+      animation: ho-draw var(--ho-band-ms) var(--hero-ease) calc(var(--ho-at) + var(--i, 0) * var(--ho-band-gap))
+        backwards;
+    }
+    .ho-line:nth-of-type(2) {
+      --i: 1;
+    }
+    .ho-line:nth-of-type(3) {
+      --i: 2;
+    }
+    .ho-line:nth-of-type(4) {
+      --i: 3;
+    }
+    .ho-line:nth-of-type(5) {
+      --i: 4;
+    }
+
+    /* 3430ms: the peak lands, the caption fades up and the bar glows. */
+    .ho-caption {
+      animation: ho-caption 0.8s var(--hero-ease) var(--ho-peak-at) backwards;
+    }
+    .ho-bar[data-peak] .ho-fill {
+      animation: ho-glow 1.6s ease-out var(--ho-peak-at) backwards;
+    }
+
+    /* Ambient: the sensor dot, and the shimmer over the bars above 87. */
+    .ho-live {
+      animation: ho-live 1.8s ease-in-out infinite;
+    }
+    .ho-shimmer {
+      display: inline;
+      animation: motion-fade 1.2s ease-out calc(var(--ho-peak-at) + 600ms) backwards;
+    }
+    .ho-shimmer-waves {
+      animation: ho-rise 2.8s linear infinite;
+    }
+    .hero-fx[data-offscreen] :is(.ho-live, .ho-shimmer-waves) {
+      animation-play-state: paused;
+    }
+  }
+
+  /* With script, the bars and their values wait for it (it zeroes them at
+     once); should it never run, they show after 4s anyway. */
+  @media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+    .ho:not([data-live], [data-done]) :is(.ho-fill, .ho-value) {
+      opacity: 0;
+      animation: ho-show 0s linear 4s forwards;
+    }
+  }
+}
+
+@keyframes ho-draw {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes ho-caption {
+  from {
+    opacity: 0.01;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes ho-glow {
+  0% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  35% {
+    filter: drop-shadow(0 0 14px color-mix(in srgb, var(--color-alert-watch) 85%, transparent));
+  }
+}
+
+@keyframes ho-live {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes ho-rise {
+  to {
+    transform: translateY(-16px);
+  }
+}
+
+@keyframes ho-show {
+  to {
+    opacity: 1;
+  }
+}

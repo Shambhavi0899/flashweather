@@ -1,0 +1,121 @@
+/*
+ * Flash API "Where does Flash already plug in?" (components/products/api/
+ * integration-list.tsx and Integrations() in agent-and-integrations.tsx).
+ *
+ * Each connector's "Receives:" line (webhook event chips, or "every event")
+ * sits at the foot of its item and always holds its space, so revealing it
+ * never moves the list. With a mouse from 768px it is hidden until the item
+ * is hovered or focused, then slides in from the left, chips 60ms apart. On
+ * phones and touch screens it is simply shown.
+ *
+ * Scroll-in (one Motion block, plays once): items fade up row by row, 120ms
+ * per row; the component sets data-row from each item's visual row.
+ * Reduced motion: no fades, no slides; the line still appears on hover/focus.
+ *
+ * The delivery cards below use the shared .pc hover (styles/parameter-card.css)
+ * plus the arrow slide on card hover, since these cards are not links.
+ * No grid motifs, no section transitions.
+ */
+@layer components {
+  /* ------------------------------------------------------------ The line */
+  .ain-item {
+    outline-offset: -2px;
+  }
+  .ain-item:focus-visible {
+    outline: 2px solid var(--color-alert-info);
+  }
+  .ain-receives {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px 6px;
+    margin-top: auto;
+    padding-top: 10px;
+  }
+  .ain-receives-label {
+    color: var(--color-text-muted);
+    font-size: var(--text-micro);
+    line-height: var(--leading-micro);
+    font-weight: 600;
+  }
+  .ain-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding-inline: 6px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-raised);
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .ain-chip-all {
+    background-color: color-mix(in srgb, var(--color-gold-on-light) 14%, transparent);
+    color: var(--color-brand-navy);
+    font-family: inherit;
+    font-weight: 700;
+  }
+
+  /* Hidden until hover or focus, only where there is a mouse and room. */
+  @media (width >= 768px) and (hover: hover) {
+    .ain-receives > * {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+    .ain-item:is(:hover, :focus-visible) .ain-receives > * {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ------------------------------------------------------ Delivery cards */
+  .ain-card-photo {
+    overflow: hidden;
+  }
+
+  /* -------------------------------------------------------------- Motion */
+  @media (prefers-reduced-motion: no-preference) {
+    @media (width >= 768px) and (hover: hover) {
+      .ain-receives > * {
+        transition:
+          opacity 250ms var(--motion-ease),
+          transform 300ms var(--motion-ease);
+      }
+      .ain-item:is(:hover, :focus-visible) .ain-receives > :nth-child(2) {
+        transition-delay: 60ms;
+      }
+      .ain-item:is(:hover, :focus-visible) .ain-receives > :nth-child(3) {
+        transition-delay: 120ms;
+      }
+      .ain-cards .pc:hover .pc-link > span {
+        transform: translateX(4px);
+      }
+    }
+
+    .ain-list[data-anim]:not([data-anim='reset']) .ain-item {
+      animation: ain-rise 600ms var(--motion-ease) calc(var(--motion-delay) + var(--ain-row-at, 0ms)) both;
+    }
+    .ain-item[data-row='1'] {
+      --ain-row-at: 120ms;
+    }
+    .ain-item[data-row='2'] {
+      --ain-row-at: 240ms;
+    }
+    .ain-item[data-row='3'] {
+      --ain-row-at: 360ms;
+    }
+    .ain-item[data-row='4'] {
+      --ain-row-at: 480ms;
+    }
+  }
+}
+
+@keyframes ain-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}

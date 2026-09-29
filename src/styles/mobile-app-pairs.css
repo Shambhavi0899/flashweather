@@ -1,0 +1,203 @@
+/*
+ * mobile-app-pairs — "Products that pair with Flash Mobile App"
+ * (components/products/detail/mobile-app-pairs.tsx).
+ *
+ * Three product cards, each with an "On your phone" strip: a mini phone with
+ * a sync pulse and one line of what that product sends to the phone.
+ *
+ * The base rules are the still frame: every strip shown, no motion. That is
+ * what reduced motion gets. From 768px, with motion, the strip sits hidden
+ * inside the photo's bottom edge and slides up on hover, focus, tap
+ * (`data-open`) or the idle run-through. Below 768px it is always shown,
+ * under the card's copy. The shared card hover (lift, photo scale, arrow)
+ * comes from styles/parameter-card.css via `.pc`.
+ */
+
+@layer components {
+  .mpp {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    @media (width >= 768px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (width >= 1024px) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .mpp-card {
+    --mpp-strip-h: 60px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 10%);
+    border-radius: var(--radius-lg);
+    background: rgb(255 255 255 / 3%);
+    /* The strip is placed against the photo's bottom edge in cqi. */
+    container-type: inline-size;
+  }
+
+  .mpp-media {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  /* ------------------------------------------------------------ Strip */
+
+  .mpp-strip {
+    display: block;
+    border-top: 1px solid rgb(255 255 255 / 10%);
+    @media (width >= 768px) {
+      position: absolute;
+      inset-inline: 0;
+      top: calc(56.25cqi - var(--mpp-strip-h));
+      height: var(--mpp-strip-h);
+      overflow: hidden;
+      border-top: 0;
+    }
+  }
+
+  .mpp-strip-in {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 100%;
+    padding: 12px 20px;
+    background: rgb(7 13 38 / 72%);
+    @media (width >= 768px) {
+      padding-block: 0;
+      border-top: 1px solid color-mix(in srgb, var(--color-viz-gold) 45%, transparent);
+      background: rgb(7 13 38 / 90%);
+      backdrop-filter: blur(8px);
+    }
+  }
+
+  .mpp-phone {
+    position: relative;
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: rgb(255 255 255 / 6%);
+    color: var(--color-text-on-dark);
+  }
+
+  .mpp-phone svg {
+    width: 14px;
+    height: 20px;
+  }
+
+  /* The sync dot at the phone's corner; its ring pulses while shown. */
+  .mpp-pulse {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-viz-gold);
+  }
+
+  .mpp-pulse::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-viz-gold);
+    opacity: 0;
+  }
+
+  .mpp-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .mpp-label {
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-viz-gold);
+  }
+
+  .mpp-line {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+    color: var(--color-text-on-dark);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Hidden in the photo's bottom edge; slides up when open. */
+    @media (width >= 768px) {
+      .mpp-strip-in {
+        translate: 0 101%;
+        transition: translate 450ms var(--motion-ease);
+      }
+      .mpp-card:is([data-open], :focus-within) .mpp-strip-in {
+        translate: 0 0;
+      }
+      .mpp-card:is([data-open], :focus-within) .mpp-pulse::after {
+        animation: mpp-pulse 1.6s ease-out 250ms infinite;
+      }
+      @media (hover: hover) {
+        .mpp-card:hover .mpp-strip-in {
+          translate: 0 0;
+        }
+        .mpp-card:hover .mpp-pulse::after {
+          animation: mpp-pulse 1.6s ease-out 250ms infinite;
+        }
+      }
+    }
+    /* Always shown below 768px: the pulse runs while the card is in view. */
+    @media (width < 768px) {
+      .motion.mpp-item[data-inview] .mpp-pulse::after {
+        animation: mpp-pulse 2.4s ease-out infinite;
+      }
+    }
+
+    /* The card is the hover target, so its link's arrow slides with it. */
+    @media (hover: hover) {
+      .mpp-card:hover .pc-link > span {
+        transform: translateX(4px);
+      }
+    }
+
+    /* Reveal: the cards fade up in turn; the chips (ccl-chips) follow. */
+    .motion.mpp-item {
+      --motion-stagger: 90ms;
+    }
+    .motion.mpp-item[data-anim]:not([data-anim='reset']) > .mpp-card {
+      animation: mpp-rise 650ms var(--motion-ease) var(--motion-delay) backwards;
+    }
+  }
+}
+
+@keyframes mpp-rise {
+  from {
+    opacity: 0;
+    translate: 0 20px;
+  }
+}
+
+@keyframes mpp-pulse {
+  0% {
+    opacity: 0.9;
+    scale: 1;
+  }
+  80%,
+  100% {
+    opacity: 0;
+    scale: 3.2;
+  }
+}

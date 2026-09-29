@@ -1,0 +1,41 @@
+/*
+ * industry-card-facts — an industry `cards` row with `wave: true`, and the
+ * fact chips a card carries under its title (components/industries/sections.tsx,
+ * icf-*). Used by Schools & Athletics' "What the NAIA and the Big 12 actually
+ * use Flash for".
+ *
+ * The row takes the site's wave reveal as it is (styles/parameter-card.css):
+ * each card is a `.motion.scroll-flow-card`, fading up 70ms after the one
+ * before while its photo comes into focus. The cards are open, with no box to
+ * cast a shadow, so a hover only lifts the card and eases its photo to 1.03.
+ * Server HTML, no JavaScript and reduced motion show the cards as they end.
+ */
+
+@layer components {
+  .icf-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .icf-chip {
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-0);
+    padding: 4px 10px;
+    color: var(--color-text);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @media (hover: hover) {
+      .pc.icf:hover {
+        box-shadow: none;
+      }
+      .pc.icf:hover .pc-photo > img {
+        scale: 1.03;
+      }
+    }
+  }
+}

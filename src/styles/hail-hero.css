@@ -1,0 +1,507 @@
+/*
+ * hail-hero — the "Hail size classes · to scale" card on the hail hero
+ * (components/products/hail/size-card.tsx, hail-stone.tsx, impact-art.tsx).
+ *
+ * The stage is 516 × 276 units, the row the design draws: stones of 90,
+ * 120 and 240 units (0.75, 1.00 and 2.00 in) standing on a ground line at
+ * 236, each on the outline of its NWS comparison, with the comparison's
+ * name under it. The impact preview sits in the empty corner above the two
+ * small stones. Everything is placed in percentages of the stage, so it
+ * scales as one drawing.
+ *
+ * The finished frame is the base: stones down, labels up, Damaging
+ * selected (the component's server state), every mark and crack drawn.
+ * That is what reduced motion and a browser without JavaScript show. The
+ * motion, all inside the no-preference query, runs on the hero's timings
+ * (styles/hero.css):
+ *   intro  as the headline's last word lands (1420ms) the stones fall,
+ *          350ms each and 120ms apart, smallest first; each squashes and
+ *          puffs ice as it lands (200ms) while its labels and tab rise
+ *          (200ms). The last is down ~600ms after the first starts. The
+ *          component holds the selection back (data-intro) until 800ms
+ *          after that; it reads the landing from the `hail-drop` animation.
+ *   cycle  the selected tab's bar fills over 2.5s; the component moves to
+ *          the next class when it ends, and the classes change over 250ms.
+ *          The bar holds (and the cycle with it) while the hero is off
+ *          screen, while a key has focus in the card, and for 3s after a
+ *          person picks a class (data-hold).
+ *   impact each time a preview opens, its marks pop in one by one, or its
+ *          cracks draw out from the impact, in 400ms.
+ */
+
+@layer components {
+  .hail-card {
+    /* The headline's last word: its eighth step, and its 0.6s rise. */
+    --hail-drop-at: calc(var(--hero-headline-at) + 7 * var(--hero-word-gap) + 600ms);
+    --hail-drop-gap: 120ms;
+    --hail-fall: 350ms;
+    --hail-settle: 200ms;
+    --hail-switch: 250ms;
+    --hail-dwell: 2.5s;
+    /* A preview's marks start as it fades in, and are drawn 400ms later. */
+    --hail-impact-at: 100ms;
+  }
+  .hail-card [data-class='severe'] {
+    --i: 0;
+    --hail-tone: var(--color-viz-gold);
+    --hail-scale: 0.6;
+  }
+  .hail-card [data-class='damaging'] {
+    --i: 1;
+    --hail-tone: var(--color-alert-watch);
+    --hail-scale: 0.8;
+  }
+  .hail-card [data-class='destructive'] {
+    --i: 2;
+    --hail-tone: var(--color-alert-warning);
+    --hail-scale: 1.4;
+  }
+  .hail-card [data-class] {
+    /* Its stone starts to fall, and lands. */
+    --hail-drop: calc(var(--hail-drop-at) + var(--i) * var(--hail-drop-gap));
+    --hail-land: calc(var(--hail-drop) + var(--hail-fall));
+  }
+
+  /* ------------------------------------------------------------ The stage */
+
+  .hail-stage {
+    position: relative;
+    aspect-ratio: 516 / 276;
+    container-type: inline-size;
+  }
+  .hail-pads {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .hail-pad-line,
+  .hail-pad-rim,
+  .hail-pad-reeding {
+    fill: none;
+    stroke: #ffffff;
+  }
+  .hail-pad-line {
+    stroke-opacity: 0.26;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .hail-pad-rim {
+    stroke-opacity: 0.12;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .hail-pad-reeding {
+    stroke-opacity: 0.16;
+    stroke-dasharray: 1 2.4;
+  }
+
+  /* A stone's box: to scale, its foot on the ground line. */
+  .hail-slot {
+    position: absolute;
+    bottom: calc(40 / 276 * 100%);
+    aspect-ratio: 1;
+    color: var(--hail-tone);
+    cursor: pointer;
+    transition: opacity var(--hail-switch) var(--motion-ease);
+  }
+  .hail-slot[data-class='severe'] {
+    left: 0;
+    width: calc(90 / 516 * 100%);
+  }
+  .hail-slot[data-class='damaging'] {
+    left: calc(123 / 516 * 100%);
+    width: calc(120 / 516 * 100%);
+  }
+  .hail-slot[data-class='destructive'] {
+    left: calc(276 / 516 * 100%);
+    width: calc(240 / 516 * 100%);
+  }
+  .hail-drop {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 100%;
+  }
+  .hail-stone {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transition: filter var(--hail-switch) var(--motion-ease);
+  }
+  .hail-stone-tint {
+    transition: opacity var(--hail-switch) var(--motion-ease);
+  }
+  .hail-halo {
+    position: absolute;
+    inset: -30%;
+    border-radius: 50%;
+    background-image: radial-gradient(
+      closest-side,
+      color-mix(in oklab, var(--hail-tone) 38%, transparent),
+      color-mix(in oklab, var(--hail-tone) 10%, transparent) 60%,
+      transparent
+    );
+    opacity: 0;
+    transition: opacity var(--hail-switch) var(--motion-ease);
+  }
+  /* Its contact shadow on the comparison. */
+  .hail-shadow {
+    position: absolute;
+    right: 14%;
+    bottom: -5%;
+    left: 14%;
+    height: 10%;
+    border-radius: 50%;
+    background-image: radial-gradient(closest-side, rgb(0 0 0 / 55%), transparent);
+  }
+  /* The puff of ice: seven grains from the foot, nothing at rest. */
+  .hail-puff {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+  }
+  .hail-puff span {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: #e6f0ff;
+    opacity: 0;
+  }
+  .hail-puff span:nth-child(1) { --dx: -30px; --dy: -10px; }
+  .hail-puff span:nth-child(2) { --dx: -18px; --dy: -22px; width: 3px; height: 3px; }
+  .hail-puff span:nth-child(3) { --dx: -6px; --dy: -28px; }
+  .hail-puff span:nth-child(4) { --dx: 8px; --dy: -24px; width: 3px; height: 3px; }
+  .hail-puff span:nth-child(5) { --dx: 20px; --dy: -16px; }
+  .hail-puff span:nth-child(6) { --dx: 32px; --dy: -6px; width: 3px; height: 3px; }
+  .hail-puff span:nth-child(7) { --dx: -38px; --dy: -2px; width: 3px; height: 3px; }
+
+  /* The comparison's name, under its outline. */
+  .hail-compare {
+    position: absolute;
+    top: calc(256 / 276 * 100%);
+    translate: -50% 0;
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    color: var(--color-text-on-dark-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .hail-compare[data-class='severe'] {
+    left: calc(45 / 516 * 100%);
+  }
+  .hail-compare[data-class='damaging'] {
+    left: calc(183 / 516 * 100%);
+  }
+  .hail-compare[data-class='destructive'] {
+    left: calc(396 / 516 * 100%);
+  }
+
+  /* ------------------------------------------------------ The impact preview */
+
+  .hail-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: calc(243 / 516 * 100%);
+    transition:
+      opacity var(--hail-switch) var(--motion-ease),
+      visibility var(--hail-switch);
+  }
+  .hail-impact {
+    display: flex;
+    grid-area: 1 / 1;
+    flex-direction: column;
+    gap: 4px;
+    border-radius: 8px;
+    color: var(--hail-tone);
+    transition:
+      opacity var(--hail-switch) var(--motion-ease),
+      visibility var(--hail-switch);
+  }
+  .hail-impact:not([data-on]) {
+    visibility: hidden;
+    opacity: 0;
+  }
+  .hail-impact-caption {
+    font-size: 9px;
+    line-height: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--color-text-on-dark-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+    @media (width >= 640px) {
+      font-size: 10px;
+      line-height: 12px;
+      letter-spacing: var(--tracking-label);
+    }
+  }
+  /* A narrow card names only the surface, so the caption stays over its drawing. */
+  @container (width < 440px) {
+    .hail-impact-mark {
+      display: none;
+    }
+  }
+  .hail-impact-art {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .hail-mark,
+  .hail-ping {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .hail-ping {
+    opacity: 0;
+  }
+  .hail-crack-line,
+  .hail-crack-ring {
+    fill: none;
+    stroke: #e6f0ff;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .hail-crack-line {
+    stroke-opacity: 0.8;
+    stroke-width: 0.9;
+  }
+  .hail-crack-ring {
+    stroke-opacity: 0.5;
+    stroke-width: 0.6;
+  }
+  .hail-crack-glow {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* ------------------------------------------------------------- The tabs */
+
+  .hail-tab {
+    position: relative;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .hail-tab:focus-visible {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: 4px;
+  }
+  .hail-tab-size {
+    transition: color var(--hail-switch) var(--motion-ease);
+  }
+  /* The selected class's bar, over the divider: full at rest, filling while it cycles. */
+  .hail-progress {
+    position: absolute;
+    top: -1px;
+    right: 0;
+    left: 0;
+    height: 2px;
+    border-radius: 1px;
+    background-color: var(--hail-tone);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+  .hail-tab[aria-selected='true'] .hail-progress {
+    transform: none;
+  }
+
+  /* ---------------------------------------------------------- Selection */
+  /* Held back while the stones are still falling. */
+
+  .hail-card:not([data-intro]) {
+    .hail-slot:not([data-on]) {
+      opacity: 0.4;
+    }
+    .hail-slot[data-on] .hail-halo {
+      opacity: 1;
+    }
+    .hail-slot[data-on] .hail-stone {
+      filter: drop-shadow(0 0 10px color-mix(in oklab, var(--hail-tone) 70%, transparent));
+    }
+    .hail-slot[data-on] .hail-stone-tint {
+      opacity: 0.2;
+    }
+    .hail-tab[aria-selected='false'] .hail-tab-size {
+      color: rgb(255 255 255 / 70%);
+    }
+  }
+  .hail-card[data-intro] {
+    .hail-preview {
+      visibility: hidden;
+      opacity: 0;
+    }
+    .hail-progress {
+      transform: scaleX(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Intro. */
+    .hail-drop {
+      animation:
+        hail-drop var(--hail-fall) cubic-bezier(0.55, 0, 0.9, 0.55) var(--hail-drop) backwards,
+        hail-settle var(--hail-settle) linear var(--hail-land),
+        hail-appear 0.15s ease-out var(--hail-drop) backwards;
+    }
+    .hail-shadow {
+      animation: hail-shadow var(--hail-fall) ease-in var(--hail-drop) backwards;
+    }
+    .hail-puff span {
+      animation: hail-puff var(--hail-settle) cubic-bezier(0.2, 0.7, 0.3, 1) var(--hail-land) both;
+    }
+    .hail-compare,
+    .hail-tab {
+      animation: hero-lift 0.2s var(--hero-ease) var(--hail-land) backwards;
+    }
+
+    /* Cycle: the bar fills, then the component moves on. */
+    /* Longhands, so the pause below is not reset by the shorthand. */
+    .hail-card:not([data-intro]) .hail-tab[aria-selected='true'] .hail-progress {
+      animation-name: hail-progress;
+      animation-duration: var(--hail-dwell);
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+    }
+    .hail-card[data-hold] .hail-tab[aria-selected='true'] .hail-progress {
+      animation-name: none;
+    }
+    .hail-card:has(:focus-visible) .hail-progress,
+    .hero-fx[data-offscreen] .hail-progress {
+      animation-play-state: paused;
+    }
+
+    /* Impact: marks pop one by one; cracks run out from each impact. */
+    .hail-marks > g:nth-child(1) { --m: 0; }
+    .hail-marks > g:nth-child(2) { --m: 1; }
+    .hail-marks > g:nth-child(3) { --m: 2; }
+    .hail-marks > g:nth-child(4) { --m: 3; }
+    .hail-marks > g:nth-child(5) { --m: 4; }
+    .hail-marks > g:nth-child(6) { --m: 5; }
+    .hail-impact[data-on] .hail-mark {
+      animation: hail-mark 0.15s var(--hero-ease) calc(var(--hail-impact-at) + var(--m) * 50ms) backwards;
+    }
+    .hail-impact[data-on] .hail-ping {
+      animation: hail-ping 0.25s ease-out calc(var(--hail-impact-at) + var(--m) * 50ms) both;
+    }
+    .hail-crack:nth-of-type(1) { --c: 0; }
+    .hail-crack:nth-of-type(2) { --c: 1; }
+    .hail-impact[data-on] .hail-crack-line,
+    .hail-impact[data-on] .hail-crack-ring {
+      stroke-dasharray: 1;
+    }
+    .hail-impact[data-on] .hail-crack-line {
+      animation: hail-crack 0.18s cubic-bezier(0.3, 0.6, 0.4, 1) calc(var(--hail-impact-at) + var(--c) * 180ms)
+        backwards;
+    }
+    .hail-impact[data-on] .hail-crack-ring {
+      animation: hail-crack 0.13s ease-out calc(var(--hail-impact-at) + 90ms + var(--c) * 180ms) backwards;
+    }
+    .hail-impact[data-on] .hail-crack-glow {
+      animation: hail-glow 0.22s ease-out calc(var(--hail-impact-at) + var(--c) * 180ms) backwards;
+    }
+  }
+}
+
+/* Falls, accelerating, and lands as it ends (the component reads the
+   landing from this animation); then squashes and settles. */
+@keyframes hail-drop {
+  from {
+    transform: translateY(-360px);
+  }
+}
+@keyframes hail-settle {
+  0% {
+    transform: translateY(0) scale(1, 1);
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+  25% {
+    transform: translateY(0) scale(1.07, 0.88);
+  }
+  60% {
+    transform: translateY(-3px) scale(0.97, 1.03);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+@keyframes hail-appear {
+  from {
+    opacity: 0.01;
+  }
+}
+@keyframes hail-shadow {
+  from {
+    opacity: 0;
+    scale: 0.3;
+  }
+}
+@keyframes hail-puff {
+  0% {
+    opacity: 0;
+    transform: none;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--dx) * var(--hail-scale)), calc(var(--dy) * var(--hail-scale))) scale(0.4);
+  }
+}
+@keyframes hail-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes hail-mark {
+  0% {
+    opacity: 0;
+    scale: 0;
+  }
+  60% {
+    opacity: 1;
+    scale: 1.25;
+  }
+}
+@keyframes hail-ping {
+  0% {
+    opacity: 0;
+    scale: 0.4;
+  }
+  1% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 2.4;
+  }
+}
+@keyframes hail-crack {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes hail-glow {
+  0% {
+    opacity: 0;
+    scale: 0.4;
+  }
+  20% {
+    opacity: 1;
+    scale: 1.5;
+  }
+}
