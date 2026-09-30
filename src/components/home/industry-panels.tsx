@@ -13,6 +13,9 @@ const HOVER_INTENT_MS = 90;
  *
  * What is added here:
  *   hover     a mouse over a panel opens it
+ *   follow    a mouse click on a closed panel, and Enter on a focused one,
+ *             go to the panel's link (an open panel is covered by the link
+ *             itself; a tap on a closed one opens it first)
  *   advance   idle and in view, the open panel gives way to the next every
  *             5s. The clock is the gold bar's own CSS animation: it runs
  *             while the wrapper carries `data-auto="run"`, holds on
@@ -91,6 +94,24 @@ export function IndustryPanels({
       clearTimeout(intent);
       sync();
     };
+    // A mouse click on a closed panel, or Enter on a focused one, follows the panel's link.
+    // A tap on a closed panel only opens it; open, the link itself covers the panel.
+    let pointer = '';
+    const onPointerDown = (event: PointerEvent) => {
+      pointer = event.pointerType;
+    };
+    const follow = (from: EventTarget | null) =>
+      (from as HTMLElement).closest('[data-panel]')?.querySelector<HTMLElement>('[data-panel-link]')?.click();
+    const onClick = (event: MouseEvent) => {
+      if (pointer !== 'mouse' || !(event.target instanceof HTMLLabelElement)) return;
+      event.preventDefault();
+      follow(event.target);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Enter' || !(event.target instanceof HTMLInputElement)) return;
+      event.preventDefault();
+      follow(event.target);
+    };
     const onPanelEnter = (event: PointerEvent) => {
       if (event.pointerType !== 'mouse') return;
       const index = panels.indexOf(event.currentTarget as HTMLElement);
@@ -104,6 +125,9 @@ export function IndustryPanels({
     root.addEventListener('pointerleave', onLeave);
     root.addEventListener('focusin', sync);
     root.addEventListener('focusout', sync);
+    root.addEventListener('pointerdown', onPointerDown);
+    root.addEventListener('click', onClick);
+    root.addEventListener('keydown', onKeyDown);
     panels.forEach((panel) => panel?.addEventListener('pointerenter', onPanelEnter));
     reduced.addEventListener('change', sync);
 
@@ -116,6 +140,9 @@ export function IndustryPanels({
       root.removeEventListener('pointerleave', onLeave);
       root.removeEventListener('focusin', sync);
       root.removeEventListener('focusout', sync);
+      root.removeEventListener('pointerdown', onPointerDown);
+      root.removeEventListener('click', onClick);
+      root.removeEventListener('keydown', onKeyDown);
       panels.forEach((panel) => panel?.removeEventListener('pointerenter', onPanelEnter));
       reduced.removeEventListener('change', sync);
       delete root.dataset.auto;

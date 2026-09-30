@@ -206,21 +206,11 @@
 
   /* -------------------------------------------------- The section's flow */
 
-  /* The trust strip runs into the catalogue: its white eases into the
+  /* The customers section runs into the catalogue: its white eases into the
      catalogue's ground instead of stopping at a rule. */
   .home-catalogue-ground {
     background-color: var(--color-surface-sunken);
     background-image: linear-gradient(to bottom, var(--color-neutral-0), var(--color-surface-sunken) 220px);
-  }
-  .home-trust-rule {
-    position: relative;
-  }
-  .home-trust-rule::after {
-    content: '';
-    position: absolute;
-    inset: auto 0 0;
-    height: 1px;
-    background-image: linear-gradient(90deg, transparent, var(--color-border) 12%, var(--color-border) 88%, transparent);
   }
 
   @media (prefers-reduced-motion: no-preference) {

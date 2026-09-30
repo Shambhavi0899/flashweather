@@ -1,0 +1,39 @@
+/*
+ * why-flash-accuracy — the Accuracy Method page, a calm reference page.
+ * Only the site's shared pieces, nothing of its own that moves:
+ *
+ * On this page (components/why-flash/on-this-page.tsx): the link for the
+ * section in view (aria-current) is brand blue, its rail blue with a small
+ * gold marker on it. The marker sits on the rail, so nothing shifts.
+ *
+ * Sections (wam-rise, under <Motion>): the site's fade-up, the shared
+ * motion-rise, once as each section scrolls in. Paragraphs inside a section
+ * move with it, never on their own. Reduced motion: none of it (the shared
+ * .motion rule), the sections are simply there.
+ */
+
+@layer components {
+  .wam-toc-link {
+    position: relative;
+    &[aria-current] {
+      border-color: var(--color-brand-blue);
+      color: var(--color-brand-blue);
+      font-weight: 600;
+    }
+    &[aria-current]::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: -4px;
+      width: 6px;
+      height: 6px;
+      border-radius: 1px;
+      background-color: var(--color-viz-gold);
+      translate: 0 -50%;
+    }
+  }
+
+  .motion[data-anim]:not([data-anim='reset']) > .wam-rise {
+    animation: motion-rise 0.6s var(--motion-ease) var(--motion-delay) both;
+  }
+}

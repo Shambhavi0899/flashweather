@@ -35,6 +35,11 @@ export type IndustryPanel = {
  * one per closed panel); below that, a stacked accordion. The open panel
  * shows who makes the call, the call, Flash Agent's verdict and the link.
  *
+ * Each panel has one link, to its industry page. It lies over the whole open
+ * panel (`ind-go`), so a click or tap anywhere on an open panel follows it; a
+ * closed panel opens first. <IndustryPanels> sends a mouse click on a closed
+ * panel, and Enter on a focused one, straight to the link.
+ *
  * The panels are a radio group and the open one is picked by
  * `:has(:checked)` (styles/home.css, `ind-*`), so every panel is in the
  * server HTML and they open without JavaScript. <IndustryPanels> adds hover
@@ -83,7 +88,7 @@ export function IndustryPanelList({
               <path d="M8 2v12M2 8h12" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
             </svg>
 
-            {/* The whole panel is the radio's label: a click or tap anywhere opens it. */}
+            {/* A closed panel is the radio's label: a tap anywhere opens it. Open, the link below covers it. */}
             <label className="ind-hit">
               <input
                 type="radio"
@@ -120,14 +125,18 @@ export function IndustryPanelList({
                   {panel.body}
                 </p>
               )}
-              <Link
-                href={panel.href}
-                className="ind-rise ind-link self-start py-[2px] text-body-s leading-5 font-bold text-viz-gold hover:underline"
+            </div>
+
+            {/* The panel's one link, over the whole open panel; its words sit where the copy leaves them room. */}
+            <Link href={panel.href} data-panel-link className="ind-go">
+              <span
+                className="ind-rise ind-link py-[2px] text-body-s leading-5 font-bold text-viz-gold hover:underline"
+                style={{ '--ind-step': panel.body ? 4 : 3 } as React.CSSProperties}
               >
                 {panel.linkLabel}
                 <span aria-hidden>&nbsp;→</span>
-              </Link>
-            </div>
+              </span>
+            </Link>
           </li>
         ))}
       </ul>

@@ -1,0 +1,99 @@
+/*
+ * pricing-portfolio — the Pricing hero's portfolio card
+ * (components/pricing/portfolio-card.tsx).
+ *
+ * It is a hero-visual on the shared hero motion (styles/hero.css), and then
+ * it plays its own intro and takes "Add a site +":
+ *    750ms  the card slides in (rises in below lg), 700ms (shared)
+ *   1400ms  the site rows fade in one by one, 100ms apart, once the
+ *           headline's last word has landed
+ *   on add  a row opens at the foot of the table over 450ms and its content
+ *           slides up into it; its status reads "Setting up" beside an amber
+ *           dot, then "Live" after 1.5s; the site count ticks up
+ * The load is CSS alone, so the rows never wait for JavaScript.
+ * Reduced motion: the rows are simply there, and an added row appears at
+ * once. Its status still changes, since that is a state and not a movement.
+ */
+
+@layer components {
+  .pfc {
+    --pfc-rows-at: 1400ms;
+    --pfc-row-gap: 100ms;
+    --pfc-amber: #f0a530;
+    --pfc-live: #3fbf8c;
+  }
+
+  /* An added row's cells: a grid track that opens, a clip, the content. */
+  .pfc-cell {
+    display: grid;
+    grid-template-rows: 1fr;
+  }
+  .pfc-clip {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .pfc-status[data-state='setup'] {
+    color: var(--pfc-amber);
+  }
+  .pfc-status[data-state='live'] {
+    color: var(--pfc-live);
+  }
+  .pfc-dot {
+    background: var(--pfc-amber);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The cells fade, not the row: a row's border belongs to the table. */
+    .pfc-row > * {
+      animation: hero-fade 500ms ease-out calc(var(--pfc-rows-at) + var(--r, 0) * var(--pfc-row-gap)) backwards;
+    }
+    .pfc-row-1 { --r: 1; }
+    .pfc-row-2 { --r: 2; }
+    .pfc-row-3 { --r: 3; }
+    .pfc-row-4 { --r: 4; }
+    .pfc-row-5 { --r: 5; }
+
+    .pfc-added .pfc-cell {
+      animation: pfc-open 450ms var(--hero-ease) backwards;
+    }
+    .pfc-added .pfc-slide {
+      animation: pfc-slide 450ms var(--hero-ease) 80ms backwards;
+    }
+    .pfc-dot {
+      animation: pfc-pulse 1.2s ease-in-out infinite;
+    }
+    /* "Live" replaces "Setting up", and the count its old figure. */
+    .pfc-status[data-state='live'],
+    .pfc-count[data-ticked] {
+      animation: pfc-tick 400ms var(--hero-ease) backwards;
+    }
+    .pfc-count,
+    .pfc-status {
+      display: inline-block;
+    }
+  }
+}
+
+@keyframes pfc-open {
+  from {
+    grid-template-rows: 0fr;
+  }
+}
+@keyframes pfc-slide {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes pfc-tick {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes pfc-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}

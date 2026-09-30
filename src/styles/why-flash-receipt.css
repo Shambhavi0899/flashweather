@@ -1,0 +1,231 @@
+/*
+ * why-flash-receipt — the /why-flash/ hub's "The receipts." section: the six
+ * figures printed on a till slip (components/why-flash/receipt.tsx).
+ *
+ * The slip is a stack of paper segments (wfr-seg): the header, one per line,
+ * the footer. The torn edges hang off the header and footer, the dashed rules
+ * are drawn inside them, and the drop shadow sits on the stack, so it follows
+ * whatever has printed.
+ *
+ * Print (once, 30% in view, <Motion>): the stack slides down 8px while each
+ * segment clip-reveals top to bottom, the header first, then one line every
+ * 150ms, then the footer. Layout never changes, so nothing below moves.
+ *
+ * Hover a line (pointer devices): a gold highlighter swipes across it, the
+ * label deepens to navy and the leader darkens.
+ *
+ * Reduced motion, or no JavaScript: the slip is simply printed.
+ */
+
+@layer components {
+  .wfr {
+    --wfr-paper: #fbf9f3;
+    --wfr-pad: 20px;
+    --wfr-step: 150ms;
+    width: 100%;
+    @media (width >= 768px) {
+      --wfr-pad: 40px;
+    }
+    @media (width >= 1024px) {
+      flex: none;
+      width: 560px;
+    }
+  }
+
+  .wfr-paper {
+    padding-block: 6px; /* room for the torn edges */
+    filter: drop-shadow(0 18px 28px rgb(7 13 38 / 0.1)) drop-shadow(0 1px 1px rgb(7 13 38 / 0.08));
+  }
+
+  .wfr-seg {
+    position: relative;
+    background-color: var(--wfr-paper);
+    font-family: var(--font-mono);
+  }
+
+  /* Header: the slip's name, a dashed rule 16px above the first line. */
+  .wfr-head {
+    --wfr-line: 0;
+    padding: 30px var(--wfr-pad) 40px;
+    color: var(--color-brand-navy);
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-align: center;
+    text-transform: uppercase;
+    @media (width >= 768px) {
+      padding-top: 36px;
+      font-size: 13px;
+    }
+  }
+  .wfr-head::before,
+  .wfr-foot::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    height: 6px;
+    background-repeat: round no-repeat;
+    background-size: 12px 100%;
+  }
+  .wfr-head::before {
+    bottom: 100%;
+    background-image: conic-gradient(from 135deg at 50% 0, var(--wfr-paper) 90deg, transparent 0);
+  }
+  .wfr-foot::after {
+    top: 100%;
+    background-image: conic-gradient(from -45deg at 50% 100%, var(--wfr-paper) 90deg, transparent 0);
+  }
+  .wfr-head::after,
+  .wfr-foot::before {
+    content: '';
+    position: absolute;
+    inset-inline: var(--wfr-pad);
+    border-top: 1.5px dashed var(--color-neutral-400);
+  }
+  .wfr-head::after {
+    bottom: 16px;
+  }
+  .wfr-foot::before {
+    top: 16px;
+  }
+
+  /* A line: label, dotted leader (the ::before, ordered between), value. */
+  .wfr-line {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    padding: 11px calc(var(--wfr-pad) + 12px);
+    background-image: linear-gradient(
+      color-mix(in srgb, var(--color-gold-100) 55%, transparent),
+      color-mix(in srgb, var(--color-gold-100) 55%, transparent)
+    );
+    background-repeat: no-repeat;
+    background-position: var(--wfr-pad) 1px;
+    background-size: 0 calc(100% - 2px);
+  }
+  .wfr-line:nth-child(1) {
+    --wfr-line: 1;
+  }
+  .wfr-line:nth-child(2) {
+    --wfr-line: 2;
+  }
+  .wfr-line:nth-child(3) {
+    --wfr-line: 3;
+  }
+  .wfr-line:nth-child(4) {
+    --wfr-line: 4;
+  }
+  .wfr-line:nth-child(5) {
+    --wfr-line: 5;
+  }
+  .wfr-line:nth-child(6) {
+    --wfr-line: 6;
+  }
+  .wfr-line dt {
+    min-width: 0;
+    color: var(--color-neutral-800);
+    font-size: 13px;
+    line-height: 20px;
+    @media (width >= 768px) {
+      font-size: 14px;
+      line-height: 22px;
+    }
+  }
+  .wfr-line::before {
+    content: '';
+    order: 1;
+    flex: 1 0 16px;
+    margin-bottom: 9px;
+    border-bottom: 2px dotted var(--color-neutral-500);
+    @media (width >= 768px) {
+      margin-bottom: 10px;
+    }
+  }
+  .wfr-line dd {
+    order: 2;
+    flex: none;
+    color: var(--color-brand-navy);
+    font-size: 15px;
+    line-height: 20px;
+    font-weight: 700;
+    white-space: nowrap;
+    @media (width >= 768px) {
+      font-size: 17px;
+      line-height: 22px;
+    }
+  }
+  @media (hover: hover) {
+    .wfr-line:hover {
+      background-size: calc(100% - 2 * var(--wfr-pad)) calc(100% - 2px);
+    }
+    .wfr-line:hover dt {
+      color: var(--color-brand-navy);
+    }
+    .wfr-line:hover::before {
+      border-bottom-color: var(--color-gold-900);
+    }
+  }
+
+  /* Footer: a dashed rule, then the line into the accuracy method. */
+  .wfr-foot {
+    --wfr-line: 7;
+    padding: 40px var(--wfr-pad) 30px;
+    color: var(--color-neutral-600);
+    font-size: 12px;
+    line-height: 18px;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+  .wfr-method {
+    color: var(--color-brand-blue);
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: underline 1px;
+    text-underline-offset: 3px;
+  }
+  .wfr-method:hover {
+    color: var(--color-brand-blue-hover);
+  }
+  .wfr-method:focus-visible {
+    outline: 2px solid var(--color-alert-info);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .wfr-line {
+      transition: background-size 200ms var(--motion-ease);
+    }
+    .wfr-line dt,
+    .wfr-line::before {
+      transition:
+        color 150ms ease,
+        border-color 150ms ease;
+    }
+
+    /* Print: every segment waits clipped shut, then opens downward on its beat. */
+    .motion[data-anim]:not([data-anim='reset']) .wfr-paper {
+      animation: wfr-feed calc(var(--wfr-step) * 8) var(--motion-ease) var(--motion-delay) backwards;
+    }
+    .motion[data-anim]:not([data-anim='reset']) .wfr-seg {
+      animation: wfr-print 120ms cubic-bezier(0.25, 0, 0.35, 1) backwards;
+      animation-delay: calc(var(--motion-delay) + var(--wfr-step) * var(--wfr-line));
+    }
+  }
+}
+
+/* The -8px insets keep the torn edges outside a segment's box in the clip. */
+@keyframes wfr-print {
+  from {
+    clip-path: inset(-8px -8px 100% -8px);
+  }
+  to {
+    clip-path: inset(-8px);
+  }
+}
+@keyframes wfr-feed {
+  from {
+    transform: translateY(-8px);
+  }
+}

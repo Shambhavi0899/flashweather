@@ -1,8 +1,10 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useMemo, useSyncExternalStore } from 'react';
 
 import { submitDemoRequest, type DemoFormState } from '@/app/contact/actions';
+import type { DemoRequestValues } from '@/lib/demo-request';
+import { parseQuoteDetails, quoteDetailsMessage } from '@/lib/quote-details';
 
 const initialState: DemoFormState = { status: 'idle', message: '' };
 
@@ -27,10 +29,24 @@ function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNo
   );
 }
 
+/** The page's query string. Empty on the server, so the static HTML is the plain form. */
+const subscribeToUrl = (onChange: () => void) => {
+  window.addEventListener('popstate', onChange);
+  return () => window.removeEventListener('popstate', onChange);
+};
+const readQuery = () => window.location.search;
+const noQuery = () => '';
+
 /**
  * The demo-request form. The one client leaf on /contact/: it needs
  * `useActionState` to show validation and the delivery result. Everything
  * around it is server-rendered.
+ *
+ * Arriving from "Get a quote with these details" on /pricing/, the query
+ * string carries the visitor's quote details (lib/quote-details.ts): the
+ * site count fills "Number of sites" and the rest opens the message, where it
+ * can be edited like anything else. The page stays static; the query is read
+ * here, in the browser.
  */
 export function DemoForm({
   roles,
@@ -43,14 +59,22 @@ export function DemoForm({
 }) {
   const [state, formAction, pending] = useActionState(submitDemoRequest, initialState);
   const errors = state.errors ?? {};
-  const values = state.values ?? {};
+
+  const query = useSyncExternalStore(subscribeToUrl, readQuery, noQuery);
+  const prefill = useMemo<DemoRequestValues>(() => {
+    const details = parseQuoteDetails(query);
+    return details ? { sites: String(details.sites), message: quoteDetailsMessage(details) } : {};
+  }, [query]);
+  // What the visitor submitted wins over what the link brought.
+  const values = state.values ?? prefill;
 
   const describedBy = (name: FieldName, hint?: string) =>
     [hint, errors[name] ? `${name}-error` : undefined].filter(Boolean).join(' ') || undefined;
   const border = (name: FieldName) => (errors[name] ? 'border-alert-warning' : 'border-border-strong');
 
   // Keyed on the echoed values so a failed submit re-renders the fields with
-  // what the visitor typed rather than blanking them.
+  // what the visitor typed rather than blanking them. The same key puts the
+  // quote details in once the query string is known.
   const formKey = JSON.stringify(values);
 
   return (

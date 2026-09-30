@@ -42,8 +42,11 @@ export const troon = {
     { label: 'Live since', value: 'Multi-year customer' },
   ],
 
+  /** `chapter` puts the block on the chapter markers beside the story. */
   narrative: [
     {
+      id: 'story-problem',
+      chapter: 'Problem',
       heading: 'What was the problem across the portfolio?',
       paragraphs: [
         'Troon manages a portfolio of courses under one duty of care. On most of them the lightning horn was wired to a detection feed, so it fired after the first strike inside the radius. Until then the superintendent, the pro shop and the general manager each made their own call about when to pull crews and players, and when to let play resume.',
@@ -51,6 +54,7 @@ export const troon = {
       ],
     },
     {
+      id: 'story-rollout',
       heading: 'What did Troon roll out?',
       paragraphs: [
         'One Flash Weather Command Center for the whole portfolio. Every course sits in its own 1×1 km cell with a 60-minute strike-level forecast that refreshes every 2 minutes, plus a six-hour prediction outlook for the day’s tee sheet and maintenance windows.',
@@ -58,6 +62,8 @@ export const troon = {
       ],
     },
     {
+      id: 'story-change',
+      chapter: 'Change',
       heading: 'What changed on the ground?',
       paragraphs: [
         'Decisions are made earlier and on the same trigger. Blanket closures gave way to per-course calls, because a cell forecast for one property does not clear or close another.',
@@ -65,12 +71,14 @@ export const troon = {
       ],
     },
     {
+      id: 'story-scale',
+      chapter: 'Scale',
       heading: 'How did it scale across the portfolio?',
       paragraphs: [
         'A portfolio view for the company, bulk onboarding from a property list, and the Flash API for properties that route alerts into their own systems. A new course is a pin on the map, not a hardware install: no station, no mast, no site visit.',
       ],
     },
-  ],
+  ] as { id: string; chapter?: string; heading: string; paragraphs: string[] }[],
 
   screens: [
     {
@@ -100,10 +108,10 @@ export const troon = {
   map: {
     alt: 'Flash Weather Command Center portfolio map showing Troon golf properties as 1 km cells, a 60-minute lightning warning cell over one course, and the written event log beside it',
     log: [
-      { time: '14:02', entry: 'Advisory · cell flagged · app + SMS to superintendent' },
-      { time: '14:21', entry: 'Warning · horns relayed · pro shop clears the course' },
-      { time: '14:33', entry: 'First CG strike detected · 12 min after Warning' },
-      { time: '14:58', entry: 'All-clear timer running · resets on each strike' },
+      { time: '14:02', property: '0412', entry: 'Advisory · cell flagged · app + SMS to superintendent' },
+      { time: '14:21', property: '0412', entry: 'Warning · horns relayed · pro shop clears the course' },
+      { time: '14:33', property: '0412', entry: 'First CG strike detected · 12 min after Warning' },
+      { time: '14:58', property: '0412', entry: 'All-clear timer running · resets on each strike' },
     ],
   },
 
@@ -112,8 +120,13 @@ export const troon = {
     question: 'Which Troon properties have a lightning Watch before Sunday’s tee times?',
     answer:
       'Two. Property 0412 has a Watch from 07:40 to 09:10 with a first tee at 08:00, and Property 0433 has a Watch from 09:10 to 10:30 that covers its 09:12 and later groups. Both tee sheets are flagged in Golf Genius and both superintendents were texted. Every other property is clear through noon.',
-    actions: ['Golf Genius · tee sheet flagged', 'SMS · both superintendents'],
-    source: 'Source: cells 0412 · 0433 · 06:02 run',
+    /** What the agent did and what it read, as the conversation's chips (label, then value). */
+    chips: [
+      { label: 'Golf Genius', value: 'tee sheet flagged' },
+      { label: 'SMS', value: 'both superintendents' },
+      { label: 'Source', value: 'cells 0412 · 0433 · 06:02 run' },
+    ],
+    placeholder: 'Ask about any property, any day…',
   },
 
   stats: [
@@ -123,6 +136,8 @@ export const troon = {
     { value: '1×1 km', label: 'forecast cell per course, not per region' },
   ],
 
+  /** The proof-bar customer this page is about: tagged "This case study", the others sit back. */
+  proofCurrent: 'Troon',
   proof: [
     { name: 'Troon', use: 'Lightning alerts across its golf portfolio' },
     { name: 'Big 12', use: 'Game-day lightning decisions for conference venues' },

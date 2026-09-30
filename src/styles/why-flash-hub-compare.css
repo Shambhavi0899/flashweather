@@ -1,0 +1,400 @@
+/*
+ * The Why Flash hub's "Everyone else reacts. Flash predicts."
+ * (components/resources/reacts-predicts.tsx).
+ *
+ * Two columns, paired row by row. From 768px each row is a flex row laid
+ * over the two column panels; the connector between a pair sits in the
+ * gutter at the height of the first line. Once, as the list scrolls in:
+ *   1. everyone else's items fade in, muted, top to bottom,
+ *   2. the Flash items check in one by one: a thin connector draws across
+ *      from the pair, the gold check draws, the text rises, the connector
+ *      fades,
+ *   3. the closing line fades in last.
+ * Hovering a row highlights both items, draws its connector and dims the
+ * other rows.
+ *
+ * Below 768px each pair is a mini card, everyone else above Flash, joined by
+ * a short vertical connector. Cards play one by one as each scrolls in.
+ *
+ * The script only sets `data-anim` (idle → run, then removes it): on the
+ * list for the row sequence, on each pair and the closing line for the
+ * cards. The markup is the final frame, which is what reduced motion and a
+ * browser without JavaScript get. No grid.
+ */
+@layer components {
+  .rp {
+    --rp-gap: 40px;
+    --rp-pad: 32px;
+    --rp-rule: rgb(255 255 255 / 0.1);
+    --rp-gold-edge: oklab(76.7% 0.004 0.15 / 45%);
+    --rp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    /* The row sequence: when the first Flash item checks in, the gap between them, and the closing line. */
+    --rp-flash-at: 650ms;
+    --rp-step: 320ms;
+    --rp-say-at: 2600ms;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+
+    @variant lg {
+      --rp-gap: 64px;
+      gap: 56px;
+    }
+  }
+
+  .rp-board {
+    position: relative;
+  }
+  .rp-list {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .rp-pair {
+    --rp-i: 0;
+    position: relative;
+    display: flex;
+  }
+  .rp-pair:nth-child(2) {
+    --rp-i: 1;
+  }
+  .rp-pair:nth-child(3) {
+    --rp-i: 2;
+  }
+  .rp-pair:nth-child(4) {
+    --rp-i: 3;
+  }
+  .rp-pair:nth-child(5) {
+    --rp-i: 4;
+  }
+  .rp-pair:nth-child(6) {
+    --rp-i: 5;
+  }
+  .rp-pair:nth-child(7) {
+    --rp-i: 6;
+  }
+  .rp-pair:nth-child(8) {
+    --rp-i: 7;
+  }
+
+  .rp-item {
+    display: flex;
+    gap: 12px;
+    font-size: var(--text-body);
+    line-height: 24px;
+  }
+  /* A fixed slot on the text's 24px line, so the mark sits on the first line. */
+  .rp-mark {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 24px;
+  }
+  .rp-others {
+    color: var(--color-text-on-dark-muted);
+  }
+  .rp-others .rp-mark {
+    color: var(--color-neutral-500);
+  }
+  .rp-flash {
+    font-weight: 600;
+    color: var(--color-text-on-dark);
+  }
+  .rp-flash .rp-mark {
+    color: var(--color-viz-gold);
+  }
+  .rp-check {
+    stroke-dasharray: 1;
+  }
+
+  /* The connector: a hairline from grey to gold, a dot at each end. */
+  .rp-link {
+    pointer-events: none;
+    background: linear-gradient(90deg, rgb(174 184 199 / 0.5), var(--color-viz-gold)) center / 100% 1px no-repeat;
+  }
+  .rp-link::before,
+  .rp-link::after {
+    content: '';
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+  }
+  .rp-link::before {
+    background-color: var(--color-text-on-dark-muted);
+  }
+  .rp-link::after {
+    background-color: var(--color-viz-gold);
+    box-shadow: 0 0 0 3px oklab(76.7% 0.004 0.15 / 20%);
+  }
+
+  /* ---------- Two columns, from 768px ---------- */
+
+  @media (width >= 768px) {
+    .rp-board {
+      padding: var(--rp-pad) 0 16px;
+    }
+    .rp-panel {
+      position: absolute;
+      inset-block: 0;
+      width: calc(50% - var(--rp-gap) / 2);
+      border-radius: var(--radius-lg);
+    }
+    .rp-panel-others {
+      left: 0;
+      border: 1px solid rgb(255 255 255 / 0.12);
+    }
+    .rp-panel-flash {
+      right: 0;
+    }
+    .rp-heads {
+      position: relative;
+      display: flex;
+      gap: var(--rp-gap);
+      margin-bottom: 8px;
+    }
+    .rp-head {
+      flex: 1 1 0;
+      padding-inline: var(--rp-pad);
+    }
+    .rp-pair {
+      gap: var(--rp-gap);
+    }
+    /* A cell is its column's full width, so a highlight is a band across the
+       panel; the transparent side borders keep it off the panel's edge. */
+    .rp-cell {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 16px var(--rp-pad);
+      border-top: 1px solid var(--rp-rule);
+      border-inline: 1px solid transparent;
+      background-clip: padding-box;
+    }
+    .rp-pair:first-child .rp-cell {
+      border-top-color: transparent;
+    }
+    /* The columns are labelled by their heads; the per-item label is for assistive tech. */
+    .rp-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    /* From just past everyone else's column to just before the Flash check,
+       on the first line (16px padding + half the 24px line). */
+    .rp-link {
+      position: absolute;
+      top: 26px;
+      left: calc(50% - var(--rp-gap) / 2 - var(--rp-pad) + 10px);
+      width: calc(var(--rp-gap) + 2 * var(--rp-pad) - 18px);
+      height: 5px;
+      opacity: 0;
+      clip-path: inset(0 100% 0 0);
+    }
+    .rp-link::before {
+      top: 0;
+      left: 0;
+    }
+    .rp-link::after {
+      top: 0;
+      right: 0;
+    }
+
+    /* Hover a row: both items light up, the connector draws, the rest dim. */
+    @media (hover: hover) {
+      .rp-list:has(.rp-pair:hover) .rp-pair:not(:hover) {
+        opacity: 0.35;
+      }
+      .rp-pair:hover .rp-others {
+        background-color: rgb(255 255 255 / 0.04);
+        color: #c9d1e3;
+      }
+      .rp-pair:hover .rp-others .rp-mark {
+        color: var(--color-text-on-dark-muted);
+      }
+      .rp-pair:hover .rp-flash {
+        background-color: oklab(76.7% 0.004 0.15 / 9%);
+      }
+      .rp-pair:hover .rp-link {
+        opacity: 1;
+        clip-path: inset(0);
+      }
+    }
+  }
+
+  /* ---------- Mini cards, below 768px ---------- */
+
+  @media (width < 768px) {
+    .rp-panel,
+    .rp-heads {
+      display: none;
+    }
+    .rp-list {
+      gap: 12px;
+    }
+    .rp-pair {
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid rgb(255 255 255 / 0.12);
+      border-radius: var(--radius-md);
+    }
+    .rp-cell {
+      padding: 16px;
+    }
+    .rp-flash {
+      border-top: 1px solid var(--rp-gold-edge);
+      background-color: var(--color-brand-navy-deep);
+    }
+    /* On the text's lane, so the marks' lane is free for the connector. */
+    .rp-label {
+      display: block;
+      margin-bottom: 8px;
+      padding-left: 28px;
+    }
+    /* No height of its own: from the seam between the halves, the line runs
+       down the marks' lane (16px padding + half the 16px mark) from under
+       the × to just above the check, past the Flash label. */
+    .rp-link {
+      position: relative;
+      z-index: 1;
+      height: 0;
+      background: none;
+    }
+    .rp-link::before {
+      top: -12px;
+      left: 23.5px;
+      width: 1px;
+      height: 50px;
+      border-radius: 0;
+      background: linear-gradient(180deg, rgb(174 184 199 / 0.5), var(--color-viz-gold));
+      transform-origin: 50% 0;
+    }
+    .rp-link::after {
+      top: 36px;
+      left: 21.5px;
+    }
+  }
+
+  /* ---------- Motion ---------- */
+
+  @media (prefers-reduced-motion: no-preference) {
+    @media (width >= 768px) {
+      .rp-pair {
+        transition: opacity 0.25s ease-out;
+      }
+      .rp-cell {
+        transition:
+          background-color 0.25s ease-out,
+          color 0.25s ease-out;
+      }
+      /* Leaving: fade, then reset the draw. Entering: draw left to right. */
+      .rp-link {
+        transition:
+          opacity 0.2s ease-out,
+          clip-path 0s linear 0.2s;
+      }
+      .rp-pair:hover .rp-link {
+        transition:
+          opacity 0.1s ease-out,
+          clip-path 0.4s var(--rp-ease);
+      }
+
+      /* The row sequence. `backwards`, so a finished item is back on its own
+         styles and the hover can change them. */
+      .rp[data-anim] .rp-flash {
+        --rp-at: calc(var(--rp-flash-at) + var(--rp-i) * var(--rp-step));
+      }
+      .rp[data-anim] .rp-others .rp-item {
+        animation: rp-rise 0.45s ease-out calc(var(--rp-i) * 70ms) backwards;
+      }
+      .rp[data-anim] .rp-link {
+        animation: rp-link-x 0.9s var(--rp-ease) calc(var(--rp-flash-at) + var(--rp-i) * var(--rp-step)) backwards;
+      }
+      .rp[data-anim] .rp-check {
+        animation: rp-check 0.35s var(--rp-ease) calc(var(--rp-at) + 280ms) backwards;
+      }
+      .rp[data-anim] .rp-flash .rp-text {
+        animation: rp-rise 0.4s var(--rp-ease) calc(var(--rp-at) + 300ms) backwards;
+      }
+      .rp[data-anim] .rp-tagline {
+        animation: rp-rise 0.6s var(--rp-ease) var(--rp-say-at) backwards;
+      }
+      .rp[data-anim='idle'] :is(.rp-others .rp-item, .rp-link, .rp-check, .rp-flash .rp-text, .rp-tagline) {
+        animation-play-state: paused;
+      }
+    }
+
+    /* Cards: each plays its own short sequence as it scrolls in. */
+    @media (width < 768px) {
+      .rp-pair[data-anim] .rp-others {
+        animation: rp-rise 0.4s ease-out backwards;
+      }
+      .rp-pair[data-anim] .rp-link::before {
+        animation: rp-link-y 0.35s var(--rp-ease) 0.3s backwards;
+      }
+      .rp-pair[data-anim] .rp-link::after {
+        animation: rp-dot 0.25s var(--rp-ease) 0.55s backwards;
+      }
+      .rp-pair[data-anim] .rp-check {
+        animation: rp-check 0.35s var(--rp-ease) 0.6s backwards;
+      }
+      .rp-pair[data-anim] :is(.rp-flash .rp-label, .rp-flash .rp-text) {
+        animation: rp-rise 0.4s var(--rp-ease) 0.62s backwards;
+      }
+      .rp-tagline[data-anim] {
+        animation: rp-rise 0.6s var(--rp-ease) backwards;
+      }
+      /* Pseudo-elements cannot sit inside :is(), so the connector's are listed apart. */
+      .rp-pair[data-anim='idle'] :is(.rp-others, .rp-check, .rp-flash .rp-label, .rp-flash .rp-text),
+      .rp-pair[data-anim='idle'] .rp-link::before,
+      .rp-pair[data-anim='idle'] .rp-link::after,
+      .rp-tagline[data-anim='idle'] {
+        animation-play-state: paused;
+      }
+    }
+  }
+}
+
+/* Implicit to-frames resolve to the element's own final state. */
+@keyframes rp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes rp-check {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+/* Draw across, hold, fade: the connector only shows while the item checks in. */
+@keyframes rp-link-x {
+  0% {
+    opacity: 1;
+    clip-path: inset(0 100% 0 0);
+  }
+  40%,
+  65% {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(0);
+  }
+}
+@keyframes rp-link-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes rp-dot {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+}

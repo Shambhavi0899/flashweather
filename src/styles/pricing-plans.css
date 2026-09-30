@@ -1,0 +1,328 @@
+/*
+ * pricing-plans — Pricing's "Which plan fits how many sites you run?"
+ * (components/pricing/plan-fit.tsx), classes plan-*.
+ *
+ * Control  "Best fit for": a segmented radio group, One site / A portfolio /
+ *          Enterprise or API. A navy thumb slides under the checked segment
+ *          (250ms). Full width with its label above below 768px.
+ * Best fit the picked plan's card takes the badge, a gold border, a lift (6px,
+ *          4px below 1024px) and the gold button. One badge slides along the
+ *          top edge to the picked card while the border, lift and button fade
+ *          across, all 250ms. The other cards stay as they are; nothing dims.
+ * Cards    equal height in a row from 1024px; stacked below it, the picked
+ *          card first via `order`, so DOM order stays Single Site, Portfolio,
+ *          Enterprise & API. They fade up once as the row scrolls in (<Motion>).
+ * Button   the arrow of "Get a quote" slides 4px on hover and focus.
+ *
+ * Reduced motion: no transitions and no fade-up; the pick still switches.
+ * No grid.
+ */
+@layer components {
+  .plan-pick {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    @media (width >= 768px) {
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+    }
+  }
+  .plan-pick-label {
+    color: var(--color-text-muted);
+    font-size: var(--text-micro);
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+  .plan-segs {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    padding: 4px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-100);
+  }
+  /* A column so the hidden bold copy below can hold the width. */
+  .plan-seg {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 10px;
+    border-radius: var(--radius-pill);
+    color: var(--color-neutral-700);
+    font-size: var(--text-caption);
+    line-height: 18px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    @media (width >= 480px) {
+      padding: 0 20px;
+      font-size: var(--text-body-s);
+      line-height: 20px;
+    }
+  }
+  /* The label again at the checked weight, so checking a segment doesn't resize it. */
+  .plan-seg::after {
+    content: attr(data-label);
+    height: 0;
+    overflow: hidden;
+    font-weight: 700;
+    visibility: hidden;
+  }
+  .plan-seg:hover {
+    background-color: var(--color-neutral-0);
+    color: var(--color-text);
+  }
+  .plan-seg[aria-checked='true'] {
+    background-color: var(--color-brand-navy);
+    color: var(--color-text-on-dark);
+    font-weight: 700;
+  }
+  /* Once the thumb is measured it is the checked segment's background. */
+  .plan-segs[data-thumb] .plan-seg[aria-checked='true'] {
+    background-color: transparent;
+  }
+  .plan-thumb {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 0;
+    width: var(--plan-thumb-w, 0);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-brand-navy);
+    box-shadow: 0 1px 2px #0b132229;
+    translate: var(--plan-thumb-x, 0) 0;
+    visibility: hidden;
+  }
+  .plan-segs[data-thumb] .plan-thumb {
+    visibility: visible;
+  }
+
+  /* The cards and the one badge that moves between them. */
+  .plan-list {
+    position: relative;
+    padding-top: 8px;
+    --plan-gap: 24px;
+  }
+  .plan-list[data-pick='1'] {
+    --plan-pick: 1;
+  }
+  .plan-list[data-pick='2'] {
+    --plan-pick: 2;
+  }
+  .plan-cards {
+    display: flex;
+    flex-direction: column;
+    gap: var(--plan-gap);
+    @media (width >= 1024px) {
+      flex-direction: row;
+    }
+  }
+  .plan-card {
+    position: relative;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+    padding: 32px 24px 28px;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background-color: var(--color-neutral-0);
+    box-shadow:
+      0 0 0 1px transparent,
+      0 1px 2px #0b13220d,
+      0 12px 32px #0b13220f;
+    @media (width >= 768px) {
+      padding: 36px 28px 32px;
+    }
+  }
+  .plan-card:nth-child(2) {
+    --plan-i: 1;
+  }
+  .plan-card:nth-child(3) {
+    --plan-i: 2;
+  }
+  .plan-card[data-picked] {
+    border-color: var(--color-viz-gold);
+    box-shadow:
+      0 0 0 1px var(--color-viz-gold),
+      0 2px 4px #0b13220f,
+      0 24px 48px -12px #0b13221f;
+    translate: 0 -4px;
+    @media (width < 1024px) {
+      order: -1;
+    }
+    @media (width >= 1024px) {
+      translate: 0 -6px;
+    }
+  }
+  /* In a row, the headings and notes hold their tallest wrap so the buttons line up. */
+  .plan-head {
+    @media (width >= 1024px) {
+      min-height: 152px;
+    }
+    @media (width >= 1280px) {
+      min-height: 126px;
+    }
+  }
+  .plan-basis {
+    @media (width >= 1024px) {
+      min-height: 96px;
+    }
+    @media (width >= 1280px) {
+      min-height: 74px;
+    }
+  }
+
+  /*
+   * The badge's rail is as wide as one card and sits across the picked card's
+   * top edge, so moving it one card over is its own width plus the gap.
+   * Stacked, the picked card is always first, so the rail stays put.
+   */
+  .plan-badge {
+    position: absolute;
+    z-index: 2;
+    top: -10px;
+    left: 0;
+    display: flex;
+    width: 100%;
+    padding-left: 20px;
+    pointer-events: none;
+    @media (width >= 768px) {
+      padding-left: 24px;
+    }
+    @media (width >= 1024px) {
+      top: -12px;
+      width: calc((100% - var(--plan-gap) * 2) / 3);
+      translate: calc(var(--plan-pick, 0) * (100% + var(--plan-gap))) 0;
+    }
+  }
+  .plan-badge-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px 6px 10px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-viz-gold);
+    box-shadow: 0 4px 10px -4px #5c492873;
+    color: var(--color-brand-navy);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 800;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+
+  /* Get a quote: outline at rest, the gold fill fades in on the picked card. */
+  .plan-cta {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    align-self: flex-start;
+    gap: 10px;
+    height: 48px;
+    padding: 0 24px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    color: var(--color-brand-navy);
+    font-size: var(--text-body-s);
+    line-height: 18px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+  .plan-cta::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: -1px;
+    border-radius: inherit;
+    background-color: var(--color-gold-metallic-mid);
+    background-image: linear-gradient(
+      in oklab 160deg,
+      var(--color-gold-metallic-mid) 0%,
+      var(--color-gold-300) 35%,
+      var(--color-gold-100) 50%,
+      var(--color-gold-button-mid) 70%,
+      var(--color-gold-button-edge) 100%
+    );
+    opacity: 0;
+  }
+  .plan-cta:hover {
+    background-color: var(--color-neutral-50);
+  }
+  .plan-card[data-picked] .plan-cta {
+    border-color: transparent;
+  }
+  .plan-card[data-picked] .plan-cta::before {
+    opacity: 1;
+  }
+  .plan-card[data-picked] .plan-cta:hover::before {
+    filter: brightness(1.06);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .plan-seg {
+      transition:
+        color 150ms ease,
+        background-color 150ms ease;
+    }
+    .plan-segs[data-thumb] .plan-thumb {
+      transition:
+        translate 250ms var(--motion-ease),
+        width 250ms var(--motion-ease);
+    }
+    .plan-card {
+      transition:
+        translate 250ms var(--motion-ease),
+        border-color 250ms ease-out,
+        box-shadow 250ms ease-out;
+    }
+    .plan-badge {
+      transition: translate 250ms var(--motion-ease);
+    }
+    .plan-cta {
+      transition:
+        border-color 250ms ease-out,
+        background-color 150ms ease;
+    }
+    .plan-cta::before {
+      transition: opacity 250ms ease-out;
+    }
+    .plan-arrow {
+      transition: translate 200ms var(--motion-ease);
+    }
+    .plan-cta:is(:hover, :focus-visible) .plan-arrow {
+      translate: 4px 0;
+    }
+
+    .plan-motion[data-anim]:not([data-anim='reset']) .plan-card {
+      animation: plan-in 500ms var(--motion-ease) calc(var(--motion-delay) + var(--plan-i, 0) * 90ms) both;
+    }
+    .plan-motion[data-anim]:not([data-anim='reset']) .plan-badge {
+      animation: plan-badge-in 300ms ease-out calc(var(--motion-delay) + 360ms) both;
+    }
+  }
+}
+
+@keyframes plan-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+@keyframes plan-badge-in {
+  from {
+    opacity: 0;
+  }
+}

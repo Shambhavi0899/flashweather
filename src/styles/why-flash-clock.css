@@ -1,0 +1,297 @@
+/*
+ * /why-flash/everyone-else-vs-flash/ "Where each alert sits on the clock":
+ * the clock dial (components/why-flash/alert-clock.tsx) and the two cards
+ * beside it, all inside one Motion block (`.eec`).
+ *
+ * The markup is the finished dial: hand on the first strike, the hour filled
+ * gold, all three markers lit. Under Motion's data-anim it plays once when
+ * it scrolls in, in about three seconds:
+ *   0       the gold "Flash flags the cell" marker lights; the Flash card lights
+ *   300ms   the minute hand sweeps the hour and the arc fills gold behind it
+ *   1300ms  "Your hour"
+ *   2300ms  the red first-strike marker
+ *   2650ms  the grey detection-alert marker; the Detection card lights
+ *   3000ms  the replay button
+ * The card highlights come and go, so the finished frame has neither lit.
+ * Reduced motion (or no JS) shows the finished dial and no replay button.
+ * Hovering a card pulses its markers, read with :has() on `.eec`; with
+ * reduced motion the pulse ring holds still.
+ */
+@layer components {
+  /* ------------------------------------------------------------ Dial */
+  /* Square, so the labels' percentages match the 400 × 400 viewBox. */
+  .eec-dial {
+    position: relative;
+    width: min(100%, 400px);
+    aspect-ratio: 1;
+
+    @variant xl {
+      width: 400px;
+    }
+  }
+  .eec-ring {
+    fill: none;
+    stroke: rgb(255 255 255 / 14%);
+    stroke-width: 1.5;
+  }
+  .eec-tick {
+    stroke: #fff;
+    stroke-linecap: round;
+    stroke-width: 1;
+    opacity: 0.18;
+  }
+  .eec-tick[data-size='m'] {
+    stroke-width: 1.5;
+    opacity: 0.38;
+  }
+  .eec-tick[data-size='l'] {
+    stroke-width: 2;
+    opacity: 0.7;
+  }
+  .eec-arc {
+    fill: none;
+    stroke: var(--color-viz-gold);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    filter: drop-shadow(0 0 6px color-mix(in oklab, var(--color-viz-gold) 45%, transparent));
+  }
+  /* Drawn pointing at 12; the finished frame rests on the first strike. */
+  .eec-hand {
+    transform-box: view-box;
+    transform-origin: 200px 200px;
+    transform: rotate(330deg);
+  }
+  .eec-hand line {
+    stroke: var(--color-text-on-dark);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+  }
+  .eec-hand circle {
+    fill: var(--color-text-on-dark);
+  }
+
+  /* ------------------------------------------------------------ Markers */
+  .eec-mark,
+  .eec-ping {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .eec-mark[data-mark='flash'] {
+    fill: var(--color-viz-gold);
+    stroke: var(--color-brand-navy);
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 8px color-mix(in oklab, var(--color-viz-gold) 70%, transparent));
+  }
+  .eec-mark[data-mark='strike'] {
+    fill: var(--color-alert-warning);
+    stroke: #fff;
+    stroke-width: 2;
+  }
+  .eec-mark[data-mark='detection'] {
+    fill: var(--color-neutral-400);
+    stroke: var(--color-brand-navy);
+    stroke-width: 2;
+  }
+  .eec-ping {
+    fill: none;
+    stroke-width: 2;
+    opacity: 0;
+  }
+  .eec-ping[data-mark='flash'] {
+    stroke: var(--color-viz-gold);
+  }
+  .eec-ping[data-mark='strike'] {
+    stroke: var(--color-alert-warning);
+  }
+  .eec-ping[data-mark='detection'] {
+    stroke: var(--color-neutral-400);
+  }
+
+  /* ------------------------------------------------------------ Labels */
+  /* Placed in % of the dial, from the marker positions in alert-clock.tsx. */
+  .eec-label {
+    position: absolute;
+    margin: 0;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  /* Right of 12 o'clock: –60 min, and the gold marker's label under it. */
+  .eec-label[data-label='flash'] {
+    left: 53.5%;
+    top: 3%;
+    display: flex;
+    flex-direction: column;
+  }
+  .eec-start {
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-text-on-dark);
+  }
+  .eec-flash {
+    font-weight: 700;
+    color: var(--color-viz-gold);
+  }
+  /* Left of 12 o'clock, stepping down to their markers. */
+  .eec-label[data-label='detection'] {
+    right: 60%;
+    top: 11%;
+    color: var(--color-text-on-dark-muted);
+  }
+  .eec-label[data-label='strike'] {
+    right: 70%;
+    top: 19%;
+    font-weight: 700;
+    /* Alert red lifted toward white so small text reads on navy. */
+    color: color-mix(in oklab, var(--color-alert-warning) 62%, #fff);
+  }
+  .eec-label[data-label='window'] {
+    left: 50%;
+    top: 60%;
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-viz-gold);
+    transform: translateX(-50%);
+  }
+  /* –45, –30, –15 just inside the ring. */
+  .eec-label[data-label^='tick'] {
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 700;
+    color: rgb(255 255 255 / 55%);
+    transform: translate(-50%, -50%);
+  }
+  .eec-label[data-label='tick-0'] {
+    left: 75.3%;
+    top: 46.7%;
+  }
+  .eec-label[data-label='tick-1'] {
+    left: 56.6%;
+    top: 74.6%;
+  }
+  .eec-label[data-label='tick-2'] {
+    left: 26.4%;
+    top: 59.8%;
+  }
+
+  /* ------------------------------------------------------------ Replay */
+  .eec-replay {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    color: var(--color-text-on-dark-muted);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgb(255 255 255 / 30%);
+    cursor: pointer;
+    transition: color 150ms ease;
+  }
+  .eec-replay:hover {
+    color: var(--color-text-on-dark);
+  }
+  .eec-replay:focus-visible {
+    outline: 2px solid var(--color-alert-info);
+    outline-offset: 2px;
+  }
+
+  /* ------------------------------------------------------------ Card hover */
+  @media (hover: hover) {
+    .eec:has(.eec-card[data-kind='flash']:hover) .eec-ping[data-kind='flash'],
+    .eec:has(.eec-card[data-kind='detection']:hover) .eec-ping[data-kind='detection'] {
+      /* The still ring reduced motion keeps; the pulse below animates it. */
+      opacity: 0.5;
+      transform: scale(1.9);
+      animation: eec-pulse 1.3s ease-out infinite;
+    }
+  }
+
+  /* ------------------------------------------------------------ The sweep */
+  .motion[data-anim]:not([data-anim='reset']) .eec-mark[data-mark='flash'] {
+    animation: motion-pop-in 450ms var(--motion-ease) calc(var(--motion-delay) + 0ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .eec-flash {
+    animation: motion-fade 300ms ease-out calc(var(--motion-delay) + 150ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .eec-card[data-kind='flash'] {
+    animation: eec-lit-flash 2300ms ease calc(var(--motion-delay) + 150ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .eec-hand {
+    animation: eec-sweep 2000ms cubic-bezier(0.45, 0.05, 0.55, 0.95) calc(var(--motion-delay) + 300ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .eec-arc {
+    animation: motion-draw 2000ms cubic-bezier(0.45, 0.05, 0.55, 0.95) calc(var(--motion-delay) + 300ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .eec-label[data-label='window'] {
+    animation: motion-fade 400ms ease-out calc(var(--motion-delay) + 1300ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .eec-mark[data-mark='strike'] {
+    animation: motion-pop-in 450ms var(--motion-ease) calc(var(--motion-delay) + 2300ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .eec-label[data-label='strike'] {
+    animation: motion-fade 300ms ease-out calc(var(--motion-delay) + 2350ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .eec-mark[data-mark='detection'] {
+    animation: motion-pop-in 400ms var(--motion-ease) calc(var(--motion-delay) + 2650ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .eec-label[data-label='detection'] {
+    animation: motion-fade 300ms ease-out calc(var(--motion-delay) + 2700ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .eec-card[data-kind='detection'] {
+    animation: eec-lit-detection 1400ms ease calc(var(--motion-delay) + 2650ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .eec-replay {
+    animation: eec-replay-in 400ms ease-out calc(var(--motion-delay) + 3000ms) backwards;
+  }
+}
+
+/* Implicit from/to frames resolve to each element's own finished state. */
+@keyframes eec-sweep {
+  from {
+    transform: rotate(0deg);
+  }
+}
+@keyframes eec-lit-flash {
+  12%,
+  85% {
+    border-color: color-mix(in oklab, var(--color-viz-gold) 60%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-viz-gold) 20%, transparent),
+      0 0 48px -8px color-mix(in oklab, var(--color-viz-gold) 35%, transparent);
+  }
+}
+@keyframes eec-lit-detection {
+  15%,
+  70% {
+    border-color: rgb(255 255 255 / 45%);
+    box-shadow: 0 0 48px -8px rgb(255 255 255 / 14%);
+  }
+}
+@keyframes eec-replay-in {
+  from {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@keyframes eec-pulse {
+  from {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}

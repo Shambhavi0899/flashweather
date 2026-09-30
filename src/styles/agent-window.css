@@ -1,0 +1,185 @@
+/*
+ * agent-window — "Ask the question your crew actually asks"
+ * (components/home/agent-section.tsx) on its light stage: the home page, the
+ * products page, every industry page and the Flash Agent page.
+ *
+ *   window   the conversations sit in a dark app window: a title bar (three
+ *            lights, the Flash logo, a green live dot and "Live"), a 1px gold
+ *            frame, 16px corners and a deep shadow, over a soft gold and
+ *            blue glow
+ *   sweep    while the agent thinks (the typing-dots step, `data-steps`
+ *            from <AgentChat>), a light runs once round the gold frame
+ *   list     the question list beside the window and the tour's line are
+ *            styles/agent-tour.css
+ *
+ * Reduced motion: no sweep and no pulse; the glow is still anyway.
+ */
+
+/* Where the frame's light is, registered so it can be animated. */
+@property --agent-sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@layer components {
+  .agent-window {
+    --agent-gold: color-mix(in oklab, var(--color-viz-gold) 78%, var(--color-brand-navy));
+    position: relative;
+    border-radius: 16px;
+    background-color: var(--color-brand-navy);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 6%),
+      0 60px 100px -40px rgb(7 13 38 / 55%),
+      0 24px 44px -24px rgb(7 13 38 / 45%);
+  }
+  /* The frame, and the light that runs round it: 1px rings over the window. */
+  .agent-window::before,
+  .agent-window::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: 1px;
+    border-radius: inherit;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+  .agent-window::before {
+    background: var(--agent-gold);
+  }
+  .agent-window::after {
+    padding: 2px;
+    background: conic-gradient(
+      from var(--agent-sweep),
+      transparent 0deg,
+      transparent 230deg,
+      rgb(255 244 200 / 0%) 230deg,
+      rgb(255 244 200 / 100%) 340deg,
+      transparent 360deg
+    );
+    opacity: 0;
+  }
+
+  /* The title bar: lights left, the name in the middle, live dot right. */
+  .agent-window-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 46px;
+    padding-inline: 14px;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+  }
+  .agent-window-lights {
+    display: flex;
+    gap: 6px;
+  }
+  .agent-window-lights > span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgb(255 255 255 / 16%);
+  }
+  /* The Flash logo (<Logo size="window">, 26px tall, 32 from 768), centred on the
+     bar with 10px above and below. */
+  .agent-window-title {
+    position: absolute;
+    left: 50%;
+    translate: -50% 0;
+    display: flex;
+  }
+  /* "Live" in muted text after the pulsing dot. */
+  .agent-window-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #8f9ab8;
+  }
+  .agent-window-live {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: color-mix(in oklab, var(--color-alert-clear) 70%, white);
+  }
+  @media (width >= 768px) {
+    .agent-window-bar {
+      height: 52px;
+      padding-inline: 18px;
+    }
+    .agent-window-lights {
+      gap: 8px;
+    }
+    .agent-window-lights > span {
+      width: 10px;
+      height: 10px;
+    }
+    .agent-window-status {
+      gap: 7px;
+      font-size: 12px;
+      line-height: 16px;
+    }
+    .agent-window-live {
+      width: 8px;
+      height: 8px;
+    }
+  }
+
+  /* The glow: two soft pools, gold and blue, each gone before its box's
+     edge (closest-side), then blurred, so no edge ever shows. */
+  .agent-window-glow {
+    position: absolute;
+    inset: -14% -6%;
+    z-index: -1;
+    background:
+      radial-gradient(closest-side at 30% 42%, rgb(230 186 45 / 16%), transparent),
+      radial-gradient(closest-side at 72% 60%, rgb(0 51 153 / 14%), transparent);
+    filter: blur(36px);
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Once per play: the step list gains "thinking" as the dots show, and
+       loses everything when the next play starts. */
+    .agent-window:has(.chat[data-steps~='thinking'])::after {
+      animation: agent-window-sweep 2.4s var(--motion-ease) both;
+    }
+    .agent-window-live {
+      animation: agent-window-live 2s ease-out infinite;
+    }
+  }
+}
+
+@keyframes agent-window-sweep {
+  0% {
+    --agent-sweep: 0deg;
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    --agent-sweep: 360deg;
+    opacity: 0;
+  }
+}
+@keyframes agent-window-live {
+  0% {
+    box-shadow: 0 0 0 0 rgb(64 190 140 / 55%);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 7px rgb(64 190 140 / 0%);
+  }
+}

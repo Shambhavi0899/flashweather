@@ -1,0 +1,324 @@
+/*
+ * Prediction vs sensors vs detection's "How do they compare on lead time,
+ * false alarms and cost?" (components/why-flash/tech-compare.tsx).
+ *
+ * From 768px, a table whose column headers are toggle buttons. The pressed
+ * column (`data-spot`, Flash on first view) takes a soft blue tint, full
+ * strength; the other two (`data-dim`) drop to half. Pressing it again
+ * clears both. The header row sticks under the compact site header while
+ * the table scrolls; the frame clips rather than scrolls, so the sticky
+ * cells stick to the page. Hovering a row lays a soft highlight across it.
+ *
+ * The Lead time row has a second, aria-hidden row of slim relative bars
+ * (none, short, long), each labelled with its cell's own words.
+ *
+ * Below 768px, tabs above the table pick one technology (`data-tab`); each
+ * criterion stacks, its label over the chosen column's answer.
+ *
+ * Each criterion is a <tbody>: once, as it scrolls in, it rises into place
+ * and its bars grow left to right. The script only sets `data-anim` (idle →
+ * run, then removes it); reduced motion and no JavaScript get the final frame.
+ */
+@layer components {
+  .tc {
+    --tc-tint: color-mix(in srgb, var(--color-brand-blue) 6%, var(--color-neutral-0));
+    --tc-tint-strong: color-mix(in srgb, var(--color-brand-blue) 10%, var(--color-neutral-0));
+    --tc-hover: var(--color-neutral-50);
+    --tc-fade: 0.25s ease-out;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .tc-frame {
+    overflow: clip;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-neutral-0);
+  }
+  .tc-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  /* ---------- Column headers: toggles ---------- */
+
+  .tc-colhead {
+    position: sticky;
+    top: var(--site-header-h-compact);
+    z-index: 1;
+    width: 27%;
+    padding: 0;
+    vertical-align: middle;
+    background-color: var(--color-surface-raised);
+    /* The header's rule is a shadow so it travels with the stuck row. */
+    box-shadow: inset 0 -1px 0 var(--color-border);
+    transition: background-color var(--tc-fade);
+  }
+  .tc-colhead.tc-crit {
+    width: 19%;
+    padding: 14px 20px;
+    line-height: 16px;
+  }
+  .tc-colhead[data-spot] {
+    background-color: var(--tc-tint-strong);
+    box-shadow: inset 0 -2px 0 var(--color-brand-blue);
+  }
+  .tc-colname {
+    font-size: var(--text-micro);
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .tc-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    padding: 14px 20px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .tc-toggle:focus-visible {
+    outline: 2px solid var(--color-brand-blue-soft);
+    outline-offset: -2px;
+  }
+  .tc-dot {
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid var(--color-neutral-400);
+    border-radius: var(--radius-pill);
+    transition:
+      background-color var(--tc-fade),
+      border-color var(--tc-fade);
+  }
+  .tc-toggle[aria-pressed='true'] .tc-dot {
+    border-color: var(--color-brand-blue);
+    background-color: var(--color-brand-blue);
+  }
+  .tc-toggle[aria-pressed='true'] .tc-colname {
+    font-weight: 700;
+    color: var(--color-brand-blue);
+  }
+  @media (hover: hover) {
+    .tc-toggle:hover .tc-dot {
+      border-color: var(--color-brand-blue);
+    }
+    .tc-toggle:hover .tc-colname {
+      color: var(--color-text);
+    }
+    .tc-toggle[aria-pressed='true']:hover .tc-colname {
+      color: var(--color-brand-blue);
+    }
+  }
+
+  /* ---------- Rows ---------- */
+
+  .tc-row + .tc-row {
+    border-top: 1px solid var(--color-border);
+  }
+  .tc-head,
+  .tc-cell {
+    padding: 16px 20px;
+    vertical-align: top;
+    font-size: 15px;
+    line-height: var(--leading-body-s);
+    color: var(--color-text);
+    transition:
+      background-color var(--tc-fade),
+      opacity var(--tc-fade);
+  }
+  .tc-head {
+    font-weight: 600;
+  }
+  .tc-cell[data-spot] {
+    background-color: var(--tc-tint);
+  }
+  /* The content dims, not the cell, so a row's hover reads straight across. */
+  .tc-cell > * {
+    transition: opacity var(--tc-fade);
+  }
+  .tc-cell[data-dim] > * {
+    opacity: 0.5;
+  }
+  @media (hover: hover) {
+    .tc-row:hover :is(.tc-head, .tc-cell, .tc-crit) {
+      background-color: var(--tc-hover);
+    }
+    .tc-row:hover .tc-cell[data-spot] {
+      background-color: var(--tc-tint-strong);
+    }
+  }
+
+  /* ---------- Lead time bars ---------- */
+
+  .tc-cell[data-bars] {
+    padding-bottom: 12px;
+  }
+  .tc-bars .tc-cell,
+  .tc-bars .tc-crit {
+    padding: 0 20px 18px;
+  }
+  .tc-barcell {
+    vertical-align: bottom;
+  }
+  .tc-track {
+    display: block;
+    height: 4px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-200);
+  }
+  .tc-fill {
+    display: block;
+    height: 100%;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-500);
+    transform-origin: 0 50%;
+  }
+  .tc-fill[data-reach='none'] {
+    width: 0;
+  }
+  .tc-fill[data-reach='short'] {
+    width: 14%;
+  }
+  .tc-fill[data-reach='long'] {
+    width: 100%;
+  }
+  .tc-fill[data-flash] {
+    background-color: var(--color-brand-blue);
+  }
+  .tc-barlabel {
+    display: block;
+    padding-top: 6px;
+    font-size: var(--text-micro);
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--color-text-muted);
+  }
+  .tc-barlabel[data-flash] {
+    font-weight: 700;
+    color: var(--color-brand-blue);
+  }
+
+  /* ---------- Tabs, below 768px ---------- */
+
+  .tc-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-raised);
+
+    @variant md {
+      display: none;
+    }
+  }
+  .tc-tab {
+    flex: 1 1 0;
+    min-height: 48px;
+    padding: 6px 8px;
+    border-radius: 7px;
+    font-size: var(--text-caption);
+    line-height: 17px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition:
+      background-color var(--tc-fade),
+      color var(--tc-fade);
+  }
+  .tc-tab[aria-selected='true'] {
+    background-color: var(--color-neutral-0);
+    box-shadow:
+      0 1px 2px rgb(11 19 34 / 0.08),
+      0 0 0 1px var(--color-border);
+    font-weight: 700;
+    color: var(--color-brand-blue);
+  }
+  .tc-tab:focus-visible {
+    outline: 2px solid var(--color-brand-blue-soft);
+    outline-offset: 0;
+  }
+
+  /* ---------- Stacked rows, below 768px ---------- */
+
+  @media (width < 768px) {
+    .tc-table,
+    .tc-table :is(tbody, tr, th, td) {
+      display: block;
+    }
+    /* The tabs name the column, so the header row (and its toggles) goes. */
+    .tc-table thead {
+      display: none;
+    }
+    .tc-head {
+      padding: 16px 16px 6px;
+      font-size: var(--text-micro);
+      line-height: 16px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+    .tc-cell {
+      padding: 0 16px 16px;
+    }
+    .tc-table .tc-cell:not([data-tab]) {
+      display: none;
+    }
+    /* One column on screen: no spotlight, no dimming. */
+    .tc-cell[data-spot],
+    .tc-row:hover .tc-cell[data-spot] {
+      background-color: transparent;
+    }
+    .tc-cell[data-dim] > * {
+      opacity: 1;
+    }
+    .tc-cell[data-bars] {
+      padding-bottom: 14px;
+    }
+    .tc-table .tc-bars .tc-crit {
+      display: none;
+    }
+    .tc-bars .tc-cell {
+      padding: 0 16px 18px;
+    }
+  }
+
+  /* ---------- Scroll-in, once ---------- */
+
+  @media (prefers-reduced-motion: no-preference) {
+    .tc-row[data-anim] {
+      animation: tc-rise 0.45s var(--motion-ease) backwards;
+    }
+    .tc-row[data-anim] .tc-fill {
+      animation: motion-grow-x 0.9s var(--motion-ease) 0.2s backwards;
+    }
+    .tc-row[data-anim='idle'],
+    .tc-row[data-anim='idle'] .tc-fill {
+      animation-play-state: paused;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tc,
+    .tc * {
+      transition: none;
+    }
+  }
+}
+
+/* Implicit to-frames resolve to the element's own final state. */
+@keyframes tc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

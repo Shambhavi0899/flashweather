@@ -2,7 +2,7 @@ import { Lines } from '@/components/lines';
 import { Motion } from '@/components/motion';
 import { ParameterCard } from '@/components/parameter-card';
 import { ScrollFlow } from '@/components/scroll-flow';
-import { catalogue, trustedBy, type CatalogueCard } from '@/content/home';
+import { catalogue, type CatalogueCard } from '@/content/home';
 
 /** Photo grade per card family; the gradients live in src/styles/home.css. */
 const GRADE_CLASS: Record<CatalogueCard['grade'], string> = {
@@ -11,34 +11,10 @@ const GRADE_CLASS: Record<CatalogueCard['grade'], string> = {
   intelligence: 'home-catalogue-grade-intelligence',
 };
 
-/** The trust bar (named customers) and "What we predict", the parameter catalogue. */
+/** "What we predict", the parameter catalogue. */
 export function Catalogue() {
   return (
     <>
-      <section aria-label="Trusted on the field" className="home-trust-rule border-t border-border bg-neutral-0">
-        <div className="mx-auto flex max-w-page flex-col lg:flex-row">
-          <div className="flex flex-col justify-center gap-2 border-b border-border px-4 py-7 md:px-10 lg:w-[300px] lg:shrink xl:shrink-0 lg:border-r lg:border-b-0 lg:pr-8 xl:pl-24">
-            <p className="text-[11px] leading-4 font-semibold tracking-[0.16em] text-text-muted uppercase md:leading-[14px]">
-              Trusted on the field
-            </p>
-            <p className="text-body-s leading-body-s text-text">Named customers, named use.</p>
-          </div>
-          <ul className="grid grow grid-cols-2 lg:grid-cols-4">
-            {trustedBy.map((c, i) => (
-              <li
-                key={c.name}
-                className={`flex flex-col justify-center gap-[6px] border-border px-4 py-7 md:px-8 ${
-                  i % 2 === 0 ? 'border-r' : ''
-                } ${i < 2 ? 'max-lg:border-b' : ''} lg:border-r lg:last:border-r-0 xl:last:pr-24`}
-              >
-                <p className="text-body leading-5 font-semibold text-brand-navy uppercase md:text-h4 md:leading-6 md:font-bold md:tracking-[0.02em]">{c.name}</p>
-                <p className="text-caption leading-caption text-text-muted">{c.use}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
       {/* Moves with the scroll (styles/parameter-card.css): the header and the
           cards reveal once as they come into view, then <ScrollFlow> drifts
           each photo in its frame and eases the cards back as the section

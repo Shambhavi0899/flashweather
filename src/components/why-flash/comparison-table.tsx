@@ -1,4 +1,4 @@
-import { BOLT_PATH } from '@/components/bolt-path';
+import { Logo } from '@/components/logo';
 import { Motion } from '@/components/motion';
 import { type ComparisonIcon, comparisonRows } from '@/content/why-flash';
 
@@ -187,12 +187,7 @@ export function ComparisonTable() {
               </span>
             </th>
             <th scope="col" className="w-1/2 bg-brand-navy px-5 py-[22px] md:px-8">
-              <span className="flex items-center gap-[10px] text-micro font-bold tracking-[0.13em] text-viz-gold uppercase">
-                <svg width="12" height="16" viewBox="0 0 26 34" aria-hidden className="shrink-0">
-                  <path d={BOLT_PATH} fill="var(--color-viz-gold)" />
-                </svg>
-                Flash
-              </span>
+              <Logo variant="dark" size="column" link={false} alt="Flash" />
             </th>
           </tr>
         </thead>

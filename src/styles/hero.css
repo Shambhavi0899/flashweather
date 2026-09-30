@@ -131,11 +131,13 @@
 }
 
 /* The gold shimmer: a light band over a hero headline's gold words, once, as
-   the last word lands. Any gold word in a hero's h1 gets it. Unlayered, so it
-   can add the band to the text-gold-* utility's own background. */
+   the last word lands. Any gold word in a hero's h1 gets it, and so does the
+   gold, word or glyph, in its paragraph. Unlayered, so it can add the band to
+   the gold utility's own background. */
 @media (prefers-reduced-motion: no-preference) {
   .hero-fx h1 .text-gold-metallic,
-  .hero-fx h1 .text-gold-on-light {
+  .hero-fx h1 .text-gold-on-light,
+  .hero-fx .hero-lede .bg-gold-metallic {
     background-size:
       250% 100%,
       100% 100%;
@@ -145,7 +147,9 @@
       0 0;
     animation: hero-shimmer 1.4s ease-out var(--hero-shimmer-at) both;
   }
-  .hero-fx h1 .text-gold-metallic {
+  .hero-fx h1 .text-gold-metallic,
+  .hero-fx .hero-lede .text-gold-metallic,
+  .hero-fx .hero-lede .bg-gold-metallic {
     background-image:
       linear-gradient(105deg, transparent 42%, rgb(255 246 214 / 85%) 50%, transparent 58%),
       linear-gradient(
@@ -172,6 +176,18 @@
     animation:
       hero-rise 0.6s var(--hero-ease) calc(var(--hero-headline-at) + var(--w, 0) * var(--hero-word-gap)) backwards,
       hero-shimmer 1.4s ease-out var(--hero-shimmer-at) both;
+  }
+  /* A paragraph's gold words show the gradient's middle (styles/home.css);
+     the band crosses them and leaves that where it is. */
+  .hero-fx .hero-lede .text-gold-metallic {
+    background-size:
+      250% 100%,
+      100% 300%;
+    background-repeat: no-repeat;
+    background-position:
+      100% 0,
+      0 30%;
+    animation: hero-shimmer-lede 1.4s ease-out var(--hero-shimmer-at) both;
   }
 }
 
@@ -213,6 +229,13 @@
     background-position:
       0% 0,
       0 0;
+  }
+}
+@keyframes hero-shimmer-lede {
+  to {
+    background-position:
+      0% 0,
+      0 30%;
   }
 }
 @keyframes hero-flash {

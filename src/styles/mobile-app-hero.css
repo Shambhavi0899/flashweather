@@ -12,10 +12,11 @@
  *                swipe or tap the dots (the labels, as dots)
  *
  * Motion, inside the no-preference query, on the hero's timings:
- *   --mph-fan-at      the phones fan out of a tilted stack in the centre
- *   --mph-labels-at   the labels rise under them, 80ms apart
- *   data-ready        (set by the component at 2.3s) selection takes over
- *   .mph-progress     the selected label's bar fills over 4s, then the next
+ *   --mph-fan-at      right after the headline, the phones fan out of a
+ *                     tilted stack in the centre, 600ms in all
+ *   --mph-labels-at   the labels rise under them as they go, 50ms apart
+ *   data-ready        (set by the component at 1.45s) selection takes over
+ *   .mph-progress     the selected label's bar fills over 2.5s, then the next
  *                     phone comes forward; paused by hover, focus, the
  *                     notification, a hero off screen, and data-hold
  *   .mph-notice       the push notification, once
@@ -26,9 +27,9 @@
 
 @layer components {
   .mph {
-    --mph-fan-at: calc(var(--hero-visual-at) + 200ms);
-    --mph-labels-at: calc(var(--mph-fan-at) + 700ms);
-    --mph-settled-at: calc(var(--mph-fan-at) + 1300ms);
+    --mph-fan-at: calc(var(--hero-visual-at) + 100ms);
+    --mph-labels-at: calc(var(--mph-fan-at) + 200ms);
+    --mph-settled-at: calc(var(--mph-fan-at) + 600ms);
     --mph-w: 29cqi;
     container-type: inline-size;
     user-select: none;
@@ -77,12 +78,21 @@
     border-radius: calc(var(--mph-w) * 0.105);
     background-color: #1e1e2e;
   }
+  /* The screenshot fills the display from the top; what is over is cut at
+     the bottom. One that fails to load is hidden (the component sets
+     data-failed), which leaves the dark display and no broken-image icon. */
   .mph-shot {
     display: block;
     width: 100%;
     height: auto;
+    aspect-ratio: 320 / 692;
+    object-fit: cover;
+    object-position: 50% 0;
     pointer-events: none;
     -webkit-user-drag: none;
+  }
+  .mph-shot[data-failed] {
+    visibility: hidden;
   }
   /* The dim on a phone that sits back. */
   .mph-screen::after {
@@ -329,14 +339,14 @@
       transform: scaleX(0);
     }
 
-    /* Intro: out of the stack, then the tilt settles a beat after. */
+    /* Intro, 600ms: out of the stack, the tilt settling as they land. */
     .mph-slot {
       animation:
-        mph-fan 1.1s var(--hero-ease) var(--mph-fan-at) backwards,
-        mph-tilt 1.3s ease-out var(--mph-fan-at) backwards;
+        mph-fan 0.6s var(--hero-ease) var(--mph-fan-at) backwards,
+        mph-tilt 0.6s ease-out var(--mph-fan-at) backwards;
     }
     .mph-tab {
-      animation: hero-lift 0.5s var(--hero-ease) calc(var(--mph-labels-at) + var(--t, 0) * 80ms) backwards;
+      animation: hero-lift 0.3s var(--hero-ease) calc(var(--mph-labels-at) + var(--t, 0) * 50ms) backwards;
     }
     .mph-tab:nth-child(2) { --t: 1; }
     .mph-tab:nth-child(3) { --t: 2; }
@@ -345,14 +355,14 @@
     /* Selection. */
     .mph-phone {
       transition:
-        scale 0.6s var(--hero-ease),
-        translate 0.6s var(--hero-ease);
+        scale 0.3s var(--hero-ease),
+        translate 0.3s var(--hero-ease);
     }
     .mph-screen::after {
-      transition: opacity 0.6s var(--hero-ease);
+      transition: opacity 0.3s var(--hero-ease);
     }
     .mph-tab {
-      transition: color 0.4s var(--hero-ease);
+      transition: color 0.3s var(--hero-ease);
     }
 
     /* Float: 3px, a different period per phone, from once they settle. */
@@ -372,7 +382,7 @@
        pauses below are not reset by the shorthand. */
     .mph[data-ready] .mph-tab[aria-selected='true'] .mph-progress {
       animation-name: mph-progress;
-      animation-duration: 4s;
+      animation-duration: 2.5s;
       animation-timing-function: linear;
       animation-fill-mode: both;
     }
@@ -390,16 +400,16 @@
       }
     }
 
-    /* The notification drops on, holds 3s, and goes back up. */
+    /* The notification drops on (0.4s), holds 2.5s, and goes back up (0.35s). */
     .mph-notice {
-      animation: mph-notice 3.9s linear both;
+      animation: mph-notice 3.25s linear both;
     }
 
     @media (width < 640px) {
       .mph-slot {
         transition:
-          translate 0.55s var(--hero-ease),
-          opacity 0.4s var(--hero-ease);
+          translate 0.3s var(--hero-ease),
+          opacity 0.3s var(--hero-ease);
       }
       .mph[data-dragging] .mph-slot {
         transition: none;
@@ -407,8 +417,8 @@
       .mph-tab::before,
       .mph-progress {
         transition:
-          width 0.35s var(--hero-ease),
-          margin 0.35s var(--hero-ease);
+          width 0.3s var(--hero-ease),
+          margin 0.3s var(--hero-ease);
       }
     }
   }
@@ -459,11 +469,11 @@
     translate: 0 -55%;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
-  13% {
+  12% {
     opacity: 1;
     translate: 0 0;
   }
-  88% {
+  89% {
     opacity: 1;
     translate: 0 0;
     animation-timing-function: cubic-bezier(0.5, 0, 0.75, 0);

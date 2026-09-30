@@ -1,0 +1,158 @@
+/*
+ * Home · "Our partners and customers" (components/home/customers.tsx): the
+ * panel the section sits in, the eyebrow's pulsing dots, the logo slider on
+ * its white strip and the section's one reveal.
+ *
+ * The slider is a row that scrolls sideways; customer-slider.tsx loops it,
+ * moves it a logo at a time and sets `data-sliding` while it does, so the
+ * row's snapping does not fight a slide in progress. `--per` is how many
+ * logos show at once. Without JavaScript the row is simply a list you can
+ * scroll.
+ */
+@layer components {
+  /* The section's own ground: a pale blue-grey, a little warm gold in the top
+     right corner, clearly off the white page. */
+  .customers-panel {
+    border: 1px solid #dfe4ee;
+    border-radius: var(--radius-xl);
+    background-color: #eff2f9;
+    background-image:
+      radial-gradient(55% 90% at 100% 0%, rgb(230 186 45 / 16%), transparent 70%),
+      linear-gradient(180deg, #f3f6fb, #ebeff7);
+    box-shadow:
+      0 1px 2px rgb(7 13 38 / 4%),
+      0 28px 56px -28px rgb(7 13 38 / 18%);
+  }
+
+  /* The logos' white strip; the row inside it scrolls. */
+  .customers-strip {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    padding-block: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-neutral-0);
+  }
+
+  .customers-dots {
+    display: flex;
+    gap: 4px;
+  }
+  .customers-dots > span {
+    width: 4px;
+    height: 4px;
+    border-radius: 9999px;
+    background: var(--color-viz-gold);
+  }
+
+  .customers-view {
+    --per: 3;
+    /* The tallest a logo stands; each logo is its own share of it (`--s`, content/home.ts). */
+    --logo-h: 44px;
+    position: relative;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    /* The logos slide in and out under a soft edge. */
+    mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+  }
+  .customers-view::-webkit-scrollbar {
+    display: none;
+  }
+  .customers-view[data-sliding] {
+    scroll-snap-type: none;
+  }
+  .customers-track {
+    display: flex;
+  }
+  .customers-logo {
+    display: flex;
+    flex: 0 0 calc(100% / var(--per));
+    align-items: center;
+    justify-content: center;
+    height: calc(var(--logo-h) + 12px);
+    padding-inline: 8px;
+    scroll-snap-align: start;
+  }
+  .customers-logo > img {
+    width: auto;
+    height: calc(var(--logo-h) * var(--s, 1));
+    max-width: 100%;
+    object-fit: contain;
+  }
+  @media (width >= 768px) {
+    .customers-view {
+      --per: 5;
+      --logo-h: 56px;
+      mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent);
+    }
+    .customers-logo {
+      padding-inline: 14px;
+    }
+    .customers-strip {
+      padding-block: 20px;
+    }
+  }
+  @media (width >= 1024px) {
+    .customers-view {
+      --per: 6;
+      --logo-h: 72px;
+    }
+  }
+
+  .customers-arrow {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    background: var(--color-neutral-0);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition:
+      border-color 0.2s,
+      background-color 0.2s,
+      color 0.2s;
+  }
+  .customers-arrow:hover {
+    border-color: var(--color-brand-blue);
+    background: var(--color-brand-blue);
+    color: var(--color-neutral-0);
+  }
+  @media (width >= 768px) {
+    .customers-arrow {
+      width: 36px;
+      height: 36px;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* Three dots a side, lit one after the other, from the outside in. */
+    .customers-dots > span {
+      animation: customers-pulse 1.8s ease-in-out calc(var(--i) * 0.22s) infinite;
+    }
+
+    /* Once, as the section scrolls in: the heading block, the logo row, the closing line. */
+    .motion[data-anim]:not([data-anim='reset']) .customers-rise {
+      animation: motion-rise 0.7s var(--motion-ease) calc(var(--motion-delay) + var(--i, 0) * 120ms) both;
+    }
+  }
+}
+
+@keyframes customers-pulse {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}

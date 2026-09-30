@@ -1,0 +1,208 @@
+/*
+ * Troon case study: "One forecast, two screens, the same call."
+ * (components/case-study/two-screens.tsx), classes tsc-*.
+ *
+ * The two product cards, Command Center and Mobile app. The list is one
+ * <Motion> block: when it scrolls in, and then every 6s while it is in view,
+ * the same alert chip pops onto both images in the same frame, and from
+ * 1024px, where the cards sit side by side, a thin line draws across the gap
+ * from one chip to the other. Both chips and the line run one 6s cycle from
+ * one start, so they cannot drift apart. They are `motion-loop`s, so the
+ * cycle pauses while the list is off screen.
+ *
+ * The markup is the finished state: both chips showing, no line. That is what
+ * reduced motion and a browser without JavaScript see.
+ *
+ * Hover (fine pointers only): the card lifts and its link arrow slides.
+ */
+@layer components {
+  .tsc {
+    /* The chip's inset from the image edge, its distance from the top (clear
+       of the badge) and its height: the line is placed from the same three. */
+    --tsc-inset: 16px;
+    --tsc-top: 52px;
+    --tsc-h: 28px;
+    --tsc-gap: 24px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--tsc-gap);
+  }
+  @media (width >= 1024px) {
+    .tsc {
+      flex-direction: row;
+    }
+    .tsc-card {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+
+  /* ---------- The cards ---------- */
+
+  .tsc-card {
+    transition:
+      translate 0.32s var(--motion-ease),
+      border-color 0.32s var(--motion-ease),
+      box-shadow 0.32s var(--motion-ease);
+  }
+  .tsc-arrow {
+    display: inline-block;
+    transition: translate 0.32s var(--motion-ease);
+  }
+  .tsc-link:focus-visible .tsc-arrow {
+    translate: 4px 0;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .tsc-card:hover {
+      translate: 0 -4px;
+      border-color: rgb(255 255 255 / 0.2);
+      box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.6);
+    }
+    .tsc-card:hover .tsc-arrow {
+      translate: 4px 0;
+    }
+  }
+
+  /* ---------- The alert chip ---------- */
+
+  .tsc-chip {
+    position: absolute;
+    top: var(--tsc-top);
+    left: var(--tsc-inset);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: var(--tsc-h);
+    padding-inline: 10px 12px;
+    border: 1px solid color-mix(in srgb, var(--color-alert-warning) 75%, transparent);
+    border-radius: 9999px;
+    background: rgb(4 8 24 / 0.88);
+    box-shadow: 0 8px 20px -8px rgb(0 0 0 / 0.7);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #c9d1e3;
+    transform-origin: left center;
+  }
+  .tsc-chip b {
+    font-weight: 800;
+    color: #fff;
+  }
+  .tsc-dot {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    background: var(--color-alert-warning);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-alert-warning) 30%, transparent);
+  }
+
+  /* ---------- The connecting line ---------- */
+
+  .tsc-line {
+    display: none;
+  }
+  @media (width >= 1024px) {
+    /* Side by side the chips face each other across the gap: the first
+       card's moves to its image's right edge. */
+    .tsc-card:first-child .tsc-chip {
+      right: var(--tsc-inset);
+      left: auto;
+      transform-origin: right center;
+    }
+    /* From the first chip's right edge to the second's left: both insets,
+       both card borders and the gap, centred on the chips. */
+    .tsc-line {
+      position: absolute;
+      top: calc(1px + var(--tsc-top) + var(--tsc-h) / 2);
+      left: calc(50% - var(--tsc-gap) / 2 - 1px - var(--tsc-inset));
+      z-index: 1;
+      display: block;
+      width: calc(var(--tsc-gap) + 2px + var(--tsc-inset) * 2);
+      height: 1px;
+      background: color-mix(in srgb, var(--color-alert-warning) 70%, #fff);
+      box-shadow: 0 0 6px color-mix(in srgb, var(--color-alert-warning) 80%, transparent);
+      opacity: 0;
+      transform-origin: left center;
+      pointer-events: none;
+    }
+  }
+
+  /* ---------- The cycle ---------- */
+
+  .motion.tsc[data-anim]:not([data-anim='reset']) .tsc-chip {
+    animation: tsc-pop 6s infinite both;
+  }
+  .motion.tsc[data-anim]:not([data-anim='reset']) .tsc-line {
+    animation: tsc-draw 6s infinite both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tsc-card,
+    .tsc-arrow {
+      transition: none;
+    }
+    .tsc-card:hover,
+    .tsc-card:hover .tsc-arrow,
+    .tsc-link:focus-visible .tsc-arrow {
+      translate: none;
+    }
+  }
+}
+
+/* Pops in with a small overshoot, holds, then clears before the next one. */
+@keyframes tsc-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.86);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  5% {
+    opacity: 1;
+    transform: scale(1.05);
+    animation-timing-function: ease-in-out;
+  }
+  9% {
+    transform: none;
+  }
+  80% {
+    opacity: 1;
+    transform: none;
+    animation-timing-function: ease-in;
+  }
+  86%,
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+/* Draws from the first chip to the second as they land, then fades. */
+@keyframes tsc-draw {
+  0%,
+  3% {
+    opacity: 0;
+    transform: scaleX(0);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  4% {
+    opacity: 1;
+    transform: scaleX(0);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  14% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  26% {
+    opacity: 1;
+    transform: scaleX(1);
+    animation-timing-function: ease-in;
+  }
+  34%,
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}

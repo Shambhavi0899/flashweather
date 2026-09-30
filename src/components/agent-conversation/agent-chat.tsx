@@ -27,7 +27,18 @@ import { scrollToCentre, scrollToY } from '@/lib/scroll';
  * index; a tab with no panel just stops the playback. Without tabs, every
  * panel is held empty and they play one after the other, never together.
  * Replay plays the panel again, and so does hovering a finished panel that
- * carries `data-chat-hover`.
+ * carries `data-chat-hover`. With `autoPlay={false}` nothing plays on its own:
+ * the panel shows finished until a `chat:play` event on the wrapper plays it
+ * (the home hero's deck sends one as the Flash Agent card comes forward).
+ *
+ * Every play announces itself: a `chat:playing` event on the panel, which
+ * bubbles, with the play's length in ms as its `detail`. The section's tour
+ * (components/home/agent-tour.tsx) times its progress line from it.
+ *
+ * A panel with `data-chat-lead="N"` never opens empty: its play starts with
+ * the question, the badge and the answer's first N words already there, with
+ * no entrance, and streams the rest after a beat. A `chat:hold` event on the
+ * wrapper puts it back on that opening state, still, until the next play.
  *
  * A question chip (`[data-chat-ask]`, its text in the attribute) types that
  * question into the open panel's composer and leaves it there, unsent: the
@@ -50,6 +61,8 @@ const ANSWER_MS = 1300; // the whole answer streams in this long, however many w
 const CHART_MS = 1100; // bars grow / lines draw, then limits and labels fade
 const CHIPS_MS = 400;
 const ACTIONS_MS = 600;
+/** A panel that opens mid-answer (`data-chat-lead`) holds its opening state this long. */
+const LEAD_HOLD_MS = 450;
 
 /** Where a tab row scrolled into view sits: clear of the fixed header. */
 const TAB_ROW_OFFSET = 112;
@@ -60,11 +73,14 @@ const typeDuration = (text: string) => Math.min(1700, Math.max(900, text.length 
 export function AgentChat({
   className,
   startDelay = 0,
+  autoPlay = true,
   children,
 }: {
   className: string;
-  /** Hold the first play this long after it scrolls in, as the home hero does. */
+  /** Hold the first play this long after it scrolls in. */
   startDelay?: number;
+  /** `false` leaves every play to a `chat:play` event on the wrapper. */
+  autoPlay?: boolean;
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -116,7 +132,7 @@ export function AgentChat({
       delete panel.dataset.steps;
       panel.removeAttribute('data-typing');
       panel.removeAttribute('data-asked');
-      panel.querySelectorAll('.chat-word.is-in').forEach((w) => w.classList.remove('is-in'));
+      panel.querySelectorAll('.chat-word.is-in').forEach((w) => w.classList.remove('is-in', 'is-lead'));
       panel.querySelectorAll<HTMLElement>('[data-chat-typed], [data-chat-asked-live]').forEach((el) => {
         el.textContent = '';
       });
@@ -140,7 +156,8 @@ export function AgentChat({
       const typed = panel.querySelector<HTMLElement>('[data-chat-typed]');
       const text = typed?.dataset.text ?? '';
       const words = [...panel.querySelectorAll<HTMLElement>('.chat-word')];
-      const typeMs = typeDuration(text);
+      // A card with no composer can skip the typing beat (`data-chat-untyped`).
+      const typeMs = panel.hasAttribute('data-chat-untyped') ? 0 : typeDuration(text);
       const sent = typeMs + 150;
       const at = {
         thinking: sent + AFTER_SEND.thinking,
@@ -153,15 +170,20 @@ export function AgentChat({
       const actions = chips + CHIPS_MS;
       const done = actions + ACTIONS_MS;
       const perWord = ANSWER_MS / Math.max(1, words.length);
+      // Opening mid-answer: the clock starts a beat before the lead's last word.
+      const lead = Math.min(words.length, Number(panel.dataset.chatLead) || 0);
+      const skip = lead ? at.answer + perWord * lead - LEAD_HOLD_MS : 0;
 
       panel.dataset.chat = 'play';
       panel.dataset.steps = '';
-      panel.setAttribute('data-typing', '');
-      let shownWords = 0;
+      if (!lead) panel.setAttribute('data-typing', '');
+      panel.dispatchEvent(new CustomEvent('chat:playing', { bubbles: true, detail: done - skip }));
+      words.slice(0, lead).forEach((w) => w.classList.add('is-in', 'is-lead'));
+      let shownWords = lead;
       const start = performance.now();
 
       const tick = (now: number) => {
-        const t = now - start;
+        const t = now - start + skip;
         const steps: string[] = [];
         if (t < sent) {
           const chars = Math.round(text.length * Math.min(1, t / typeMs));
@@ -198,7 +220,9 @@ export function AgentChat({
         }
         frame = requestAnimationFrame(tick);
       };
-      frame = requestAnimationFrame(tick);
+      // With a lead the first state is set now, not a frame later, so the panel is never seen empty.
+      if (lead) tick(start);
+      else frame = requestAnimationFrame(tick);
     };
 
     const checked = () => radios.find((r) => r.checked);
@@ -271,13 +295,16 @@ export function AgentChat({
     root.addEventListener('click', onAsk);
 
     // Reduced motion: nothing plays; the panels stay finished and only a question chip acts.
-    // A tab change still clears a question a chip typed in, so no tab opens on another's leftovers.
+    // A tab change still clears a question a chip typed in, so no tab opens on another's leftovers,
+    // and so does a `chat:play`, which here just shows the finished conversation again.
     if (reduced) {
       const onTab = () => panels.forEach(settle);
       root.addEventListener('change', onTab);
+      root.addEventListener('chat:play', onTab);
       return () => {
         root.removeEventListener('click', onAsk);
         root.removeEventListener('change', onTab);
+        root.removeEventListener('chat:play', onTab);
         panels.forEach(settle);
       };
     }
@@ -299,8 +326,10 @@ export function AgentChat({
       panel.dataset.steps = '';
     };
     const first = current();
-    if (first && (startDelay > 0 || first.getBoundingClientRect().top > window.innerHeight)) hold(first);
-    if (!radios.length) panels.slice(1).forEach(hold);
+    if (autoPlay) {
+      if (first && (startDelay > 0 || first.getBoundingClientRect().top > window.innerHeight)) hold(first);
+      if (!radios.length) panels.slice(1).forEach(hold);
+    }
 
     // Watch the panel itself where it is known: a tab group can be much
     // taller than its conversation (a question list above it on a phone).
@@ -315,7 +344,25 @@ export function AgentChat({
       },
       { threshold: 0.25 },
     );
-    observer.observe(first ?? root);
+    if (autoPlay) observer.observe(first ?? root);
+
+    const onPlay = () => {
+      seen = true;
+      clearTimeout(delayed);
+      play(current());
+    };
+    root.addEventListener('chat:play', onPlay);
+    const onHold = () => {
+      const panel = current();
+      const lead = Number(panel?.dataset.chatLead) || 0;
+      if (!panel || !lead) return;
+      cancel();
+      settle(panel);
+      panel.dataset.chat = 'play';
+      panel.dataset.steps = 'sent thinking badge';
+      [...panel.querySelectorAll('.chat-word')].slice(0, lead).forEach((w) => w.classList.add('is-in', 'is-lead'));
+    };
+    root.addEventListener('chat:hold', onHold);
 
     const onChange = (event: Event) => {
       const radio = event.target as HTMLInputElement;
@@ -350,6 +397,8 @@ export function AgentChat({
     return () => {
       observer.disconnect();
       root.removeEventListener('click', onAsk);
+      root.removeEventListener('chat:play', onPlay);
+      root.removeEventListener('chat:hold', onHold);
       root.removeEventListener('change', onChange);
       root.removeEventListener('click', onClick);
       hoverPanels.forEach((panel) => panel.removeEventListener('pointerenter', onEnter));
@@ -359,7 +408,7 @@ export function AgentChat({
       stage?.style.removeProperty('--chat-height');
       panels.forEach(settle);
     };
-  }, [startDelay]);
+  }, [startDelay, autoPlay]);
 
   return (
     <div ref={ref} className={className}>

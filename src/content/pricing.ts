@@ -81,6 +81,21 @@ export const plans: Plan[] = [
   },
 ];
 
+/**
+ * "Best fit for", above the plan cards: each answer badges one plan (by `id`).
+ * `initial` is the plan badged on load.
+ */
+export const planFit = {
+  label: 'Best fit for',
+  badge: 'Best fit',
+  initial: 'portfolio',
+  options: [
+    { plan: 'single-site', label: 'One site' },
+    { plan: 'portfolio', label: 'A portfolio' },
+    { plan: 'enterprise', label: 'Enterprise or API' },
+  ],
+};
+
 export const quoteFactors = [
   {
     name: 'Number of sites',
@@ -116,14 +131,26 @@ export const alwaysIncluded = [
   { title: 'Onboarding in days', body: 'Sites, users and thresholds loaded in days, not a build season.' },
 ];
 
-export const includedSurfaces: { label: string; href?: string }[] = [
-  { label: 'Weather Command Center', href: '/products/weather-command-center/' },
-  { label: 'Flash mobile app' },
-  { label: 'Flash API', href: '/products/api-offerings/' },
-  { label: 'Flash Agent', href: '/products/flash-agent/' },
+/** `id` names the surface's focus area on the devices photo (styles/pricing-surfaces.css). */
+export const includedSurfaces: { id: string; label: string; href?: string }[] = [
+  { id: 'command-center', label: 'Weather Command Center', href: '/products/weather-command-center/' },
+  { id: 'mobile-app', label: 'Flash mobile app' },
+  { id: 'api', label: 'Flash API', href: '/products/api-offerings/' },
+  { id: 'agent', label: 'Flash Agent', href: '/products/flash-agent/' },
 ];
 
-export const sensorComparison = [
+export type SensorComparisonRow = {
+  item: string;
+  flash: string;
+  sensor: string;
+  /**
+   * Set on a row that is not a cost (Coverage): it stacks no block on the
+   * sensor bar, and each bar carries this short caption instead.
+   */
+  short?: { flash: string; sensor: string };
+};
+
+export const sensorComparison: SensorComparisonRow[] = [
   {
     item: 'Hardware',
     flash: 'None — nothing to buy',
@@ -148,6 +175,7 @@ export const sensorComparison = [
     item: 'Coverage',
     flash: 'Every 1 × 1 km cell — continental U.S., Canada and Mexico',
     sensor: 'The radius each mounted unit can see',
+    short: { flash: 'Every 1×1 km cell', sensor: '1 radius per mast' },
   },
 ];
 

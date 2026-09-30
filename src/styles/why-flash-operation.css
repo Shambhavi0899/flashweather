@@ -1,0 +1,168 @@
+/*
+ * why-flash-operation — the /why-flash/ hub's "For your operation" section:
+ * "An hour of warning changes how you run everything."
+ *
+ * Industry chips (components/why-flash/operation-picker.tsx, wfo-chip*): a
+ * radio group that wraps from 768px and scrolls sideways below it. Picking
+ * one fades the paragraph's scenario out and the new one in.
+ *
+ * Outcomes (wfo-range*): a slim 0-100% track per stat with its range filled,
+ * growing from the range's start once as the stats scroll in (<Motion>).
+ *
+ * Products (wfo-product*): a linked row lights up on hover or keyboard focus
+ * and its arrow slides. The whole row is the link's hit area.
+ *
+ * Reduced motion: nothing fades, grows or slides; picking still swaps.
+ */
+
+@layer components {
+  /* Chips: one scrolling row to the screen edge on phones, wrapped from md. */
+  .wfo-chips {
+    display: flex;
+    gap: 8px;
+    margin-inline: -16px;
+    padding: 2px 16px;
+    overflow-x: auto;
+    scroll-padding-inline: 16px;
+    scrollbar-width: none;
+    @media (width >= 768px) {
+      flex-wrap: wrap;
+      margin-inline: 0;
+      padding-inline: 0;
+      overflow: visible;
+    }
+  }
+  .wfo-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .wfo-chip {
+    flex: none;
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-0);
+    color: var(--color-text);
+    font-size: var(--text-body-s);
+    line-height: 20px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .wfo-chip:hover {
+    border-color: var(--color-brand-navy);
+  }
+  .wfo-chip[aria-checked='true'] {
+    border-color: var(--color-brand-navy);
+    background-color: var(--color-brand-navy);
+    color: var(--color-text-on-dark);
+    font-weight: 600;
+  }
+
+  .wfo-scenario[data-fading] {
+    opacity: 0;
+  }
+
+  /* Outcomes: two stats side by side, a range bar under each number. */
+  .wfo-outcomes {
+    display: flex;
+    gap: 24px;
+    padding-block: 24px;
+    border-block: 1px solid var(--color-border);
+  }
+  .wfo-outcome {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column-reverse;
+    gap: 8px;
+    min-width: 0;
+  }
+  .wfo-range {
+    display: block;
+    width: 100%;
+    height: 6px;
+    margin-top: 12px;
+  }
+  .wfo-range-track {
+    fill: var(--color-neutral-200);
+  }
+  .wfo-range-fill {
+    fill: var(--color-brand-blue);
+    transform-box: fill-box;
+    transform-origin: left center;
+  }
+
+  /* Products: name over its line; the name's link stretches over the row.
+     The content keeps the live page's lowercase line, so it is capitalised here. */
+  .wfo-product-body::first-letter {
+    text-transform: uppercase;
+  }
+  .wfo-product {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .wfo-product-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .wfo-product-link:focus-visible {
+    outline: none;
+  }
+  .wfo-product:has(.wfo-product-link:focus-visible) {
+    outline: 2px solid var(--color-alert-info);
+    outline-offset: -2px;
+  }
+  .wfo-product:has(.wfo-product-link:is(:hover, :focus-visible)) {
+    background-color: var(--color-surface-sunken);
+  }
+  .wfo-arrow {
+    flex: none;
+    width: 20px;
+    color: var(--color-text-subtle);
+    font-weight: 700;
+    line-height: 26px;
+    text-align: right;
+  }
+  .wfo-product:has(.wfo-product-link:is(:hover, :focus-visible)) .wfo-arrow {
+    color: var(--color-brand-blue);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .wfo-scenario {
+      transition: opacity 160ms ease;
+    }
+    .wfo-scenario[data-fading] {
+      transition-duration: 140ms;
+    }
+    .wfo-chip {
+      transition:
+        border-color 150ms ease,
+        background-color 150ms ease,
+        color 150ms ease;
+    }
+    .wfo-product {
+      transition: background-color 200ms ease;
+    }
+    .wfo-arrow {
+      transition:
+        transform 250ms var(--motion-ease),
+        color 200ms ease;
+    }
+    .wfo-product:has(.wfo-product-link:is(:hover, :focus-visible)) .wfo-arrow {
+      transform: translateX(4px);
+    }
+
+    /* Once, on scroll-in: each range grows from its start; the second follows. */
+    .motion[data-anim]:not([data-anim='reset']) .wfo-range-fill {
+      animation: motion-grow-x 900ms var(--motion-ease) var(--motion-delay) both;
+    }
+    .motion[data-anim]:not([data-anim='reset']) .wfo-outcome + .wfo-outcome .wfo-range-fill {
+      animation-delay: calc(var(--motion-delay) + 150ms);
+    }
+  }
+}

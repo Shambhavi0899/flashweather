@@ -1,0 +1,96 @@
+/*
+ * home-hero-lightning — the home hero's strikes (components/home/
+ * hero-lightning.tsx): a bolt drawn new each time, and the clouds lighting
+ * up with it. At rest both are invisible, which is also all that reduced
+ * motion, and a browser with no JavaScript, ever shows.
+ *
+ *   home-sky     the light in the clouds, round `--strike-x`. Under the
+ *                hero's grades, so the ground the copy reads on stays dark.
+ *   home-strike  the bolt: a white-blue core over a soft blue glow. It is
+ *                there at once, flickers once, and is gone in 300ms; a
+ *                second bolt (`data-strike="once"`) does not flicker.
+ */
+
+@layer components {
+  .home-sky {
+    --strike-x: 66%;
+    background-image:
+      radial-gradient(ellipse 34% 58% at var(--strike-x) 4%, rgb(222 230 255 / 60%), transparent 72%),
+      linear-gradient(rgb(196 208 255 / 16%), rgb(196 208 255 / 5%) 60%, transparent);
+    mix-blend-mode: screen;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .home-strike {
+    visibility: hidden;
+    pointer-events: none;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .home-strike-glow {
+    stroke: #8fb0ff;
+    stroke-width: 9;
+    opacity: 0.85;
+    filter: blur(7px);
+  }
+  .home-strike-core {
+    stroke: #f4f8ff;
+    stroke-width: 2.4;
+    filter: drop-shadow(0 0 2px #c4d6ff);
+  }
+  .home-strike-glow [data-bolt='forks'] {
+    stroke-width: 5;
+  }
+  .home-strike-core [data-bolt='forks'] {
+    stroke-width: 1.2;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .home-strike[data-strike] {
+      visibility: visible;
+      animation: home-strike 300ms linear both;
+    }
+    .home-strike[data-strike='once'] {
+      animation-name: home-strike-once;
+    }
+    .home-sky[data-strike] {
+      animation: home-sky 150ms ease-out both;
+    }
+  }
+}
+
+@keyframes home-strike {
+  0%,
+  28% {
+    opacity: 1;
+  }
+  36% {
+    opacity: 0.1;
+  }
+  46%,
+  58% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes home-strike-once {
+  0%,
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes home-sky {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

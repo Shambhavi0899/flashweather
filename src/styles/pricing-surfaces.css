@@ -1,0 +1,149 @@
+/*
+ * pricing-surfaces — Pricing's "Every surface, one subscription."
+ * (AlwaysIncludedSection in components/pricing/pricing-sections.tsx,
+ * components/pricing/surface-focus.tsx), classes psf-*.
+ *
+ * Chips     a surface chip under the mouse, focused or tapped zooms and pans
+ *           the devices photo to that surface and shows its name on the
+ *           photo; leaving resets.
+ * Included  the five items fade up once, 80ms apart, as the row scrolls in
+ *           (the shared motion-rise, under <Motion>).
+ * Catalogue the arrow of "See the catalogue" slides on hover and focus.
+ *
+ * Reduced motion: the photo never moves, the label alone says which surface;
+ * the items are simply there; the arrow stays put.
+ */
+@layer components {
+  /*
+   * The focus areas, on the photo as the frame shows it: --fx / --fy are the
+   * point to look at, as fractions of the frame's width and height (the
+   * frame crops 8% off the top and the foot of the 898×501 file), and --fs is
+   * the zoom. The point is brought to --ax / --ay of the frame, above centre
+   * so it clears the caption, as far as the photo's edges allow.
+   */
+  .psf {
+    --ax: 0.5;
+    --ay: 0.44;
+  }
+  /* The laptop's screen. */
+  .psf[data-focus='command-center'] {
+    --fx: 0.26;
+    --fy: 0.46;
+    --fs: 1.4;
+  }
+  /* Both phones, from the status bar down. */
+  .psf[data-focus='mobile-app'] {
+    --fx: 0.755;
+    --fy: 0.4;
+    --fs: 1.45;
+  }
+  /* The second phone's read-outs: nearest strike in miles, the one-hour forecast bars. */
+  .psf[data-focus='api'] {
+    --fx: 0.875;
+    --fy: 0.62;
+    --fs: 1.8;
+  }
+  /* The site tags on the Command Center map, the cells the agent reads. */
+  .psf[data-focus='agent'] {
+    --fx: 0.2;
+    --fy: 0.6;
+    --fs: 1.9;
+  }
+
+  .psf-image {
+    transform-origin: 0 0;
+  }
+
+  /* The surface's name on the photo: top right, or under the pill where the frame is narrow. */
+  .psf-label {
+    position: absolute;
+    top: 48px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 12px;
+    background: rgb(4 8 24 / 0.72);
+    backdrop-filter: blur(6px);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--color-text-on-dark);
+    pointer-events: none;
+    opacity: 0;
+  }
+  @media (width >= 640px) {
+    .psf-label {
+      top: 18px;
+      right: 20px;
+      left: auto;
+    }
+  }
+  .psf-label[data-on] {
+    opacity: 1;
+  }
+
+  /* The chip's lit colour is a utility on the chip itself (data-[on]:), beside its hover. */
+  .psf-chip {
+    cursor: pointer;
+  }
+
+  .psf-arrow {
+    display: inline-block;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .psf-image {
+      transition: transform 700ms var(--motion-ease);
+    }
+    .psf[data-focus] .psf-image {
+      transform: translate(
+          clamp((1 - var(--fs)) * 100%, (var(--ax) - var(--fs) * var(--fx)) * 100%, 0%),
+          clamp((1 - var(--fs)) * 100%, (var(--ay) - var(--fs) * var(--fy)) * 100%, 0%)
+        )
+        scale(var(--fs));
+    }
+    .psf-label {
+      translate: 0 4px;
+      transition:
+        opacity 240ms ease,
+        translate 400ms var(--motion-ease);
+    }
+    .psf-label[data-on] {
+      translate: 0 0;
+    }
+    .psf-chip {
+      transition: background-color 160ms ease;
+    }
+
+    .motion[data-anim]:not([data-anim='reset']) .psf-rise {
+      animation: motion-rise 0.6s var(--motion-ease) calc(var(--motion-delay) + var(--psf-at, 0ms)) both;
+    }
+    .psf-rise:nth-child(2) {
+      --psf-at: 80ms;
+    }
+    .psf-rise:nth-child(3) {
+      --psf-at: 160ms;
+    }
+    .psf-rise:nth-child(4) {
+      --psf-at: 240ms;
+    }
+    .psf-rise:nth-child(5) {
+      --psf-at: 320ms;
+    }
+
+    .psf-arrow {
+      transition: translate 240ms var(--motion-ease);
+    }
+    .psf-catalogue:focus-visible .psf-arrow {
+      translate: 4px 0;
+    }
+    @media (hover: hover) {
+      .psf-catalogue:hover .psf-arrow {
+        translate: 4px 0;
+      }
+    }
+  }
+}

@@ -1,9 +1,10 @@
 import Link from 'next/link';
 
+import { Logo } from '@/components/logo';
 import { Motion } from '@/components/motion';
 import { comparisonRows, type ComparisonRow } from '@/content/home';
 
-import { BoltIcon, GoldBolt } from './bolt-icon';
+import { BoltIcon } from './bolt-icon';
 
 /**
  * "Reactive. We're proactive." The comparison is a real table (two columns,
@@ -78,10 +79,9 @@ export function Comparison() {
               </span>
               <span
                 aria-hidden
-                className="diff-tag-us flex rotate-3 items-center gap-2 rounded-[8px] bg-brand-navy px-[10px] py-[7px] shadow-[0_12px_28px_rgb(7_13_38/0.28)] sm:px-[14px] sm:py-[10px]"
+                className="diff-tag-us flex rotate-3 items-center rounded-[8px] bg-brand-navy px-3 py-2 shadow-[0_12px_28px_rgb(7_13_38/0.28)] sm:px-[18px] sm:py-3"
               >
-                <GoldBolt className="h-[14px] w-[10px]" />
-                <span className="text-[9px] leading-3 font-extrabold tracking-[0.08em] text-viz-gold before:content-['FLASH'] sm:text-micro sm:leading-micro sm:tracking-[0.13em]" />
+                <Logo variant="dark" size="tag" link={false} alt="" />
               </span>
             </span>
           </Motion>
@@ -116,10 +116,7 @@ export function Comparison() {
                   </span>
                 </th>
                 <th scope="col" className="bg-brand-navy px-8 py-[22px] text-left">
-                  <span className="flex items-center gap-[10px] text-micro font-bold tracking-[0.13em] text-viz-gold uppercase">
-                    <GoldBolt className="h-4 w-3" />
-                    Flash
-                  </span>
+                  <Logo variant="dark" size="column" link={false} alt="Flash" />
                 </th>
               </tr>
             </thead>
@@ -187,12 +184,16 @@ function Cell({
         {/* The column label, shown only where the table header is hidden. */}
         <span
           aria-hidden
-          className={`mb-1 flex items-center gap-2 text-[10px] leading-3 font-bold tracking-[0.13em] uppercase md:hidden ${
-            flash ? 'text-viz-gold' : 'text-text-muted'
-          }`}
+          className="mb-1 flex items-center gap-2 text-[10px] leading-3 font-bold tracking-[0.13em] text-text-muted uppercase md:hidden"
         >
-          {flash ? <GoldBolt className="h-3 w-[9px]" /> : <span className="size-2 rounded-full bg-neutral-300" />}
-          {flash ? 'Flash' : 'Everyone else'}
+          {flash ? (
+            <Logo variant="dark" size="label" link={false} alt="" />
+          ) : (
+            <>
+              <span className="size-2 rounded-full bg-neutral-300" />
+              Everyone else
+            </>
+          )}
         </span>
         <p className={`text-[15px] leading-[21px] font-bold md:text-body-l md:leading-6 ${flash ? 'text-text-on-dark' : 'text-neutral-700'}`}>{title}</p>
         <p className={`text-caption md:text-body-s md:leading-5 ${flash ? 'text-text-on-dark-muted' : 'text-text-muted'}`}>{body}</p>

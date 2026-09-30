@@ -1,0 +1,337 @@
+/*
+ * Pricing's "What does a sensor-based system cost you that Flash doesn't?"
+ * (components/pricing/sensor-cost-figure.tsx).
+ *
+ * The comparison table with two slim bars beside it, "Sensor-based" and
+ * "Flash". Once, the first time the figure scrolls into view, in about two
+ * seconds:
+ *   1. the Flash bar draws as a flat line, labelled "Software only",
+ *   2. the rows arrive one by one, and each cost row drops a labelled block
+ *      onto the Sensor-based bar,
+ *   3. Coverage arrives last and adds no block: it is reach, not a cost, so
+ *      each bar takes a short caption instead.
+ * Hovering a row lights its block and steps the others back.
+ *
+ * The blocks are all one height. They count line items; there are no dollar
+ * figures to scale them by.
+ *
+ * Below 1200px the bars sit above the table and run horizontally, blocks
+ * arriving left to right; the table scrolls sideways as it did before.
+ *
+ * The script only sets `data-anim` (idle → run, then removes it). The markup
+ * is the final frame, which is what reduced motion and a browser without
+ * JavaScript get. No grid lines, no axis, no seam.
+ */
+@layer components {
+  .sc {
+    --sc-block: var(--color-neutral-700);
+    --sc-block-on: #c9d1e3;
+    --sc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    /* The sequence: when the first row starts, and the gap between rows. */
+    --sc-at: 300ms;
+    --sc-step: 300ms;
+    /* Where a block arrives from: the right here, above from 1200px. */
+    --sc-from-x: 18px;
+    --sc-from-y: 0px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ---------- The bars ---------- */
+
+  .sc-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .sc-note {
+    order: 1;
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+    color: var(--color-text-on-dark-muted);
+  }
+  .sc-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .sc-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* The bar's name, and its coverage caption. */
+  .sc-legend {
+    order: -1;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--color-text-on-dark-muted);
+  }
+  .sc-bar[data-bar='flash'] .sc-legend {
+    color: var(--color-text-on-dark);
+  }
+  .sc-name {
+    font-size: var(--text-micro);
+    line-height: var(--leading-micro);
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+  .sc-reach {
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+    transition: color 0.2s ease-out;
+  }
+  .sc-reach[data-on] {
+    color: var(--color-text-on-dark);
+  }
+
+  .sc-stack {
+    display: flex;
+    gap: 4px;
+  }
+  .sc-block {
+    --sc-i: 0;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .sc-block:nth-child(2) {
+    --sc-i: 1;
+  }
+  .sc-block:nth-child(3) {
+    --sc-i: 2;
+  }
+  .sc-block:nth-child(4) {
+    --sc-i: 3;
+  }
+  .sc-block:nth-child(5) {
+    --sc-i: 4;
+  }
+  .sc-block:nth-child(6) {
+    --sc-i: 5;
+  }
+  .sc-fill {
+    height: 28px;
+    border-radius: var(--radius-xs);
+    background-color: var(--sc-block);
+    transition:
+      background-color 0.2s ease-out,
+      opacity 0.2s ease-out;
+  }
+  .sc-label {
+    font-size: var(--text-micro);
+    line-height: var(--leading-micro);
+    font-weight: 600;
+    color: #c9d1e3;
+    transition: color 0.2s ease-out;
+  }
+  .sc-block[data-on] .sc-fill {
+    background-color: var(--sc-block-on);
+  }
+  .sc-block[data-on] .sc-label {
+    color: var(--color-text-on-dark);
+  }
+  .sc[data-active] .sc-block:not([data-on]) .sc-fill {
+    opacity: 0.5;
+  }
+  .sc[data-active] .sc-block:not([data-on]) .sc-label {
+    color: var(--color-neutral-500);
+  }
+
+  /* Flash: a bar with nothing in it. Here a tick at the origin, from 1200px a flat line. */
+  .sc-flat {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  .sc-flat-label {
+    font-size: var(--text-caption);
+    line-height: var(--leading-caption);
+    font-weight: 600;
+    color: var(--color-text-on-dark);
+  }
+  .sc-flat-line {
+    flex-shrink: 0;
+    width: 2px;
+    height: 28px;
+    border-radius: 1px;
+    background-color: var(--color-viz-gold);
+    transform-origin: 50% 100%;
+  }
+
+  /* ---------- The table ---------- */
+
+  .sc-frame {
+    min-width: 0;
+  }
+  .sc-table {
+    table-layout: fixed;
+  }
+  .sc-col-item {
+    width: 22%;
+  }
+  .sc-col-flash {
+    width: 39%;
+  }
+  .sc-row {
+    --sc-i: 0;
+    transition: background-color 0.2s ease-out;
+  }
+  .sc-row:nth-child(2) {
+    --sc-i: 1;
+  }
+  .sc-row:nth-child(3) {
+    --sc-i: 2;
+  }
+  .sc-row:nth-child(4) {
+    --sc-i: 3;
+  }
+  .sc-row:nth-child(5) {
+    --sc-i: 4;
+  }
+  .sc-row:nth-child(6) {
+    --sc-i: 5;
+  }
+  .sc-row[data-on] {
+    background-color: rgb(255 255 255 / 5%);
+  }
+
+  /* ---------- Bars beside the table, from 1200px ---------- */
+
+  @media (width >= 1200px) {
+    .sc {
+      --sc-from-x: 0px;
+      --sc-from-y: -18px;
+      flex-direction: row;
+      align-items: stretch;
+      gap: 40px;
+    }
+    .sc-frame {
+      flex: 1 1 0;
+    }
+    .sc-bars {
+      order: 1;
+      flex-shrink: 0;
+      justify-content: space-between;
+      gap: 32px;
+      width: 288px;
+      padding-block: 16px 22px;
+    }
+    .sc-note {
+      order: 0;
+      max-width: 240px;
+    }
+    .sc-chart {
+      flex-direction: row;
+      align-items: flex-end;
+      gap: 24px;
+    }
+    .sc-bar {
+      flex-shrink: 0;
+      gap: 14px;
+      width: 116px;
+    }
+    .sc-bar[data-bar='sensor'] {
+      width: 148px;
+    }
+    .sc-legend {
+      order: 0;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 4px;
+    }
+    /* The first line item is the bottom block. */
+    .sc-stack {
+      flex-direction: column-reverse;
+    }
+    .sc-block {
+      flex: none;
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+    }
+    .sc-fill {
+      flex-shrink: 0;
+      width: 40px;
+      height: 76px;
+    }
+    .sc-label {
+      font-size: var(--text-caption);
+      line-height: var(--leading-caption);
+    }
+    .sc-flat {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+    .sc-flat-line {
+      width: 40px;
+      height: 2px;
+      transform-origin: 0 50%;
+    }
+  }
+
+  /* ---------- The reveal ---------- */
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* `backwards`, so a finished row or block is back on its own styles and
+       the hover can change them. */
+    .sc[data-anim] .sc-row {
+      --sc-row-at: calc(var(--sc-at) + var(--sc-i) * var(--sc-step));
+      animation: sc-line 0.4s ease-out var(--sc-row-at) backwards;
+    }
+    .sc[data-anim] .sc-row > * {
+      animation: sc-rise 0.45s var(--sc-ease) var(--sc-row-at) backwards;
+    }
+    .sc[data-anim] .sc-block {
+      animation: sc-drop 0.5s var(--sc-ease) calc(var(--sc-at) + var(--sc-i) * var(--sc-step) + 80ms) backwards;
+    }
+    /* With the Coverage row, the fifth. */
+    .sc[data-anim] .sc-reach {
+      animation: motion-fade 0.45s ease-out calc(var(--sc-at) + 4 * var(--sc-step) + 80ms) backwards;
+    }
+    .sc[data-anim] .sc-flat-line {
+      animation: motion-grow-y 0.45s var(--sc-ease) backwards;
+    }
+    .sc[data-anim] .sc-flat-label {
+      animation: motion-fade 0.4s ease-out 0.2s backwards;
+    }
+    @media (width >= 1200px) {
+      .sc[data-anim] .sc-flat-line {
+        animation-name: motion-grow-x;
+      }
+    }
+    .sc[data-anim='idle'] :is(.sc-row, .sc-row > *, .sc-block, .sc-reach, .sc-flat-line, .sc-flat-label) {
+      animation-play-state: paused;
+    }
+  }
+}
+
+/* Implicit to-frames resolve to the element's own final state. */
+@keyframes sc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes sc-drop {
+  from {
+    opacity: 0;
+    transform: translate(var(--sc-from-x), var(--sc-from-y));
+  }
+}
+@keyframes sc-line {
+  from {
+    border-bottom-color: transparent;
+  }
+}

@@ -1,0 +1,223 @@
+/*
+ * why-flash-options — "Your options" and "Everyone else vs the agentic
+ * approach" on /why-flash/everyone-else-vs-flash/.
+ *
+ * opt-*: the three option cards (components/why-flash/option-cards.tsx).
+ * Equal height in a row, each ending in one action pinned to its foot. The
+ * "Start here" card takes a gold border and lifts 8px (4px below 1024px,
+ * where it also moves to the top via `order`, so DOM order stays Flash,
+ * Detection, DIY). When the self-check moves the badge, the old one fades
+ * and drops 4px (120ms), the new one fades in and settles from -4px (200ms,
+ * 60ms delay), and the border and lift ease across over 240ms.
+ *
+ * agf-*: the Ask, Answer, Act flow. Once, as it scrolls in (<Motion>), the
+ * steps fade in left to right and a thin connector draws from each step to
+ * the next. Below 768px the steps stack and the connector runs down.
+ *
+ * Reduced motion: everything is static; the badge and lift still switch.
+ * No grid.
+ */
+
+@layer components {
+  .opt-card {
+    position: relative;
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    padding: 24px;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background-color: var(--color-neutral-0);
+    box-shadow:
+      0 0 0 1px transparent,
+      0 1px 2px #0b13220d,
+      0 12px 32px #0b13220f;
+    @media (width >= 768px) {
+      padding: 28px;
+    }
+  }
+  .opt-card[data-picked] {
+    border-color: var(--color-viz-gold);
+    box-shadow:
+      0 0 0 1px var(--color-viz-gold),
+      0 2px 4px #0b13220f,
+      0 24px 48px -12px #0b13221f;
+    translate: 0 -4px;
+    @media (width < 1024px) {
+      order: -1;
+    }
+    @media (width >= 1024px) {
+      translate: 0 -8px;
+    }
+  }
+
+  /* The badge sits across the card's top edge, on the text column. */
+  .opt-badges {
+    position: absolute;
+    top: -14px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    visibility: hidden;
+    translate: 0 4px;
+    @media (width >= 768px) {
+      left: 24px;
+    }
+  }
+  .opt-card[data-picked] .opt-badges {
+    opacity: 1;
+    visibility: visible;
+    translate: 0 0;
+  }
+  .opt-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px 6px 10px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-viz-gold);
+    box-shadow: 0 4px 10px -4px #5c492873;
+    color: var(--color-brand-navy);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 800;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+  .opt-note {
+    padding: 5px 12px;
+    border: 1px solid var(--color-viz-gold);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-0);
+    color: var(--color-gold-900);
+    font-size: var(--text-micro);
+    line-height: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* Ask, Answer, Act. Each step's rail is its dot plus the connector to the next. */
+  .agf {
+    display: flex;
+    flex-direction: column;
+    @media (width >= 768px) {
+      flex-direction: row;
+    }
+  }
+  .agf-step {
+    display: flex;
+    flex: 1 1 0;
+    gap: 16px;
+    min-width: 0;
+    @media (width >= 768px) {
+      flex-direction: column;
+      gap: 20px;
+    }
+  }
+  .agf-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    padding-top: 6px;
+    @media (width >= 768px) {
+      flex-direction: row;
+      padding-top: 0;
+    }
+  }
+  .agf-dot {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--color-brand-blue);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-surface-sunken);
+  }
+  .agf-step:last-child .agf-dot {
+    border-color: var(--color-viz-gold);
+    background-color: var(--color-viz-gold);
+  }
+  .agf-line {
+    flex: 1 1 auto;
+    width: 1px;
+    min-height: 24px;
+    background-color: color-mix(in srgb, var(--color-brand-blue) 40%, transparent);
+    transform-origin: top;
+    --agf-from: 1 0;
+    @media (width >= 768px) {
+      width: auto;
+      height: 1px;
+      min-height: 0;
+      margin-right: 8px;
+      transform-origin: left;
+      --agf-from: 0 1;
+    }
+  }
+  .agf-step:last-child .agf-line {
+    visibility: hidden;
+  }
+  .agf-step:last-child .agf-copy {
+    padding-bottom: 0;
+  }
+  .agf-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 28px;
+    @media (width >= 768px) {
+      padding-right: 24px;
+      padding-bottom: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .opt-card {
+      transition:
+        translate 240ms var(--motion-ease),
+        border-color 240ms ease-out,
+        box-shadow 240ms ease-out;
+    }
+    .opt-badges {
+      transition:
+        opacity 120ms ease-in,
+        translate 120ms ease-in,
+        visibility 0s linear 120ms;
+    }
+    /* Only once the reader has moved it, so the default badge doesn't animate on load. */
+    .opt-list[data-moved] .opt-card[data-picked] .opt-badges {
+      transition: none;
+      animation: opt-badge-in 200ms var(--motion-ease) 60ms both;
+    }
+
+    .agf[data-anim]:not([data-anim='reset']) .agf-step {
+      animation: agf-in 500ms var(--motion-ease) calc(var(--motion-delay) + var(--agf-i) * 380ms) both;
+    }
+    /* One keyframe for both directions, so crossing 768px doesn't restart the draw. */
+    .agf[data-anim]:not([data-anim='reset']) .agf-line {
+      animation: agf-draw 360ms ease-out calc(var(--motion-delay) + var(--agf-i) * 380ms + 240ms) both;
+    }
+  }
+}
+
+@keyframes opt-badge-in {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+@keyframes agf-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+@keyframes agf-draw {
+  from {
+    scale: var(--agf-from);
+  }
+}

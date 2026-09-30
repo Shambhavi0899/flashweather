@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Motion } from '@/components/motion';
-import type { Industry } from '@/content/industries';
 import { linkKind } from '@/content/link-kinds';
 
 import { SectionHeading } from './primitives';
@@ -22,10 +21,19 @@ const SETTLE_MS = 700;
  * The related links as one row of cards that scrolls sideways and snaps card
  * by card: swipe on touch, drag with a mouse, or use the two arrow buttons
  * beside the heading. Each card is one link: a type tag read from where it
- * points (content/link-kinds.ts), the title and "Read →".
+ * points (content/link-kinds.ts) unless the link names its own `kind`, the
+ * title and "Read →". `children` sit under the row, on the page gutter.
  * Styles: `kr-*` in styles/industry-keep-reading.css.
  */
-export function KeepReading({ id, related }: { id: string; related: NonNullable<Industry['related']> }) {
+export function KeepReading({
+  id,
+  related,
+  children,
+}: {
+  id: string;
+  related: { heading: string; intro?: string; links: { title: string; href: string; kind?: string }[] };
+  children?: React.ReactNode;
+}) {
   const scroller = useRef<HTMLDivElement>(null);
   const [ends, setEnds] = useState({ start: true, end: false });
 
@@ -170,7 +178,7 @@ export function KeepReading({ id, related }: { id: string; related: NonNullable<
             {related.links.map((link) => (
               <li key={link.href} className="kr-item">
                 <Link href={link.href} className="kr-card">
-                  <span className="kr-tag">{linkKind(link.href)}</span>
+                  <span className="kr-tag">{link.kind ?? linkKind(link.href)}</span>
                   <span className="kr-title">{link.title}</span>
                   <span className="kr-read">
                     Read
@@ -184,6 +192,7 @@ export function KeepReading({ id, related }: { id: string; related: NonNullable<
           </ul>
         </div>
       </Motion>
+      {children && <div className="container-page kr-more">{children}</div>}
     </section>
   );
 }

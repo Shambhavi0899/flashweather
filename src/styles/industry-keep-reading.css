@@ -136,6 +136,14 @@
     --kr-i: 7;
   }
 
+  /* What a page adds under the row, such as a line of text links. */
+  .kr-more {
+    margin-top: 32px;
+    @media (width >= 768px) {
+      margin-top: 40px;
+    }
+  }
+
   /* ---------- Card ---------- */
 
   .kr-card {
