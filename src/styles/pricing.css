@@ -54,4 +54,12 @@
       oklab(17.1% -0.0005 -0.052 / 90%) 100%
     );
   }
+
+  /* "Trusted on the field" on Pricing (under <Motion>): the photo tile and the
+     names take the site's fade-up, the shared motion-rise, together and once
+     as the strip scrolls in. Reduced motion: none of it (the shared .motion
+     rule). */
+  .motion[data-anim]:not([data-anim='reset']) > .pricing-trusted-rise {
+    animation: motion-rise 0.6s var(--motion-ease) var(--motion-delay) both;
+  }
 }

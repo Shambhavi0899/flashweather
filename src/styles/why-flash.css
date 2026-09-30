@@ -27,15 +27,6 @@
     background-image: linear-gradient(in oklab 90deg, oklab(17.1% -.0005 -0.052 / 97%) 0%, oklab(17.1% -.0005 -0.052 / 88%) 46%, oklab(17.1% -.0005 -0.052 / 42%) 100%);
   }
 
-  /* Alert clock: the dashed gold prediction window, vertical below xl, horizontal from xl. */
-  .why-flash-clock-window {
-    background-image: repeating-linear-gradient(180deg, var(--color-viz-gold) 0 6px, transparent 6px 12px);
-
-    @variant xl {
-      background-image: repeating-linear-gradient(90deg, var(--color-viz-gold) 0 6px, transparent 6px 12px);
-    }
-  }
-
   /*
    * Comparison diagrams (this page's table and the home page's), on the
    * shared .motion system (globals.css, components/motion.tsx). Rows stagger
@@ -289,5 +280,199 @@
   50% {
     opacity: 0.6;
     transform: scale(0.96);
+  }
+}
+
+/*
+ * Everyone else vs Flash, "When is a detection-based tool the better fit?"
+ * (components/why-flash/detection-fit.tsx). Each case is a row that toggles
+ * on click, with an "Applies to us" pill at its top right; a selected row
+ * takes a 3px gold left edge and a faint gold wash, and the rules either
+ * side of it step aside. The row bleeds past the text column by its own
+ * padding, so the copy stays on the column's edge. "Your fit" sits under
+ * the intro and sticks while the rows scroll from 1024px; on a phone it is
+ * simply above the rows. Its verdict crossfades when it changes; reduced
+ * motion swaps it. No grid.
+ */
+@layer components {
+  .fit-case {
+    --fit-bleed: 12px;
+    position: relative;
+    margin-inline: calc(-1 * var(--fit-bleed));
+    padding: 20px var(--fit-bleed);
+    border-radius: 12px;
+    box-shadow: inset 0 0 0 0 var(--color-viz-gold);
+    cursor: pointer;
+    user-select: none;
+
+    @variant md {
+      --fit-bleed: 16px;
+    }
+  }
+  /* The rule between two cases, on the text column's width. */
+  .fit-case + .fit-case::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    inset-inline: var(--fit-bleed);
+    height: 1px;
+    background-color: var(--color-border);
+  }
+  @media (hover: hover) {
+    .fit-case:hover {
+      background-color: var(--color-surface-sunken);
+    }
+  }
+  .fit-case:focus-within:has(.fit-pill:focus-visible) {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: -2px;
+  }
+  .fit-case[data-on] {
+    background-color: color-mix(in srgb, var(--color-viz-gold) 6%, var(--color-neutral-0));
+    box-shadow: inset 3px 0 0 0 var(--color-viz-gold);
+  }
+  .fit-case[data-on]::before,
+  .fit-case[data-on] + .fit-case::before {
+    opacity: 0;
+  }
+
+  /* "Applies to us": outline, then filled brand blue with a tick once pressed. */
+  .fit-pill {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1.5px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-0);
+    font-size: var(--text-caption);
+    line-height: 18px;
+    font-weight: 600;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+  .fit-pill:hover {
+    border-color: var(--color-text-muted);
+  }
+  .fit-pill:focus-visible {
+    outline: none;
+  }
+  .fit-pill-tick {
+    display: none;
+    font-weight: 700;
+  }
+  .fit-pill[aria-pressed='true'] {
+    border-color: var(--color-brand-blue);
+    background-color: var(--color-brand-blue);
+    color: var(--color-text-on-dark);
+  }
+  .fit-pill[aria-pressed='true'] .fit-pill-tick {
+    display: inline;
+  }
+  @media (forced-colors: active) {
+    .fit-pill[aria-pressed='true'] {
+      forced-color-adjust: none;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+  }
+
+  /* "Your fit" */
+  .fit-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 20px 22px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background-color: var(--color-surface-sunken);
+    box-shadow: inset 3px 0 0 0 transparent;
+
+    @variant lg {
+      position: sticky;
+      top: 96px;
+    }
+  }
+  .fit-summary[data-on] {
+    box-shadow: inset 3px 0 0 0 var(--color-viz-gold);
+  }
+  .fit-summary-label {
+    font-size: var(--text-micro);
+    line-height: var(--leading-micro);
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .fit-summary-count {
+    font-size: var(--text-h3);
+    line-height: var(--leading-h3);
+    font-weight: 800;
+    letter-spacing: var(--tracking-heading);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+  }
+  .fit-summary-next {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    min-height: 44px;
+    font-size: var(--text-body-s);
+    line-height: var(--leading-caption);
+    font-weight: 700;
+    color: var(--color-brand-blue);
+  }
+  .fit-summary-next:hover {
+    text-decoration: underline;
+  }
+
+  /* The verdict. The outgoing one sits on top of the new one while it fades. */
+  .fit-verdict {
+    position: relative;
+  }
+  .fit-verdict-line {
+    font-size: var(--text-body);
+    line-height: var(--leading-body-s);
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  .fit-verdict-out {
+    position: absolute;
+    inset: 0 0 auto;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .fit-case,
+    .fit-summary {
+      transition:
+        box-shadow 0.2s ease-out,
+        background-color 0.2s ease-out;
+    }
+    .fit-pill {
+      transition:
+        background-color 0.15s ease-out,
+        border-color 0.15s ease-out,
+        color 0.15s ease-out;
+    }
+    .fit-verdict-in {
+      animation: fit-in 0.22s ease-out 0.06s backwards;
+    }
+    .fit-verdict-out {
+      animation: fit-out 0.16s ease-in forwards;
+    }
+  }
+}
+
+@keyframes fit-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fit-out {
+  to {
+    opacity: 0;
   }
 }

@@ -1,0 +1,186 @@
+/*
+ * case-study-story — Case study: Troon's story sections, "What was the
+ * problem across the portfolio?" to "How did it scale across the
+ * portfolio?" (app/case-studies/troon/page.tsx).
+ *
+ * From 1024px the "At a glance" card sticks under the header while the
+ * story scrolls, with the chapter markers (components/case-study/
+ * story-chapters.tsx) at its head: Problem, Change, Scale, joined by a thin
+ * vertical line. A marker fills gold as its section comes into view and the
+ * line fills down to it in step with the scroll (`--css-fill`, 0 to 1, set
+ * by the script).
+ *
+ * Below 1024px the card is simply above the story and the markers are a
+ * slim bar that sticks under the header for the length of the section, the
+ * line running across it.
+ *
+ * Story blocks (`css-rise`, under <Motion>): the site's shared fade-up,
+ * once, as each block scrolls in. Reduced motion: no fade-up (the shared
+ * .motion rule), and the markers change without a transition.
+ * No grid. The section itself does not move.
+ */
+@layer components {
+  .css {
+    --css-fill: 0;
+    --css-dot: 12px;
+    --css-rule: var(--color-border-strong);
+    position: relative;
+  }
+  .css-list {
+    display: flex;
+  }
+  .css-link {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: var(--text-body-s);
+    line-height: 20px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+  .css-link:hover,
+  .css-link[data-on] {
+    color: var(--color-text);
+  }
+  .css-link:focus-visible {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  .css-dot {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    width: var(--css-dot);
+    height: var(--css-dot);
+    border: 1.5px solid var(--css-rule);
+    border-radius: 50%;
+    background-color: var(--color-neutral-0);
+  }
+  .css-link[data-on] .css-dot {
+    border-color: var(--color-gold-on-light);
+    background-color: var(--color-viz-gold);
+  }
+  .css-link[aria-current] .css-dot {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-viz-gold) 22%, transparent);
+  }
+  .css-line {
+    position: absolute;
+    background-color: var(--css-rule);
+  }
+  .css-line-fill {
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-viz-gold);
+  }
+
+  /* ------------------------------------------------------------ Rail, in the card */
+  .css-rail {
+    display: none;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .css-rail .css-list {
+    flex-direction: column;
+  }
+  .css-rail .css-link {
+    gap: 14px;
+  }
+  .css-rail .css-dot {
+    background-color: var(--color-surface-sunken);
+  }
+  .css-rail .css-link[data-on] .css-dot {
+    background-color: var(--color-viz-gold);
+  }
+  /* From the first dot's centre to the last one's: each row is 44px tall. */
+  .css-rail .css-line {
+    top: 22px;
+    bottom: calc(22px + 12px);
+    left: calc(var(--css-dot) / 2 - 1px);
+    width: 2px;
+  }
+  .css-rail .css-line-fill {
+    transform: scaleY(var(--css-fill));
+    transform-origin: center top;
+  }
+
+  /* ------------------------------------------------------------ Bar, on a phone */
+  .css-bar {
+    position: sticky;
+    top: var(--site-header-h-compact);
+    z-index: 20;
+    margin-inline: -16px;
+    padding-inline: 16px;
+    border-bottom: 1px solid var(--color-border);
+    background-color: color-mix(in srgb, var(--color-neutral-0) 94%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+
+    @variant md {
+      margin-inline: -40px;
+      padding-inline: 40px;
+    }
+  }
+  .css-bar .css-list {
+    justify-content: space-between;
+  }
+  .css-bar .css-link {
+    gap: 8px;
+    font-size: var(--text-caption);
+  }
+  .css-bar .css-dot {
+    --css-dot: 10px;
+  }
+  /* Along the bar's bottom edge, over its border. */
+  .css-bar .css-line {
+    inset: auto 0 -1px;
+    height: 2px;
+    background-color: transparent;
+  }
+  .css-bar .css-line-fill {
+    transform: scaleX(calc(0.12 + var(--css-fill) * 0.88));
+    transform-origin: left center;
+  }
+  .css-bar:not(:has([data-on])) .css-line-fill {
+    transform: scaleX(0);
+  }
+
+  @variant lg {
+    .css-rail {
+      display: block;
+    }
+    .css-bar {
+      display: none;
+    }
+    .css-card {
+      position: sticky;
+      top: calc(var(--site-header-h-compact) + 24px);
+    }
+  }
+
+  /* Anchor targets clear the header, and on a phone the bar under it. */
+  .css-section {
+    scroll-margin-top: 64px;
+
+    @variant lg {
+      scroll-margin-top: 24px;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .css-link,
+    .css-dot {
+      transition:
+        color 0.2s ease-out,
+        background-color 0.2s ease-out,
+        border-color 0.2s ease-out,
+        box-shadow 0.2s ease-out;
+    }
+  }
+
+  /* ------------------------------------------------------------ Fade-up */
+  .motion[data-anim]:not([data-anim='reset']) > .css-rise {
+    animation: motion-rise 0.6s var(--motion-ease) var(--motion-delay) both;
+  }
+}

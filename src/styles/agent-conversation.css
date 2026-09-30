@@ -56,6 +56,15 @@
     opacity: 1;
     filter: none;
   }
+  /* A panel that opens mid-answer (data-chat-lead): what has already been
+     said is simply there, with no entrance. */
+  .chat[data-chat-lead][data-steps] :is(.chat-bubble, .chat-agent, .chat-badge) {
+    opacity: 1;
+    animation: none;
+  }
+  .chat[data-chat] .chat-word.is-lead {
+    transition: none;
+  }
 
   /* 1 · The query types into the composer, then sends as a bubble. */
   .chat[data-typing] .chat-placeholder {

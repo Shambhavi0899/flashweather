@@ -30,6 +30,7 @@ export function ButtonLink({
   variant = 'gold',
   size = 'md',
   icon,
+  newTab = false,
   className = '',
 }: {
   href: string;
@@ -38,19 +39,27 @@ export function ButtonLink({
   size?: keyof typeof sizes;
   /** A trailing glyph such as ↗ or →; hidden from screen readers. */
   icon?: string;
+  /** An external link that opens in a new tab, and says so to screen readers. */
+  newTab?: boolean;
   className?: string;
 }) {
-  const external = /^https?:\/\//.test(href);
+  const external = /^(https?:\/\/|mailto:)/.test(href);
   const classes = `inline-flex shrink-0 items-center justify-center gap-[14px] rounded-xs font-extrabold transition ${variants[variant]} ${sizes[size]} ${className}`;
   const content = (
     <>
       {children}
       {icon && <span aria-hidden>{icon}</span>}
+      {external && newTab && <span className="sr-only">(opens in a new tab)</span>}
     </>
   );
 
   return external ? (
-    <a href={href} className={classes} rel="noopener">
+    <a
+      href={href}
+      className={classes}
+      target={newTab ? '_blank' : undefined}
+      rel={newTab ? 'noopener noreferrer' : 'noopener'}
+    >
       {content}
     </a>
   ) : (

@@ -1,6 +1,7 @@
 import { AgentSection } from '@/components/home/agent-section';
 import { Catalogue } from '@/components/home/catalogue';
 import { Comparison } from '@/components/home/comparison';
+import { Customers } from '@/components/home/customers';
 import { Hero } from '@/components/home/hero';
 import { HowItWorks } from '@/components/home/how-it-works';
 import { Industries } from '@/components/home/industries';
@@ -48,6 +49,7 @@ export default function Home() {
         <AgentSection />
         <Comparison />
         <SeeWhatsComing />
+        <Customers />
         <Catalogue />
         <Industries />
         <Products />

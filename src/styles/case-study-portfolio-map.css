@@ -1,0 +1,161 @@
+/*
+ * case-study-portfolio-map — Case study: Troon's portfolio map with the event
+ * log (components/case-study/portfolio-map.tsx, portfolio-map-motion.tsx),
+ * classes pmap-*.
+ *
+ * At rest the figure is the design's frame, untouched.
+ *
+ * Scroll-in   the log entries come in in time order, 150ms apart, and each
+ *             entry's pin pulses once as its entry appears.
+ * Highlight   an entry under the mouse, focused or tapped lights itself and
+ *             rings its property's pin; a pin under the mouse rings itself
+ *             and lights its entries. The other properties' labels step back
+ *             so the ringed one reads. Below lg, where the map is cropped and
+ *             its labels are small, the ringed pin also gets a label chip.
+ *
+ * No data-anim (no JavaScript, reduced motion): every entry is shown and
+ * nothing pulses; the highlight still works, it just switches at once.
+ */
+@layer components {
+  /* ---------- Log entries ---------- */
+
+  /* The button bleeds 8px / 4px past the design's row so its highlight has room; the row itself does not move. */
+  .pmap-entry {
+    display: flex;
+    gap: 12px;
+    width: calc(100% + 16px);
+    margin: -4px -8px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .pmap-entry-text {
+    color: var(--color-text-on-dark-muted);
+  }
+  .pmap-entry[data-on] {
+    background: rgb(255 255 255 / 0.08);
+  }
+  .pmap-entry[data-on] .pmap-entry-text {
+    color: var(--color-text-on-dark);
+  }
+  .pmap-entry:focus-visible {
+    outline-color: var(--color-text-on-dark);
+    outline-offset: 0;
+  }
+
+  /* ---------- Pins ---------- */
+
+  .pmap-pin {
+    cursor: pointer;
+  }
+  .pmap-pin :is(.pmap-ring, .pmap-pulse) {
+    opacity: 0;
+    pointer-events: none;
+    transform-box: fill-box;
+    transform-origin: center;
+    vector-effect: non-scaling-stroke;
+  }
+  .pmap-pin[data-on] .pmap-ring {
+    opacity: 1;
+  }
+  .pmap-pin[data-on] .pmap-label {
+    fill: var(--color-text-on-dark);
+  }
+  .pmap[data-active] .pmap-pin:not([data-on]) .pmap-label {
+    opacity: 0.45;
+  }
+
+  /* ---------- The label chip, below lg ---------- */
+
+  /* The SVG covers the map (xMidYMid slice), so a pin sits at the centre plus its offset at the cover scale. */
+  .pmap-map {
+    container-type: size;
+  }
+  .pmap-chip {
+    --pmap-scale: max(100cqw / 1248, 100cqh / 440);
+    position: absolute;
+    left: calc(50cqw + (var(--x) - 624) * var(--pmap-scale));
+    top: calc(50cqh + (var(--y) - 220) * var(--pmap-scale) - 14px);
+    translate: -50% -100%;
+    border: 1px solid var(--color-border-on-dark);
+    border-radius: 6px;
+    padding: 4px 8px;
+    background: var(--color-brand-navy-deep);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--color-text-on-dark);
+    pointer-events: none;
+    visibility: hidden;
+    opacity: 0;
+  }
+  .pmap-chip[data-on] {
+    visibility: visible;
+    opacity: 1;
+  }
+  @media (width >= 1024px) {
+    .pmap-chip {
+      display: none;
+    }
+  }
+
+  /* ---------- Motion ---------- */
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pmap {
+      --pmap-step: 150ms;
+    }
+    .pmap-entry,
+    .pmap-entry-text,
+    .pmap-label {
+      transition:
+        background-color 160ms ease,
+        color 160ms ease,
+        fill 160ms ease,
+        opacity 160ms ease;
+    }
+    .pmap-ring {
+      scale: 0.6;
+      transition:
+        opacity 160ms ease,
+        scale 240ms var(--motion-ease);
+    }
+    .pmap-pin[data-on] .pmap-ring {
+      scale: 1;
+    }
+    .pmap-chip {
+      transition:
+        opacity 160ms ease,
+        visibility 160ms;
+    }
+
+    .pmap[data-anim='idle'] .pmap-row {
+      opacity: 0;
+    }
+    .pmap[data-anim='run'] .pmap-row {
+      animation: pmap-entry 420ms var(--motion-ease) calc(var(--i) * var(--pmap-step)) backwards;
+    }
+    .pmap[data-anim='run'] .pmap-pulse {
+      animation: pmap-pulse 720ms ease-out calc(var(--i) * var(--pmap-step));
+    }
+  }
+
+  @keyframes pmap-entry {
+    from {
+      opacity: 0;
+      translate: 0 6px;
+    }
+  }
+  @keyframes pmap-pulse {
+    from {
+      opacity: 0.9;
+      scale: 1;
+    }
+    to {
+      opacity: 0;
+      scale: 3.4;
+    }
+  }
+}

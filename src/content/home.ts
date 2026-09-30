@@ -20,37 +20,63 @@ export const heroImage: Img = {
   alt: 'Rain sweeping across a golf course fairway under a dark storm sky, the hour before a strike that Flash Weather AI predicts',
 };
 
-export const heroSurfaces = [
+/**
+ * The hero's product deck, front to back. `name` is the card's label and `tab`
+ * its shorter name in the tab row under the deck; `chips` are the facts shown under its visual, in the
+ * site's own type. The two images are cut from the product renders so they
+ * carry no lettering of their own: the laptop's map alone, and the first
+ * three phones. Flash Agent's visual is the live chat, so it has no image.
+ */
+export type HeroSurface = {
+  id: 'command-center' | 'mobile-app' | 'flash-agent';
+  tab: string;
+  name: string;
+  title: string;
+  body: string;
+  href: string;
+  image?: Img;
+  chips?: readonly string[];
+};
+
+export const heroSurfaces: readonly HeroSurface[] = [
   {
-    tag: '01 · Weather Command Center',
-    title: 'Every site on one screen',
-    body: 'Lightning, hail, heat, wind and rain on the same 1×1 km grid',
-    href: '/products/weather-command-center/',
-    image: {
-      src: `${IMG}/weather-command-center-lightning-map.png`,
-      alt: 'Weather Command Center map showing lightning probability cells at 1×1 km resolution',
-    },
-    height: 'h-[186px]',
-  },
-  {
-    tag: '02 · Flash Mobile App',
+    id: 'mobile-app',
+    tab: 'Mobile App',
+    name: 'Flash Mobile App',
     title: '18 hours of future radar',
     body: "The same forecast in the crew's pocket",
     href: '/products/mobile-app/',
     image: {
-      src: `${IMG}/flash-mobile-app-future-radar-phones.png`,
-      alt: 'Four phones running the Flash mobile app with lightning probability and future radar maps',
+      src: `${IMG}/hero/flash-mobile-app-three-phones.webp`,
+      alt: 'Three phones running the Flash mobile app: lightning probability, 18-hour future radar and live radar',
     },
-    height: 'h-[150px]',
+    chips: ['Lightning probability', 'Future radar', 'Live radar'],
   },
-] as const;
-
-export const heroBaseline: { label: string; href?: string }[] = [
-  { label: 'Lightning prediction', href: '/products/lightning-prediction/' },
-  { label: 'Hail prediction', href: '/products/hail-prediction/' },
-  { label: '18-hour future radar' },
-  { label: 'Flash Agent', href: '/products/flash-agent/' },
+  {
+    id: 'command-center',
+    tab: 'Command Center',
+    name: 'Weather Command Center',
+    title: 'Every site on one screen',
+    body: 'Lightning, hail, heat, wind and rain on the same 1×1 km grid',
+    href: '/products/weather-command-center/',
+    image: {
+      src: `${IMG}/hero/weather-command-center-lightning-probability-map.webp`,
+      alt: 'Weather Command Center map showing lightning probability cells at 1×1 km resolution',
+    },
+    chips: ['99.6% accuracy', '1×1 km', '6-hour outlook'],
+  },
+  {
+    id: 'flash-agent',
+    tab: 'Flash Agent',
+    name: 'Flash Agent',
+    title: 'Ask in plain language',
+    body: 'A go or no-go, then action in the tools you already run',
+    href: '/products/flash-agent/',
+  },
 ];
+
+/** Where "See the Flash difference" goes: the film, on YouTube, in a new tab. */
+export const heroVideoHref = 'https://www.youtube.com/watch?v=rp9dq-HIy6o';
 
 // ---------------------------------------------------------------------------
 // Numbers
@@ -224,26 +250,32 @@ export const agentTabs: AgentTab[] = [
   },
 ];
 
-export const agentHarness = [
-  {
-    tag: '01 · Prediction engine',
+/**
+ * The diagram above the agent's tabs: two inputs run into Flash Agent, and
+ * its answer goes to the crew (components/home/agent-flow.tsx).
+ */
+export const agentFlow = {
+  tools: {
+    tag: 'Your tools and data',
+    title: 'Calendar · Procore · Slack · Teams · ERP · CRM',
+    body: 'Your sites, limits and schedules, with permissions per connector.',
+  },
+  engine: {
+    tag: 'Prediction engine',
     title: '15+ prediction products, 1×1 km, every 2 minutes',
     body: 'Lightning, hail, heat and WBGT, wind, rain, frost and more, scored for every cell.',
-    highlight: false,
   },
-  {
-    tag: '02 · Flash Agent, the harness',
-    title: 'Your sites, your thresholds, your data',
-    body: 'Reads your limits and schedules, answers in plain language, proposes the action.',
-    highlight: true,
+  agent: {
+    tag: 'Flash Agent',
+    body: 'Reads your limits and the forecast, answers in plain language, proposes the action.',
   },
-  {
-    tag: '03 · Your tools',
-    title: 'Calendar · Procore · Slack · Teams · ERP · CRM',
-    body: 'Permissions per connector. Every action logged. A person confirms before a schedule or record changes.',
-    highlight: false,
+  crew: {
+    tag: 'You and your crew',
+    title: 'Ask in plain language. Decide with confidence.',
+    outcomes: ['Go / No-go', 'Reschedule', 'Alert the crew'],
   },
-];
+  cue: 'See it in action',
+};
 
 // ---------------------------------------------------------------------------
 // Reactive vs proactive
@@ -303,13 +335,41 @@ export const devicesImage: Img = {
 };
 
 // ---------------------------------------------------------------------------
-// Trust bar + catalogue
+// Customers + catalogue
 
-export const trustedBy = [
-  { name: 'Troon', use: 'Lightning alerts across Troon golf properties' },
-  { name: 'Big 12', use: 'Game-day lightning decisions for conference venues' },
-  { name: 'Syngenta', use: 'Turf agronomy forecasts inside Turf Assistant' },
-  { name: 'NAIA', use: 'Official weather-safety partner for championships' },
+/**
+ * "Our partners and customers": the logo slider, in the live site's order.
+ * Files are public/logos/customers/<file>.png, trimmed to the mark; width and
+ * height are the file's own, so each logo keeps its shape in the row.
+ * `scale` is the logo's height as a share of the row's tallest (72px on
+ * desktop), set so the logos carry about the same weight: a wide wordmark is
+ * shorter than a crest, a solid mark a little smaller than a fine-lined one,
+ * and nothing is wider than 160px.
+ */
+export const customers = [
+  { name: 'Troon', file: 'troon', width: 351, height: 97, scale: 0.56 },
+  { name: 'Portland Sea Dogs', file: 'portland-sea-dogs', width: 194, height: 192, scale: 0.89 },
+  { name: 'ANNIKA Women\'s All Pro Tour', file: 'annika-womens-all-pro-tour', width: 326, height: 106, scale: 0.61 },
+  { name: 'Syngenta', file: 'syngenta', width: 360, height: 101, scale: 0.55 },
+  { name: 'NAIA', file: 'naia', width: 324, height: 192, scale: 0.74 },
+  { name: 'PGA of America, New England Section', file: 'pga-new-england', width: 240, height: 192, scale: 1.00 },
+  { name: 'K12 Sports Tech', file: 'k12-sports-tech', width: 360, height: 160, scale: 0.73 },
+  { name: 'Big 12 Conference', file: 'big-12-conference', width: 318, height: 192, scale: 0.82 },
+  { name: 'McClatchy Media', file: 'mcclatchy-media', width: 360, height: 51, scale: 0.31 },
+  { name: 'PGA of America, Southern Ohio Section', file: 'pga-southern-ohio', width: 151, height: 192, scale: 1.00 },
+  { name: 'Golf Genius', file: 'golf-genius', width: 360, height: 61, scale: 0.38 },
+  { name: 'PGA of America, Western New York Section', file: 'pga-western-new-york', width: 338, height: 192, scale: 1.00 },
+  { name: 'Kansas City Chiefs', file: 'kansas-city-chiefs', width: 303, height: 192, scale: 0.83 },
+  { name: 'PGA of America, South Florida Section', file: 'pga-south-florida', width: 256, height: 192, scale: 1.00 },
+  { name: 'Turf Assistant', file: 'turf-assistant', width: 360, height: 128, scale: 0.69 },
+  { name: 'PGA of America, Northern Ohio Section', file: 'pga-northern-ohio', width: 153, height: 192, scale: 1.00 },
+  { name: 'NGCOA North Carolina', file: 'ngcoa-north-carolina', width: 153, height: 192, scale: 1.00 },
+  { name: 'PGA of America, Kentucky Section', file: 'pga-kentucky', width: 138, height: 150, scale: 1.00 },
+  { name: 'Hanse Golf Course Design', file: 'hanse-golf-course-design', width: 243, height: 188, scale: 1.00 },
+  { name: 'Club Caddie', file: 'club-caddie', width: 360, height: 96, scale: 0.49 },
+  { name: 'Invited Clubs', file: 'invited-clubs', width: 354, height: 63, scale: 0.40 },
+  { name: 'Philadelphia Eagles', file: 'philadelphia-eagles', width: 267, height: 181, scale: 0.85 },
+  { name: 'Chicago Cubs', file: 'chicago-cubs', width: 180, height: 180, scale: 0.90 },
 ];
 
 export type CatalogueCard = {

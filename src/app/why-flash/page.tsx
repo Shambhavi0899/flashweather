@@ -6,9 +6,15 @@ import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ButtonLink } from '@/components/button';
 import { HeroBackground, HeroSection, HeroWords } from '@/components/hero/hero';
 import { Eyebrow } from '@/components/eyebrow';
+import { Motion } from '@/components/motion';
 import { HubRuns } from '@/components/resources/hub-runs';
+import { ReactsPredicts } from '@/components/resources/reacts-predicts';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
+import { DeeperPath } from '@/components/why-flash/deeper-path';
+import { OperationPicker } from '@/components/why-flash/operation-picker';
+import { Receipt } from '@/components/why-flash/receipt';
+import { TimeAxis } from '@/components/why-flash/time-axis';
 import { whyFlashOrder, whyFlashPages } from '@/content/why-flash';
 import {
   WHY_FLASH_HUB_PATH,
@@ -93,7 +99,7 @@ export default function WhyFlashPage() {
 
         {/* Three kinds of weather tools */}
         <section aria-labelledby="three-kinds" className="bg-neutral-0">
-          <div className="container-page flex flex-col gap-10 py-20 lg:gap-14 lg:py-28">
+          <div className="wfk container-page flex flex-col gap-10 py-20 lg:gap-14 lg:py-28">
             <div className="flex max-w-[980px] flex-col gap-4">
               <Eyebrow tone="light">{category.kicker}</Eyebrow>
               <h2 id="three-kinds" className={`${h2} text-text`}>
@@ -103,9 +109,12 @@ export default function WhyFlashPage() {
             <ol className="grid gap-6 lg:grid-cols-3">
               {category.kinds.map((kind) => (
                 <li
-                  key={kind.name}
-                  className={`flex flex-col gap-4 rounded-lg p-7 md:p-8 ${
-                    kind.flash ? 'why-flash-hub-flash-card text-text-on-dark' : 'border border-border bg-surface-sunken'
+                  key={kind.key}
+                  data-kind={kind.key}
+                  className={`wfk-card flex flex-col gap-4 rounded-lg p-7 md:p-8 ${
+                    kind.flash
+                      ? 'why-flash-hub-flash-card text-text-on-dark'
+                      : 'border border-border bg-surface-sunken transition-colors hover:border-neutral-400'
                   }`}
                 >
                   {kind.flash && (
@@ -124,9 +133,12 @@ export default function WhyFlashPage() {
                 </li>
               ))}
             </ol>
-            <p className="max-w-[900px] text-body-l font-semibold text-pretty text-text md:text-[22px] md:leading-[32px]">
-              {category.closing}
-            </p>
+            <Motion className="motion flex flex-col gap-10 lg:gap-14" replay={false} threshold={0.6}>
+              <TimeAxis />
+              <p className="wfk-closing max-w-[900px] text-body-l font-semibold text-pretty text-text md:text-[22px] md:leading-[32px]">
+                {category.closing}
+              </p>
+            </Motion>
           </div>
         </section>
 
@@ -139,45 +151,7 @@ export default function WhyFlashPage() {
                 {comparison.heading}
               </h2>
             </div>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="flex flex-col gap-5 rounded-lg border border-white/12 p-7 md:p-8">
-                <h3 className="text-micro font-bold tracking-label-wide text-text-on-dark-muted uppercase">
-                  {comparison.others.label}
-                </h3>
-                <ul className="flex flex-col">
-                  {comparison.others.rows.map((row) => (
-                    <li
-                      key={row}
-                      className="flex gap-3 border-t border-white/10 py-4 text-body text-text-on-dark-muted first:border-t-0 first:pt-0"
-                    >
-                      <span aria-hidden className="w-4 shrink-0 font-bold text-neutral-500">
-                        ×
-                      </span>
-                      {row}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="why-flash-hub-win-card flex flex-col gap-5 rounded-lg p-7 md:p-8">
-                <h3 className="font-logo text-caption font-bold tracking-label-wide text-viz-gold uppercase">
-                  {comparison.flash.label}
-                </h3>
-                <ul className="flex flex-col">
-                  {comparison.flash.rows.map((row) => (
-                    <li
-                      key={row}
-                      className="flex gap-3 border-t border-white/10 py-4 text-body font-semibold text-text-on-dark first:border-t-0 first:pt-0"
-                    >
-                      <span aria-hidden className="w-4 shrink-0 font-bold text-viz-gold">
-                        ✓
-                      </span>
-                      {row}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <p className="text-body-l font-semibold text-text-on-dark">{comparison.tagline}</p>
+            <ReactsPredicts labels={comparison.labels} pairs={comparison.pairs} tagline={comparison.tagline} />
           </div>
         </section>
 
@@ -190,70 +164,77 @@ export default function WhyFlashPage() {
                 {receipts.heading}
               </h2>
             </div>
-            <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border lg:grid-cols-3">
-              {receipts.stats.map((stat) => (
-                <div key={stat.value} className="flex flex-col-reverse gap-2 bg-neutral-0 p-5 md:p-8">
-                  <dt className="text-body-s text-text-muted">{stat.label}</dt>
-                  <dd className="text-[34px] leading-[40px] font-extrabold tracking-display text-brand-navy md:text-display-m md:leading-display-m">
-                    {stat.value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <div className="flex max-w-[900px] flex-col gap-5">
-              <p className="text-body-l text-pretty text-text">
-                <HubRuns runs={receipts.proof} />
-              </p>
-              <p className="text-body text-pretty text-text-muted">{receipts.founder}</p>
+            <div className="flex flex-col gap-12 lg:flex-row lg:items-center lg:gap-24">
+              <Receipt
+                title={receipts.slip.title}
+                stats={receipts.stats}
+                verified={receipts.slip.verified}
+                method={receipts.slip.method}
+              />
+              <div className="flex max-w-[900px] min-w-0 flex-col gap-5 lg:flex-1">
+                <p className="text-body-l text-pretty text-text">
+                  <HubRuns runs={receipts.proof} />
+                </p>
+                <p className="text-body text-pretty text-text-muted">{receipts.founder}</p>
+              </div>
             </div>
           </div>
         </section>
 
         {/* For your operation */}
         <section aria-labelledby="for-your-operation" className="bg-neutral-0">
-          <div className="container-page grid gap-12 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 lg:py-28">
-            <div className="flex flex-col gap-6">
+          <div className="container-page flex flex-col gap-12 py-20 lg:flex-row lg:gap-16 lg:py-28">
+            <div className="flex min-w-0 flex-col gap-6 lg:flex-1">
               <Eyebrow tone="light">{operation.kicker}</Eyebrow>
               <h2 id="for-your-operation" className={`${h2} text-text`}>
                 {operation.heading}
               </h2>
-              <p className="text-body-l text-pretty text-text-muted">{operation.body}</p>
-              <dl className="grid grid-cols-2 gap-6 border-y border-border py-6">
-                {operation.outcomes.map((outcome) => (
-                  <div key={outcome.value} className="flex flex-col-reverse gap-1">
-                    <dt className="text-body-s text-text-muted">{outcome.label}</dt>
-                    <dd className="text-[30px] leading-[36px] font-extrabold tracking-display text-brand-blue md:text-[36px] md:leading-[42px]">
-                      {outcome.value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+              <OperationPicker lead={operation.lead} close={operation.close} audiences={operation.audiences} />
+              <Motion className="motion" replay={false}>
+                <dl className="wfo-outcomes">
+                  {operation.outcomes.map((outcome) => (
+                    <div key={outcome.value} className="wfo-outcome">
+                      <dt className="text-body-s text-text-muted">{outcome.label}</dt>
+                      <dd className="text-[30px] leading-[36px] font-extrabold tracking-display text-brand-blue md:text-[36px] md:leading-[42px]">
+                        {outcome.value}
+                        <svg aria-hidden className="wfo-range">
+                          <rect className="wfo-range-track" width="100%" height="6" rx="3" />
+                          <rect
+                            className="wfo-range-fill"
+                            x={`${outcome.range[0]}%`}
+                            width={`${outcome.range[1] - outcome.range[0]}%`}
+                            height="6"
+                            rx="3"
+                          />
+                        </svg>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </Motion>
               <p className="text-body text-text">{operation.outcomeNote}</p>
-              <ul aria-label="Who it is for" className="flex flex-wrap gap-2">
-                {operation.audiences.map((audience) => (
-                  <li
-                    key={audience}
-                    className="flex min-h-9 items-center rounded-full border border-border-strong px-4 text-body-s font-medium text-text"
-                  >
-                    {audience}
-                  </li>
-                ))}
-              </ul>
             </div>
-            <div className="flex flex-col gap-6">
-              <ul className="flex flex-col rounded-lg border border-border">
+            <div className="flex min-w-0 flex-col gap-6 lg:flex-1">
+              <ul className="flex flex-col overflow-hidden rounded-lg border border-border">
                 {operation.products.map((product) => (
-                  <li key={product.name} className="border-t border-border p-6 first:border-t-0">
-                    <p className="text-body text-text-muted">
-                      {product.href ? (
-                        <Link href={product.href} className="font-bold text-brand-blue hover:underline">
-                          {product.name}
-                        </Link>
-                      ) : (
-                        <strong className="font-bold text-text">{product.name}</strong>
-                      )}{' '}
-                      – {product.body}
-                    </p>
+                  <li key={product.name} className="wfo-product border-t border-border p-6 first:border-t-0">
+                    <div className="flex min-w-0 grow flex-col gap-1">
+                      <p className="text-body leading-body font-bold">
+                        {product.href ? (
+                          <Link href={product.href} className="wfo-product-link text-brand-blue">
+                            {product.name}
+                          </Link>
+                        ) : (
+                          <span className="text-text">{product.name}</span>
+                        )}
+                      </p>
+                      <p className="wfo-product-body text-body leading-body text-text-muted">{product.body}</p>
+                    </div>
+                    {product.href && (
+                      <span aria-hidden className="wfo-arrow">
+                        →
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -291,24 +272,7 @@ export default function WhyFlashPage() {
                 {deeper.heading}
               </h2>
             </div>
-            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {deepPages.map((page) => (
-                <li key={page.path}>
-                  <Link
-                    href={page.path}
-                    className="group flex h-full flex-col gap-3 rounded-lg border border-border bg-surface-sunken p-6 transition hover:border-brand-blue"
-                  >
-                    <h3 className="text-h4 leading-h4 font-extrabold tracking-heading text-text group-hover:text-brand-blue">
-                      {page.label}
-                    </h3>
-                    <p className="grow text-body-s text-text-muted">{page.blurb}</p>
-                    <span className="inline-flex min-h-11 items-center text-body-s font-bold text-brand-blue">
-                      Read<span aria-hidden>&nbsp;→</span>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <DeeperPath />
           </div>
         </section>
       </main>

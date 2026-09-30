@@ -1,0 +1,28 @@
+/*
+ * pricing-quote — "How is your quote calculated?" on /pricing/
+ * (components/pricing/quote-builder.tsx).
+ *
+ * Classes sit in @layer components so a Tailwind utility on the same element
+ * still wins.
+ */
+
+@layer components {
+  /* Each factor row (a <Motion> block) takes the site's fade-up, the shared
+     motion-rise, once as it scrolls in; rows that arrive together follow each
+     other by the block's stagger. The heading, the summary card and the
+     section itself do not move. Reduced motion: none of it (the shared
+     .motion rule, and motion.tsx never sets data-anim). */
+  .motion[data-anim]:not([data-anim='reset']) > .pricing-quote-rise {
+    animation: motion-rise 0.6s var(--motion-ease) var(--motion-delay) both;
+  }
+
+  /* The stepper's own minus and plus replace the browser's spin buttons. */
+  .pricing-quote-number {
+    appearance: textfield;
+  }
+  .pricing-quote-number::-webkit-outer-spin-button,
+  .pricing-quote-number::-webkit-inner-spin-button {
+    margin: 0;
+    appearance: none;
+  }
+}

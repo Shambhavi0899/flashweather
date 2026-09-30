@@ -1,4 +1,5 @@
 import { AgentBadge } from '@/components/home/bolt-icon';
+import { Logo } from '@/components/logo';
 import type { AgentReply } from '@/content/agent';
 
 /**
@@ -20,7 +21,15 @@ import type { AgentReply } from '@/content/agent';
  * answer; narrower, they stack in the order the conversation builds: answer,
  * chart, chips. The chart keeps a 520px floor on phones only (it scrolls
  * sideways there); from md it scales to its column.
+ *
+ * A section shows the parts its copy has: the answer and its chips always,
+ * and the site, status badge, chart and proposed actions when given (the
+ * Troon case study has none of those four). The playback is the same either
+ * way; a missing piece's step simply has nothing to show.
  */
+
+/** A reply's answer and chips, and whichever of its other parts the section has. */
+export type ConversationReply = Pick<AgentReply, 'answer' | 'chips'> & Partial<AgentReply>;
 
 const STATUS_BG: Record<AgentReply['status']['tone'], string> = {
   warning: 'bg-alert-warning',
@@ -31,6 +40,8 @@ const STATUS_BG: Record<AgentReply['status']['tone'], string> = {
 /** Written out in full so Tailwind can see them. */
 const LAYOUT = {
   body: 'grid grid-cols-[minmax(0,1fr)] gap-6 @min-[886px]:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] @min-[886px]:gap-10',
+  /** With no chart the answer has the panel's whole width. */
+  bodyAlone: 'grid grid-cols-[minmax(0,1fr)] gap-6',
   text: 'flex min-w-0 flex-col gap-5 @max-[886px]:contents',
   chips: '@max-[886px]:order-3',
   chart: '@max-[886px]:order-2',
@@ -44,10 +55,11 @@ export function AgentConversation({
   tabFor,
   placeholder = 'Ask about any site, any layer, any day…',
   askNote,
+  inWindow = false,
   className = 'flex',
 }: {
   question: string;
-  reply: AgentReply;
+  reply: ConversationReply;
   /** The answer's visual, with `chat-bar` / `chat-line` / `chat-annot` hooks. Leave out for none. */
   chart?: React.ReactNode;
   /** The panel's accessible name. */
@@ -61,15 +73,27 @@ export function AgentConversation({
    * (`data-asked`, set by <AgentChat>); leave out where no chips point here.
    */
   askNote?: React.ReactNode;
+  /**
+   * Set inside an app window that draws its own frame (`.agent-window`,
+   * styles/agent-window.css): the panel drops its card and gets more room
+   * (except at the sides from lg to xl, where the 886px switch needs them),
+   * the agent signs with the Flash logo, and the floating launcher steps
+   * aside while the actions or composer would be under it.
+   */
+  inWindow?: boolean;
   /** Display and visibility (a tab's `group-has-[…]:flex`); `flex` by default. */
   className?: string;
 }) {
+  const hasActions = Boolean(reply.primaryAction || reply.secondaryAction || reply.followUps?.length);
+
   return (
     <article
       data-chat-panel
       data-chat-for={tabFor}
       aria-label={label}
-      className={`chat min-w-0 flex-col gap-6 rounded-[20px] border border-white/10 bg-brand-navy-deep/72 p-5 sm:p-7 ${className}`}
+      className={`chat min-w-0 flex-col gap-6 ${
+        inWindow ? 'p-5 sm:p-8 lg:px-7 xl:p-10' : 'rounded-[20px] border border-white/10 bg-brand-navy-deep/72 p-5 sm:p-7'
+      } ${className}`}
     >
       <div className="chat-bubble flex justify-end">
         <p className="max-w-[560px] rounded-[14px] rounded-br-xs bg-brand-blue px-4 py-3 text-caption leading-[19px] font-medium text-text-on-dark md:text-body-s md:leading-[21px]">
@@ -80,20 +104,29 @@ export function AgentConversation({
       <div className="@container relative flex flex-col gap-6">
         <div className="chat-agent flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
-            <AgentBadge />
-            <p className="text-[10px] leading-3 font-extrabold tracking-[0.13em] text-text-on-dark md:text-micro md:leading-micro">
-              FLASH AGENT
-            </p>
-            <p className="text-micro text-[#8F9AB8]">· {reply.site}</p>
+            {/* In the window the agent signs with the Flash logo. */}
+            {inWindow ? (
+              <Logo variant="dark" size="chat" link={false} alt="Flash Agent" />
+            ) : (
+              <>
+                <AgentBadge />
+                <p className="text-[10px] leading-3 font-extrabold tracking-[0.13em] text-text-on-dark md:text-micro md:leading-micro">
+                  FLASH AGENT
+                </p>
+              </>
+            )}
+            {reply.site && <p className="text-micro text-[#8F9AB8]">· {reply.site}</p>}
           </div>
-          <p
-            className={`chat-badge flex h-[30px] items-center gap-2 rounded-[15px] px-3 text-[10px] leading-3 font-extrabold tracking-[0.08em] text-text-on-dark uppercase md:text-micro md:leading-micro ${
-              STATUS_BG[reply.status.tone]
-            }`}
-          >
-            <span aria-hidden className="size-2 shrink-0 rounded-[2px] bg-text-on-dark" />
-            {reply.status.label}
-          </p>
+          {reply.status && (
+            <p
+              className={`chat-badge flex h-[30px] items-center gap-2 rounded-[15px] px-3 text-[10px] leading-3 font-extrabold tracking-[0.08em] text-text-on-dark uppercase md:text-micro md:leading-micro ${
+                STATUS_BG[reply.status.tone]
+              }`}
+            >
+              <span aria-hidden className="size-2 shrink-0 rounded-[2px] bg-text-on-dark" />
+              {reply.status.label}
+            </p>
+          )}
         </div>
 
         {/* Shown only while the agent "thinks"; sits over the answer's first line. */}
@@ -103,7 +136,7 @@ export function AgentConversation({
           <span className="size-[7px] rounded-full bg-[#8F9AB8]" />
         </span>
 
-        <div className={LAYOUT.body}>
+        <div className={chart ? LAYOUT.body : LAYOUT.bodyAlone}>
           <div className={LAYOUT.text}>
             <p className="text-body-s leading-body-s text-text-on-dark md:text-body md:leading-body">
               {reply.answer.split(' ').map((word, i) => (
@@ -139,35 +172,48 @@ export function AgentConversation({
         {/* The actions and follow-ups show what the agent proposes; they are
             illustrations, not controls, so they are not buttons. One row for
             the two actions and the confirm note, one for the follow-ups. */}
-        <div className="chat-actions flex flex-col gap-4 border-t border-white/10 pt-5">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-            <span className="bg-gold-button flex min-h-11 items-center justify-center gap-[10px] rounded-xs px-[18px] text-caption leading-4 font-extrabold text-brand-navy">
-              {reply.primaryAction}
-              <span aria-hidden>↗</span>
-            </span>
-            <span className="flex min-h-11 items-center justify-center rounded-xs border border-white/40 px-[18px] text-caption leading-4 font-extrabold text-text-on-dark">
-              {reply.secondaryAction}
-            </span>
-            <span className="text-[10px] leading-[14px] text-[#8F9AB8] md:text-micro md:leading-micro">
-              You confirm before anything changes.
-            </span>
+        {hasActions && (
+          <div
+            data-launcher-clear={inWindow || undefined}
+            className="chat-actions flex flex-col gap-4 border-t border-white/10 pt-5"
+          >
+            {(reply.primaryAction || reply.secondaryAction) && (
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+                {reply.primaryAction && (
+                  <span className="bg-gold-button flex min-h-11 items-center justify-center gap-[10px] rounded-xs px-[18px] text-caption leading-4 font-extrabold text-brand-navy">
+                    {reply.primaryAction}
+                    <span aria-hidden>↗</span>
+                  </span>
+                )}
+                {reply.secondaryAction && (
+                  <span className="flex min-h-11 items-center justify-center rounded-xs border border-white/40 px-[18px] text-caption leading-4 font-extrabold text-text-on-dark">
+                    {reply.secondaryAction}
+                  </span>
+                )}
+                <span className="text-[10px] leading-[14px] text-[#8F9AB8] md:text-micro md:leading-micro">
+                  You confirm before anything changes.
+                </span>
+              </div>
+            )}
+            {reply.followUps && reply.followUps.length > 0 && (
+              <ul className="flex flex-wrap gap-2">
+                {reply.followUps.map((f) => (
+                  <li
+                    key={f}
+                    className="flex min-h-[30px] items-center rounded-[15px] border border-white/18 px-[14px] py-1 text-[10px] leading-3 font-bold text-[#D1DBE8] md:text-micro md:leading-micro"
+                  >
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          <ul className="flex flex-wrap gap-2">
-            {reply.followUps.map((f) => (
-              <li
-                key={f}
-                className="flex min-h-[30px] items-center rounded-[15px] border border-white/18 px-[14px] py-1 text-[10px] leading-3 font-bold text-[#D1DBE8] md:text-micro md:leading-micro"
-              >
-                {f}
-              </li>
-            ))}
-          </ul>
-        </div>
+        )}
       </div>
 
       {/* The composer the question is typed into; an illustration, so hidden
           from assistive tech (the question itself is the bubble above). */}
-      <div className="flex items-center gap-3 border-t border-white/10 pt-5">
+      <div data-launcher-clear={inWindow || undefined} className="flex items-center gap-3 border-t border-white/10 pt-5">
         <div
           aria-hidden
           className="chat-composer flex h-12 min-w-0 grow items-center gap-3 rounded-full border border-white/12 bg-white/4 pr-[6px] pl-5 text-caption md:text-body-s"

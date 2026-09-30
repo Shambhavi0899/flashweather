@@ -1,0 +1,278 @@
+/*
+ * /why-flash/ "There are three kinds of weather tools": the time axis under
+ * the three cards (components/why-flash/time-axis.tsx) and the closing line.
+ *
+ * Earlier · NOW · Next hour · Later today, with one mark per kind: Detection
+ * a grey dot at NOW, Forecasting a wide soft band across later today,
+ * Prediction a sharp gold mark in the next hour. The markup is the finished
+ * axis; under Motion's data-anim it draws in once, in about two seconds:
+ *   0      the line draws left to right, the ticks come up as it passes
+ *   600ms  Detection
+ *   850ms  the Forecasting band spreads, its label follows
+ *   1300ms Prediction, last, with a glow that settles
+ *   1750ms the closing line
+ * Reduced motion (or no JS) shows the finished axis. Hovering a card
+ * highlights its mark and dims the other two, read with :has() on `.wfk`.
+ */
+@layer components {
+  .wfk-axis {
+    --wfk-now: 24%;
+    --wfk-next: 46%;
+    --wfk-later: 62%;
+    --wfk-later-mid: 81%;
+    --wfk-line-y: 56px;
+    --wfk-stem: 20px;
+    --wfk-band-alpha: 26%;
+    position: relative;
+    height: 88px;
+  }
+
+  /* ------------------------------------------------------------ Line + ticks */
+  .wfk-line {
+    position: absolute;
+    top: calc(var(--wfk-line-y) - 1px);
+    left: 0;
+    right: 0;
+    height: 2px;
+    border-radius: 1px;
+    background-color: var(--color-neutral-300);
+    transform-origin: left center;
+  }
+  .wfk-tick {
+    position: absolute;
+    top: calc(var(--wfk-line-y) + 14px);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    color: var(--color-text-muted);
+    transform: translateX(-50%);
+  }
+  .wfk-tick[data-tick='0'] {
+    left: 0;
+    transform: none;
+  }
+  .wfk-tick[data-tick='1'] {
+    left: var(--wfk-now);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: var(--color-text);
+  }
+  .wfk-tick[data-tick='2'] {
+    left: var(--wfk-next);
+  }
+  .wfk-tick[data-tick='3'] {
+    left: var(--wfk-later-mid);
+  }
+
+  /* ------------------------------------------------------------ Forecasting band */
+  .wfk-band {
+    position: absolute;
+    top: calc(var(--wfk-line-y) - 13px);
+    left: var(--wfk-later);
+    right: 1%;
+    height: 26px;
+    border-radius: 13px;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--color-brand-blue) var(--wfk-band-alpha), transparent) 22% 78%,
+      transparent
+    );
+    filter: blur(7px);
+  }
+
+  /* ------------------------------------------------------------ Marks */
+  /* Anchored by its bottom edge to the line, so a label that wraps grows up. */
+  .wfk-mark {
+    --wfk-dot: 10px;
+    position: absolute;
+    bottom: calc(100% - var(--wfk-line-y));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translateX(-50%);
+    transition: opacity 200ms ease;
+  }
+  .wfk-mark[data-kind='detection'] {
+    left: var(--wfk-now);
+  }
+  .wfk-mark[data-kind='forecasting'] {
+    left: var(--wfk-later-mid);
+    /* Its stem stops on the band's top edge; there is no dot. */
+    bottom: calc(100% - var(--wfk-line-y) + 14px);
+    --wfk-stem: 8px;
+  }
+  .wfk-mark[data-kind='prediction'] {
+    --wfk-dot: 14px;
+    left: var(--wfk-next);
+  }
+  .wfk-mark-label {
+    padding-bottom: 6px;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+    color: var(--color-text-muted);
+    transition: color 200ms ease;
+  }
+  .wfk-mark-stem {
+    width: 1px;
+    height: var(--wfk-stem);
+    background-color: var(--color-neutral-300);
+  }
+  .wfk-mark-dot {
+    width: var(--wfk-dot);
+    height: var(--wfk-dot);
+    margin-bottom: calc(var(--wfk-dot) / -2);
+    border-radius: 50%;
+    background-color: var(--color-neutral-500);
+    transition:
+      background-color 200ms ease,
+      box-shadow 200ms ease,
+      transform 200ms ease;
+  }
+  .wfk-mark[data-kind='forecasting'] .wfk-mark-dot {
+    display: none;
+  }
+  .wfk-mark[data-kind='prediction'] .wfk-mark-label {
+    font-weight: 800;
+    color: var(--color-gold-on-light);
+  }
+  .wfk-mark[data-kind='prediction'] .wfk-mark-stem {
+    width: 2px;
+    background-color: var(--color-gold-on-light);
+  }
+  .wfk-mark[data-kind='prediction'] .wfk-mark-dot {
+    border: 2px solid var(--color-neutral-0);
+    background-color: var(--color-viz-gold);
+    box-shadow:
+      0 0 0 1px var(--color-gold-on-light),
+      0 0 18px 4px color-mix(in oklab, var(--color-viz-gold) 45%, transparent);
+  }
+
+  /* ------------------------------------------------------------ Phone */
+  /* Labels wrap to two short lines and grow upward; NOW and Next hour spread
+     a little so their labels clear each other. */
+  @media (width < 640px) {
+    .wfk-axis {
+      --wfk-now: 21%;
+      --wfk-next: 49%;
+      --wfk-line-y: 74px;
+      --wfk-stem: 14px;
+      height: 106px;
+    }
+    .wfk-mark-label {
+      width: 84px;
+      white-space: normal;
+      text-wrap: balance;
+    }
+  }
+
+  /* ------------------------------------------------------------ Card hover */
+  @media (hover: hover) {
+    .wfk:has(.wfk-card:hover) .wfk-mark,
+    .wfk:has(.wfk-card:hover) .wfk-band {
+      opacity: 0.25;
+    }
+    .wfk-band {
+      transition: opacity 200ms ease;
+    }
+    .wfk:has(.wfk-card[data-kind='detection']:hover) .wfk-axis [data-kind='detection'],
+    .wfk:has(.wfk-card[data-kind='forecasting']:hover) .wfk-axis [data-kind='forecasting'],
+    .wfk:has(.wfk-card[data-kind='prediction']:hover) .wfk-axis [data-kind='prediction'] {
+      opacity: 1;
+    }
+    .wfk:has(.wfk-card[data-kind='detection']:hover) .wfk-mark[data-kind='detection'] .wfk-mark-label,
+    .wfk:has(.wfk-card[data-kind='forecasting']:hover) .wfk-mark[data-kind='forecasting'] .wfk-mark-label {
+      color: var(--color-text);
+    }
+    .wfk:has(.wfk-card[data-kind='detection']:hover) .wfk-mark[data-kind='detection'] .wfk-mark-dot {
+      background-color: var(--color-neutral-700);
+      transform: scale(1.2);
+    }
+    .wfk:has(.wfk-card[data-kind='forecasting']:hover) .wfk-band {
+      --wfk-band-alpha: 40%;
+    }
+    .wfk:has(.wfk-card[data-kind='prediction']:hover) .wfk-mark[data-kind='prediction'] .wfk-mark-dot {
+      transform: scale(1.15);
+      box-shadow:
+        0 0 0 1px var(--color-gold-on-light),
+        0 0 28px 8px color-mix(in oklab, var(--color-viz-gold) 60%, transparent);
+    }
+  }
+
+  /* ------------------------------------------------------------ Draw-in */
+  .motion[data-anim]:not([data-anim='reset']) .wfk-line {
+    animation: motion-grow-x 600ms var(--motion-ease) calc(var(--motion-delay) + 0ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wfk-tick {
+    animation: motion-fade 300ms ease-out backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wfk-tick[data-tick='0'] {
+    animation-delay: calc(var(--motion-delay) + 0ms);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wfk-tick[data-tick='1'] {
+    animation-delay: calc(var(--motion-delay) + 120ms);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wfk-tick[data-tick='2'] {
+    animation-delay: calc(var(--motion-delay) + 240ms);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wfk-tick[data-tick='3'] {
+    animation-delay: calc(var(--motion-delay) + 420ms);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wfk-mark {
+    animation: wfk-mark-in 400ms var(--motion-ease) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wfk-mark[data-kind='detection'] {
+    animation-delay: calc(var(--motion-delay) + 600ms);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wfk-band {
+    animation: wfk-band-in 650ms ease-out calc(var(--motion-delay) + 850ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wfk-mark[data-kind='forecasting'] {
+    animation-delay: calc(var(--motion-delay) + 1050ms);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wfk-mark[data-kind='prediction'] {
+    animation-delay: calc(var(--motion-delay) + 1300ms);
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wfk-mark[data-kind='prediction'] .wfk-mark-dot {
+    animation: wfk-glow-in 900ms var(--motion-ease) calc(var(--motion-delay) + 1300ms) backwards;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .wfk-closing {
+    animation: wfk-closing-in 500ms var(--motion-ease) calc(var(--motion-delay) + 1750ms) backwards;
+  }
+}
+
+/* Implicit to-frames resolve to each element's own finished state. */
+@keyframes wfk-mark-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+}
+@keyframes wfk-band-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0.35);
+  }
+}
+@keyframes wfk-glow-in {
+  from {
+    transform: scale(0);
+  }
+  45% {
+    transform: scale(1.3);
+    box-shadow:
+      0 0 0 1px var(--color-gold-on-light),
+      0 0 36px 14px color-mix(in oklab, var(--color-viz-gold) 70%, transparent);
+  }
+}
+@keyframes wfk-closing-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

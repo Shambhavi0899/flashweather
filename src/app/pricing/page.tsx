@@ -39,6 +39,7 @@ export default function PricingPage() {
         <SensorCostSection />
         <TrustedStrip
           customers={trustedCustomers}
+          rise
           photo={{
             src: '/images/pricing/flash-golf-fairway-rain-trusted-customers-golf.webp',
             alt: 'A golf fairway under heavy rain, the kind of site Troon, the Big 12, Syngenta and the NAIA license by site with Flash',

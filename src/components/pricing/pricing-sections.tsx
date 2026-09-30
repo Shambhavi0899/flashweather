@@ -6,17 +6,21 @@ import { ButtonLink } from '@/components/button';
 import { HeroBackground, HeroSection, HeroWords } from '@/components/hero/hero';
 import { FaqAccordion } from '@/components/faq/faq-accordion';
 import { Bolt } from '@/components/logo';
+import { Motion } from '@/components/motion';
 import { LinkedText } from '@/components/pricing/linked-text';
+import { PlanFit } from '@/components/pricing/plan-fit';
+import { QuoteBuilder } from '@/components/pricing/quote-builder';
+import { SensorCostFigure } from '@/components/pricing/sensor-cost-figure';
+import { SurfaceFocus } from '@/components/pricing/surface-focus';
+import { PortfolioCard } from '@/components/pricing/portfolio-card';
 import { DEMO_HREF } from '@/content/navigation';
 import {
   alwaysIncluded,
   includedSurfaces,
-  plans,
   portfolioSites,
   pricingFaqs,
   quoteFactors,
   sensorComparison,
-  type Plan,
 } from '@/content/pricing';
 
 const h2 = 'text-[32px] leading-[38px] font-extrabold tracking-[-0.03em] md:text-h1 md:leading-h1';
@@ -67,135 +71,9 @@ export function PricingHero() {
           <p className="hero-support mt-7 text-caption text-text-on-dark-muted">Trusted by Troon · Big 12 · Syngenta · NAIA</p>
         </div>
 
-        <PortfolioMock />
+        <PortfolioCard sites={portfolioSites} quoteHref={DEMO_HREF} />
       </div>
     </HeroSection>
-  );
-}
-
-/** The per-site portfolio view, rebuilt in HTML so its text is crawlable. */
-function PortfolioMock() {
-  return (
-    <figure className="hero-visual hero-visual-side min-w-0 lg:w-[544px] lg:shrink xl:shrink-0">
-      <figcaption className="sr-only">
-        Flash Weather AI portfolio view listing sites with their users, predicted parameters and live status, priced
-        per site per year
-      </figcaption>
-      <div className="overflow-hidden rounded-[20px] border border-border-on-dark bg-brand-navy-deep shadow-[0_1px_2px_#0B13220D,0_24px_48px_#0B132229]">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-on-dark px-6 py-[18px]">
-          <p className="text-micro font-semibold tracking-label text-text-on-dark-muted">PORTFOLIO · PER SITE, PER YEAR</p>
-          <p className="flex items-center gap-2 text-micro font-medium text-neutral-500">
-            <span aria-hidden className="size-[6px] rounded-full bg-alert-clear" />
-            Live · refreshed 09:42
-          </p>
-        </div>
-        <div className="relative overflow-x-auto">
-          <table className="w-full min-w-[440px] text-left">
-            <thead>
-              <tr className="border-b border-border-on-dark text-[11px] leading-[14px] font-semibold tracking-[0.12em] text-neutral-500">
-                <th scope="col" className="w-[204px] py-3 pr-4 pl-6 font-semibold">
-                  SITE
-                </th>
-                <th scope="col" className="py-3 pr-4 font-semibold">
-                  PARAMETERS
-                </th>
-                <th scope="col" className="py-3 pr-6 text-right font-semibold">
-                  STATUS
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {portfolioSites.map((s) => (
-                <tr key={s.name} className="border-b border-border-on-dark">
-                  <th scope="row" className="py-[14px] pr-4 pl-6 font-normal">
-                    <span className="block text-body-s leading-caption font-medium text-text-on-dark">{s.name}</span>
-                    <span className="block text-micro text-neutral-500">{s.meta}</span>
-                  </th>
-                  <td className="py-[14px] pr-4">
-                    <ul className="flex flex-wrap gap-[6px]">
-                      {s.params.map((p) => (
-                        <li
-                          key={p}
-                          className="flex h-[22px] items-center rounded-sm border border-border-on-dark bg-neutral-900 px-2 text-[11px] leading-[14px] font-medium text-[#C9D1E3]"
-                        >
-                          {p}
-                        </li>
-                      ))}
-                    </ul>
-                  </td>
-                  <td
-                    className={`py-[14px] pr-6 text-right text-micro font-medium ${
-                      s.status === 'Live' ? 'text-[#3FBF8C]' : 'text-text-on-dark-muted'
-                    }`}
-                  >
-                    {s.status}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-2 bg-white/3 px-6 py-4 text-caption">
-          <span className="text-text-on-dark-muted">Every site · every user included · one renewal date</span>
-          <span className="font-semibold text-text-on-dark">Add a site →</span>
-        </div>
-      </div>
-    </figure>
-  );
-}
-
-function Check() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden className="mt-[2px] shrink-0">
-      <circle cx="10" cy="10" r="10" fill="var(--color-neutral-100)" />
-      <path
-        d="M6 10.5l2.6 2.6L14 7.5"
-        fill="none"
-        stroke="var(--color-brand-blue)"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function PlanColumn({ plan, index }: { plan: Plan; index: number }) {
-  const last = index === plans.length - 1;
-  return (
-    <li
-      className={`flex flex-col gap-7 lg:px-8 ${index === 0 ? 'lg:pl-0' : ''} ${last ? 'lg:pr-0' : 'lg:border-r lg:border-border'} ${
-        plan.featured ? 'border-t-2 border-gold-on-light pt-10' : 'border-t border-border pt-[41px]'
-      }`}
-    >
-      <div className="flex flex-col gap-3">
-        <p className={`${eyebrow} ${plan.featured ? 'text-text' : 'text-text-muted'}`}>{plan.eyebrow}</p>
-        <h3 className="text-[28px] leading-[34px] font-extrabold tracking-[-0.03em] text-text">{plan.name}</h3>
-        <p className="text-body text-text-muted">{plan.audience}</p>
-      </div>
-      <div className="flex flex-col gap-1">
-        <p className="text-body-l leading-body font-semibold text-text">{plan.basis}</p>
-        <p className="text-body-s text-text-muted">{plan.basisNote}</p>
-      </div>
-      <ButtonLink
-        href={DEMO_HREF}
-        variant={plan.featured ? 'gold' : 'outline-light'}
-        className="h-12 self-start rounded-full px-[26px]"
-      >
-        Get a quote<span className="sr-only"> for {plan.name}</span>
-      </ButtonLink>
-      <div className="flex flex-col gap-3 pt-1">
-        <p className={`${eyebrow} text-text-muted`}>{plan.includesLabel}</p>
-        <ul className="flex flex-col gap-3">
-          {plan.includes.map((item) => (
-            <li key={item} className="flex items-start gap-3 text-[15px] leading-6 text-text">
-              <Check />
-              {item}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </li>
   );
 }
 
@@ -214,11 +92,7 @@ export function PlansSection() {
             All three are quoted per site, per year. No setup fee, no hardware line item, no per-user seats.
           </p>
         </div>
-        <ul className="grid gap-12 lg:grid-cols-3 lg:gap-0">
-          {plans.map((plan, i) => (
-            <PlanColumn key={plan.id} plan={plan} index={i} />
-          ))}
-        </ul>
+        <PlanFit />
       </div>
     </section>
   );
@@ -227,8 +101,8 @@ export function PlansSection() {
 export function QuoteFactorsSection() {
   return (
     <section aria-labelledby="quote-heading" className="bg-surface-sunken">
-      <div className="container-page flex flex-col gap-10 py-16 lg:flex-row lg:gap-16 lg:py-[112px]">
-        <div className="flex flex-col gap-4 lg:w-[400px] lg:shrink xl:shrink-0">
+      <div className="container-page flex flex-col gap-10 py-16 lg:gap-14 lg:py-[112px]">
+        <div className="flex max-w-[640px] flex-col gap-4">
           <p className={`${eyebrow} text-brand-blue`}>Quote factors</p>
           <h2 id="quote-heading" className={`${h2} text-text`}>
             How is your quote calculated?
@@ -238,17 +112,7 @@ export function QuoteFactorsSection() {
             be added later in the year.
           </p>
         </div>
-        <ol className="flex grow flex-col border-t border-border-strong">
-          {quoteFactors.map((f, i) => (
-            <li key={f.name} className="flex flex-col gap-2 border-b border-border py-6 md:flex-row md:gap-6">
-              <span aria-hidden className="text-micro leading-body font-semibold tracking-label text-brand-blue md:w-12 md:shrink-0">
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              <h3 className="text-body-l leading-body font-semibold text-text md:w-[220px] md:shrink-0">{f.name}</h3>
-              <p className="grow text-body text-text-muted">{f.body}</p>
-            </li>
-          ))}
-        </ol>
+        <QuoteBuilder factors={quoteFactors} />
       </div>
     </section>
   );
@@ -263,19 +127,25 @@ export function AlwaysIncludedSection() {
           <div aria-hidden className="h-px grow bg-border" />
         </div>
 
-        <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-12">
+        {/* A chip zooms the photo to its surface (surface-focus.tsx, styles/pricing-surfaces.css). */}
+        <SurfaceFocus className="psf flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-12">
           <div className="relative aspect-[640/300] w-full overflow-hidden rounded-lg border border-border-on-dark bg-brand-navy lg:w-[640px] lg:shrink xl:shrink-0">
             <Image
               src="/images/pricing/flash-devices-command-center-mobile-app.png"
               alt="Weather Command Center on a laptop beside the Flash mobile app, the surfaces included with every site licence"
               fill
-              sizes="(min-width: 1024px) 640px, 100vw"
-              className="object-cover"
+              sizes="(min-width: 1024px) 1200px, 190vw"
+              className="psf-image object-cover"
             />
             <div aria-hidden className="pricing-included-grade absolute inset-0" />
             <p className="absolute top-[18px] left-5 flex h-6 items-center rounded-[12px] bg-[#040818C7] px-[10px] text-[10px] leading-3 font-extrabold tracking-[0.13em] text-viz-gold">
               INCLUDED AT EVERY SITE
             </p>
+            {includedSurfaces.map((s) => (
+              <span key={s.id} aria-hidden className="psf-label" data-surface-label={s.id}>
+                {s.label}
+              </span>
+            ))}
             <p className="absolute right-5 bottom-4 left-5 text-[15px] leading-5 font-extrabold text-text-on-dark">
               Command Center, mobile app and API — one licence
             </p>
@@ -297,24 +167,31 @@ export function AlwaysIncludedSection() {
                   {s.href ? (
                     <Link
                       href={s.href}
-                      className="flex min-h-[30px] items-center rounded-[15px] bg-neutral-100 px-3 py-1 text-micro font-bold text-neutral-700 hover:bg-neutral-200"
+                      data-surface={s.id}
+                      className="psf-chip flex min-h-[30px] items-center rounded-[15px] bg-neutral-100 px-3 py-1 text-micro font-bold text-neutral-700 hover:bg-neutral-200 data-[on]:bg-neutral-200"
                     >
                       {s.label}
                     </Link>
                   ) : (
-                    <span className="flex min-h-[30px] items-center rounded-[15px] bg-neutral-100 px-3 py-1 text-micro font-bold text-neutral-700">
+                    <button
+                      type="button"
+                      data-surface={s.id}
+                      aria-pressed="false"
+                      className="psf-chip flex min-h-[30px] items-center rounded-[15px] bg-neutral-100 px-3 py-1 text-micro font-bold text-neutral-700 hover:bg-neutral-200 data-[on]:bg-neutral-200"
+                    >
                       {s.label}
-                    </span>
+                    </button>
                   )}
                 </li>
               ))}
             </ul>
           </div>
-        </div>
+        </SurfaceFocus>
 
-        <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
+        {/* The five items fade up once, in turn (styles/pricing-surfaces.css). */}
+        <Motion as="ul" replay={false} threshold={0.2} className="motion grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           {alwaysIncluded.map((a) => (
-            <li key={a.title} className="flex flex-col gap-2 border-t border-border-strong pt-5">
+            <li key={a.title} className="psf-rise flex flex-col gap-2 border-t border-border-strong pt-5">
               <h4 className="text-[17px] leading-6 font-semibold text-text">
                 {a.href ? (
                   <Link href={a.href} className="hover:underline">
@@ -327,7 +204,7 @@ export function AlwaysIncludedSection() {
               <p className="text-body-s text-text-muted">{a.body}</p>
             </li>
           ))}
-        </ul>
+        </Motion>
 
         <div className="mt-2 flex flex-col gap-5 rounded-[20px] border border-border-on-dark bg-brand-navy-deep px-6 py-[26px] md:flex-row md:items-center md:justify-between md:gap-8 md:px-8">
           <div className="flex items-start gap-5 md:items-center">
@@ -339,9 +216,9 @@ export function AlwaysIncludedSection() {
           </div>
           <Link
             href="/products/"
-            className="flex min-h-[44px] shrink-0 items-center text-body-s leading-5 font-semibold text-[#C9D1E3] hover:text-text-on-dark"
+            className="psf-catalogue flex min-h-[44px] shrink-0 items-center text-body-s leading-5 font-semibold text-[#C9D1E3] hover:text-text-on-dark"
           >
-            See the catalogue <span aria-hidden>&nbsp;→</span>
+            See the catalogue <span aria-hidden className="psf-arrow">&nbsp;→</span>
           </Link>
         </div>
       </div>
@@ -388,35 +265,7 @@ export function SensorCostSection() {
           </div>
         </div>
 
-        <div className="relative overflow-x-auto rounded-[20px] border border-white/10 bg-[#040818B8]">
-          <table className="w-full min-w-[640px] text-left">
-            <caption className="sr-only">Line items on a sensor-based system compared with Flash</caption>
-            <thead>
-              <tr className="border-b border-white/8 text-micro font-semibold tracking-label">
-                <th scope="col" className="px-7 py-4 font-semibold text-text-on-dark-muted lg:w-[320px]">
-                  LINE ITEM
-                </th>
-                <th scope="col" className="px-7 py-4 font-semibold text-text-on-dark lg:w-[464px]">
-                  FLASH
-                </th>
-                <th scope="col" className="px-7 py-4 font-semibold text-text-on-dark-muted">
-                  SENSOR-BASED SYSTEM
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {sensorComparison.map((r) => (
-                <tr key={r.item} className="border-b border-white/8 last:border-b-0">
-                  <th scope="row" className="px-7 py-[22px] text-body font-semibold text-text-on-dark">
-                    {r.item}
-                  </th>
-                  <td className="px-7 py-[22px] text-body text-text-on-dark">{r.flash}</td>
-                  <td className="px-7 py-[22px] text-body text-text-on-dark-muted">{r.sensor}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <SensorCostFigure rows={sensorComparison} />
 
         <Link
           href="/why-flash/prediction-vs-sensors-vs-detection/"

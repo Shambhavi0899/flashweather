@@ -1,11 +1,17 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { BOLT_PATH } from '@/components/bolt-path';
+import { AgentChat } from '@/components/agent-conversation/agent-chat';
+import { AgentConversation } from '@/components/agent-conversation/agent-conversation';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ButtonLink } from '@/components/button';
+import { Motion } from '@/components/motion';
 import { HeroBackground, HeroSection, HeroWords } from '@/components/hero/hero';
+import { KeepReading } from '@/components/industries/keep-reading';
 import { PortfolioMap } from '@/components/case-study/portfolio-map';
+import { TwoScreens } from '@/components/case-study/two-screens';
+import { StoryChapters } from '@/components/case-study/story-chapters';
+import { Lines } from '@/components/lines';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { IllustrativeChip, Kicker, SectionHeading } from '@/components/why-flash/section-heading';
@@ -21,6 +27,9 @@ export const metadata = buildMetadata({
   description: page.description,
   path: page.path,
 });
+
+/** The story blocks that sit on the chapter markers: Problem, Change, Scale. */
+const chapters = troon.narrative.flatMap((block) => (block.chapter ? [{ id: block.id, label: block.chapter }] : []));
 
 const cardShadow = 'shadow-[0_1px_2px_#0B13220D,0_12px_32px_#0B13220F]';
 
@@ -79,12 +88,16 @@ export default function TroonCaseStudyPage() {
                 <p className="hero-support text-caption leading-5 text-[#8F9AB8]">{troon.productsLine}</p>
               </div>
 
-              <figure className="hero-visual hero-visual-side flex grow flex-col gap-5 rounded-[20px] border border-white/10 bg-[#040818B8] p-6 shadow-[0_30px_80px_#00000073] md:p-8">
+              {/* Enters after the buttons, then plays its own intro (styles/case-study-quote.css). */}
+              <figure className="csq hero-visual hero-visual-side flex grow flex-col gap-5 rounded-[20px] border border-white/10 bg-[#040818B8] p-6 shadow-[0_30px_80px_#00000073] md:p-8">
                 <span aria-hidden className="h-[2px] w-10 bg-viz-gold" />
                 <blockquote className="text-[20px] leading-[30px] font-medium tracking-heading text-text-on-dark md:text-[22px] md:leading-[32px]">
-                  <p>“{troon.heroQuote.quote}”</p>
+                  <p>
+                    <span className="csq-mark">“</span>
+                    <Lines className="csq-word" text={`${troon.heroQuote.quote}”`} />
+                  </p>
                 </blockquote>
-                <figcaption className="flex flex-col gap-1">
+                <figcaption className="csq-cite flex flex-col gap-1">
                   <span className="text-[15px] leading-5 font-semibold text-text-on-dark">{troon.heroQuote.name}</span>
                   <span className="text-body-s leading-5 text-[#C9D1E3]">{troon.heroQuote.role}</span>
                 </figcaption>
@@ -96,7 +109,9 @@ export default function TroonCaseStudyPage() {
         {/* Facts + narrative */}
         <section aria-label="The Troon rollout" className="bg-neutral-0">
           <div className="container-page flex flex-col gap-12 py-20 lg:flex-row lg:items-start lg:gap-16 lg:py-28">
-            <aside aria-label="At a glance" className="rounded-lg bg-surface-sunken px-7 pt-7 pb-3 lg:w-[360px] lg:shrink xl:shrink-0">
+            {/* Sticks beside the story from lg, the chapter markers at its head (styles/case-study-story.css). */}
+            <aside aria-label="At a glance" className="css-card rounded-lg bg-surface-sunken px-7 pt-7 pb-3 lg:w-[360px] lg:shrink xl:shrink-0">
+              <StoryChapters chapters={chapters} variant="rail" />
               <p className="pb-2 text-[11px] leading-[14px] font-semibold tracking-label text-text-muted uppercase">
                 At a glance
               </p>
@@ -116,14 +131,22 @@ export default function TroonCaseStudyPage() {
             </aside>
 
             <div className="flex flex-col gap-10 lg:w-narrow lg:shrink xl:shrink-0">
+              {/* On a phone the markers are a slim bar that sticks for the length of the story. */}
+              <StoryChapters chapters={chapters} variant="bar" />
               {troon.narrative.map((block, b) => (
-                <div key={block.heading} className="flex flex-col gap-4">
-                  <h2 className="text-[26px] leading-[32px] font-extrabold tracking-[-0.03em] text-text md:text-h2 md:leading-h2">
+                <Motion
+                  key={block.heading}
+                  id={block.id}
+                  className="motion css-section flex flex-col gap-4"
+                  replay={false}
+                  threshold={0.2}
+                >
+                  <h2 className="css-rise text-[26px] leading-[32px] font-extrabold tracking-[-0.03em] text-text md:text-h2 md:leading-h2">
                     {block.heading}
                   </h2>
                   {block.paragraphs.map((p) =>
                     b === troon.narrative.length - 1 ? (
-                      <p key={p.slice(0, 24)} className="text-body text-text">
+                      <p key={p.slice(0, 24)} className="css-rise text-body text-text">
                         {p.split('the Flash API')[0]}
                         <Link href={links.api.href} className="font-semibold text-brand-blue hover:underline">
                           the Flash API
@@ -131,12 +154,12 @@ export default function TroonCaseStudyPage() {
                         {p.split('the Flash API')[1]}
                       </p>
                     ) : (
-                      <p key={p.slice(0, 24)} className="text-body text-text">
+                      <p key={p.slice(0, 24)} className="css-rise text-body text-text">
                         {p}
                       </p>
                     ),
                   )}
-                </div>
+                </Motion>
               ))}
             </div>
           </div>
@@ -160,41 +183,7 @@ export default function TroonCaseStudyPage() {
                 different reason than the app.
               </p>
             </div>
-            <ul className="grid gap-6 lg:grid-cols-2">
-              {troon.screens.map((screen) => (
-                <li
-                  key={screen.badge}
-                  className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-[#040818B8]"
-                >
-                  <div className="relative aspect-[612/330] bg-brand-navy-deep">
-                    <Image
-                      src={screen.image.src}
-                      alt={screen.image.alt}
-                      fill
-                      sizes="(min-width: 1440px) 612px, (min-width: 1024px) 46vw, 100vw"
-                      className="object-cover"
-                    />
-                    <div aria-hidden className="case-study-screen-grade absolute inset-0" />
-                    <p className="absolute top-4 left-4 flex h-6 items-center rounded-[12px] bg-[#040818C7] px-[10px] text-[10px] leading-3 font-extrabold tracking-[0.13em] text-viz-gold uppercase">
-                      {screen.badge}
-                    </p>
-                    <h3 className="absolute bottom-4 left-4 text-body leading-body-s font-extrabold tracking-heading text-white">
-                      {screen.caption}
-                    </h3>
-                  </div>
-                  <div className="flex flex-col gap-2 px-6 pt-5 pb-6">
-                    <p className="text-micro font-bold tracking-[0.13em] text-text-on-dark-muted uppercase">{screen.role}</p>
-                    <p className="text-[15px] leading-6 text-neutral-300">{screen.body}</p>
-                    <Link
-                      href={screen.link.href}
-                      className="inline-flex min-h-11 items-center text-body-s font-semibold text-viz-gold hover:underline"
-                    >
-                      {screen.link.label}&nbsp;<span aria-hidden>→</span>
-                    </Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <TwoScreens screens={troon.screens} />
             <p className="text-micro leading-caption text-text-on-dark-muted">
               Product imagery. Illustrative example, not live weather.
             </p>
@@ -224,49 +213,20 @@ export default function TroonCaseStudyPage() {
               </Link>
             </div>
 
-            <figure
-              aria-label="Illustrative Flash Agent conversation, not live weather"
-              className="flex grow flex-col gap-[14px] rounded-[20px] border border-white/10 bg-[#040818B8] p-5 md:p-7"
-            >
+            {/* The shared Flash Agent conversation, as on the home page: one
+                panel, no tabs; it plays when it scrolls in, then offers Replay. */}
+            <div className="flex min-w-0 grow flex-col gap-3 lg:basis-0">
               <IllustrativeChip tone="dark" />
-              <div className="flex justify-end">
-                <p className="max-w-panel rounded-t-lg rounded-br-xs rounded-bl-lg bg-white/8 px-[18px] py-[14px] text-[15px] leading-body-s text-white">
-                  {troon.agent.question}
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <span aria-hidden className="bg-gold-metallic flex size-8 shrink-0 items-center justify-center rounded-full">
-                  <svg width="12" height="16" viewBox="0 0 26 34">
-                    <path d={BOLT_PATH} fill="#070D26" />
-                  </svg>
-                </span>
-                <div className="flex max-w-[560px] flex-col gap-[10px]">
-                  <p className="text-[15px] leading-[23px] text-[#DCE2F0]">{troon.agent.answer}</p>
-                  <ul className="flex flex-wrap gap-2">
-                    {troon.agent.actions.map((action) => (
-                      <li
-                        key={action}
-                        className="flex h-[26px] items-center rounded-sm border border-[#128A5E80] bg-[#128A5E2E] px-[10px] text-micro font-medium text-[#5FD3A3]"
-                      >
-                        {action}
-                      </li>
-                    ))}
-                    <li className="flex h-[26px] items-center rounded-sm border border-white/15 px-[10px] text-micro font-medium text-text-on-dark-muted">
-                      {troon.agent.source}
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div
-                aria-hidden
-                className="mt-[6px] flex items-center gap-3 rounded-full border border-white/12 py-[10px] pr-[10px] pl-4"
-              >
-                <span className="grow text-[15px] leading-caption text-[#6F7A99]">Ask about any property, any day…</span>
-                <span className="bg-gold-button flex h-[34px] items-center rounded-full px-4 text-caption leading-micro font-extrabold text-brand-navy">
-                  Ask
-                </span>
-              </div>
-            </figure>
+              <AgentChat className="flex">
+                <AgentConversation
+                  question={troon.agent.question}
+                  reply={troon.agent}
+                  label={`Illustrative Flash Agent conversation, not live weather: Flash Agent answers "${troon.agent.question}"`}
+                  placeholder={troon.agent.placeholder}
+                  className="flex w-full"
+                />
+              </AgentChat>
+            </div>
           </div>
         </section>
 
@@ -282,17 +242,20 @@ export default function TroonCaseStudyPage() {
                 Troon; the per-event log is the evidence.
               </p>
             </div>
-            <dl className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {troon.stats.map((stat) => (
-                <div
-                  key={stat.value}
-                  className={`flex flex-col-reverse justify-end gap-2 rounded-[20px] border border-border bg-neutral-0 p-6 ${cardShadow}`}
-                >
-                  <dt className="text-[15px] leading-body-s text-text-muted">{stat.label}</dt>
-                  <dd className="text-display-m leading-display-m font-bold tracking-[-0.03em] text-text">{stat.value}</dd>
-                </div>
-              ))}
-            </dl>
+            {/* The four figures fade up together, once (styles/case-study-numbers.css). */}
+            <Motion replay={false} threshold={0.2} className="motion">
+              <dl className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {troon.stats.map((stat) => (
+                  <div
+                    key={stat.value}
+                    className={`csn-rise flex flex-col-reverse justify-end gap-2 rounded-[20px] border border-border bg-neutral-0 p-6 ${cardShadow}`}
+                  >
+                    <dt className="text-[15px] leading-body-s text-text-muted">{stat.label}</dt>
+                    <dd className="text-display-m leading-display-m font-bold tracking-[-0.03em] text-text">{stat.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Motion>
             <p className="text-body-s text-text-muted">
               How 99.6% is scored:{' '}
               <Link href={whyFlashPages.accuracyMethod.path} className="font-semibold text-brand-blue hover:underline">
@@ -316,11 +279,17 @@ export default function TroonCaseStudyPage() {
               {troon.proof.map((item, i) => (
                 <li
                   key={item.name}
-                  className={`flex flex-col justify-center gap-[6px] border-border py-7 lg:px-8 ${
+                  data-current={item.name === troon.proofCurrent ? '' : undefined}
+                  className={`csn-proof flex flex-col gap-[6px] border-border py-7 lg:px-8 ${
                     i < troon.proof.length - 1 ? 'border-b sm:border-b-0 lg:border-r' : ''
                   } ${i === troon.proof.length - 1 ? 'lg:pr-0' : ''}`}
                 >
-                  <p className="text-h4 leading-6 font-bold tracking-[0.02em] text-brand-navy uppercase">{item.name}</p>
+                  <p className="flex flex-wrap items-center gap-x-[10px] gap-y-[6px]">
+                    <span className="csn-proof-name text-h4 leading-6 font-bold tracking-[0.02em] text-brand-navy uppercase">
+                      {item.name}
+                    </span>
+                    {item.name === troon.proofCurrent && <span className="csn-tag">This case study</span>}
+                  </p>
                   <p className="text-caption text-text-muted">{item.use}</p>
                 </li>
               ))}
@@ -335,13 +304,17 @@ export default function TroonCaseStudyPage() {
               What golf operators say about running Flash
             </SectionHeading>
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-              <div className="relative h-[360px] shrink-0 overflow-hidden rounded-lg bg-neutral-900 lg:h-[548px] lg:w-[472px]">
+              {/* The photo pulls into focus, then each card fades up (styles/case-study-testimonials.css). */}
+              <Motion
+                replay={false}
+                className="motion cst-photo relative h-[360px] shrink-0 overflow-hidden rounded-lg bg-neutral-900 lg:h-[548px] lg:w-[472px]"
+              >
                 <Image
                   src={troon.testimonialPhoto.src}
                   alt={troon.testimonialPhoto.alt}
                   fill
                   sizes="(min-width: 1024px) 472px, 100vw"
-                  className="object-cover"
+                  className="cst-photo-image object-cover"
                 />
                 <div aria-hidden className="case-study-photo-grade absolute inset-0" />
                 <div className="absolute inset-x-5 bottom-5 flex flex-col gap-[6px]">
@@ -350,21 +323,23 @@ export default function TroonCaseStudyPage() {
                     Play is cleared on a forecast, not on a flash that already landed.
                   </p>
                 </div>
-              </div>
+              </Motion>
               <ul className="flex grow flex-col gap-6">
                 {troon.testimonials.map((t) => (
-                  <li key={t.name + t.quote.slice(0, 12)}>
-                    <figure className={`flex flex-col gap-5 rounded-[20px] border border-border bg-neutral-0 p-6 md:p-8 ${cardShadow}`}>
-                      <span aria-hidden className="h-[3px] w-10 bg-brand-blue" />
-                      <blockquote className="text-h4 leading-body-l text-text">
-                        <p>“{t.quote}”</p>
-                      </blockquote>
-                      <figcaption className="flex flex-col gap-[2px]">
+                  <Motion as="li" key={t.name + t.quote.slice(0, 12)} replay={false} className="motion cst-card">
+                    <figure className="cst-quote flex flex-col gap-5 rounded-[20px] border border-border bg-neutral-0 p-6 md:p-8">
+                      <div className="flex gap-5">
+                        <span aria-hidden className="cst-line w-[2px] shrink-0 bg-viz-gold" />
+                        <blockquote className="text-h4 leading-body-l text-text">
+                          <p>“{t.quote}”</p>
+                        </blockquote>
+                      </div>
+                      <figcaption className="flex flex-col gap-[2px] pl-[22px]">
                         <span className="text-[15px] leading-body-s font-semibold text-text">{t.name}</span>
                         <span className="text-body-s leading-5 text-text-muted">{t.role}</span>
                       </figcaption>
                     </figure>
-                  </li>
+                  </Motion>
                 ))}
               </ul>
             </div>
@@ -407,38 +382,21 @@ export default function TroonCaseStudyPage() {
         </section>
 
         {/* Related */}
-        <nav aria-label="Related reading" className="bg-neutral-0">
-          <div className="container-page flex flex-col gap-6 py-20 lg:py-28">
-            <Kicker>Related · Keep reading</Kicker>
-            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {related.map((item) => (
-                <li key={item.href} className="border-t-2 border-border-strong pt-5">
-                  <Link href={item.href} className="group flex flex-col gap-[6px]">
-                    <span className="text-[10px] leading-3 font-semibold tracking-label text-text-muted uppercase">
-                      {item.kind}
-                    </span>
-                    <span className="text-body-l leading-body font-semibold text-text group-hover:text-brand-blue">
-                      {item.title}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <ul className="flex flex-wrap gap-x-6 border-t border-border pt-4">
-              {[links.commandCenter, links.api, links.agent, links.schools].map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="inline-flex min-h-11 items-center text-body-s font-semibold text-brand-blue hover:underline"
-                  >
-                    {item.label === 'API offerings' ? 'API offerings and integrations' : item.label}&nbsp;
-                    <span aria-hidden>→</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </nav>
+        <KeepReading id="keep-reading" related={{ heading: 'Keep reading', links: related }}>
+          <ul className="flex flex-wrap gap-x-6 border-t border-border pt-4">
+            {[links.commandCenter, links.api, links.agent, links.schools].map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="inline-flex min-h-11 items-center text-body-s font-semibold text-brand-blue hover:underline"
+                >
+                  {item.label === 'API offerings' ? 'API offerings and integrations' : item.label}&nbsp;
+                  <span aria-hidden>→</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </KeepReading>
 
       </main>
       <SiteFooter />

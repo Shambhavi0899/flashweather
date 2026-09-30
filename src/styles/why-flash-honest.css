@@ -1,0 +1,86 @@
+/*
+ * why-flash-honest — "How we keep this comparison honest" on /why-flash/
+ * everyone-else-vs-flash/ (the method note, wfh-*).
+ *
+ * Each row of the sources table carries a small badge in a fixed slot at its
+ * right end, so the two badges share one edge: the Flash row's links to the
+ * accuracy method, the Everyone else row's is a plain label. Below 640px the
+ * badge drops under the row's text.
+ *
+ * Once, as the section scrolls in (<Motion>), the heading and paragraphs fade
+ * up, then the table, then the "Report an error" button. The button lifts
+ * slightly on hover. Reduced motion: no fade and no lift.
+ */
+
+@layer components {
+  .wfh-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+    @media (width >= 640px) {
+      flex: 1 1 0;
+      flex-direction: row;
+      gap: 24px;
+    }
+  }
+  .wfh-badge-slot {
+    display: flex;
+    flex: none;
+    @media (width >= 640px) {
+      justify-content: flex-end;
+      width: 168px;
+    }
+  }
+  .wfh-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 10px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-neutral-100);
+    color: var(--color-text-muted);
+    font-size: var(--text-micro);
+    line-height: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .wfh-badge[data-tone='scored'] {
+    background-color: color-mix(in srgb, var(--color-brand-blue) 8%, transparent);
+    color: var(--color-brand-blue);
+  }
+  a.wfh-badge:hover {
+    background-color: color-mix(in srgb, var(--color-brand-blue) 14%, transparent);
+  }
+
+  .wfh-report:hover {
+    box-shadow: 0 6px 16px #0b13221f;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .wfh-report:hover {
+      transform: translateY(-2px);
+    }
+
+    .motion[data-anim]:not([data-anim='reset']) .wfh-rise {
+      animation: wfh-rise 600ms var(--motion-ease) var(--motion-delay) both;
+    }
+    .motion[data-anim]:not([data-anim='reset']) .wfh-rise[data-step='1'] {
+      animation-delay: calc(var(--motion-delay) + 80ms);
+    }
+    .motion[data-anim]:not([data-anim='reset']) .wfh-rise[data-step='2'] {
+      animation-delay: calc(var(--motion-delay) + 200ms);
+    }
+    .motion[data-anim]:not([data-anim='reset']) .wfh-rise[data-step='3'] {
+      animation-delay: calc(var(--motion-delay) + 300ms);
+    }
+  }
+}
+
+@keyframes wfh-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}

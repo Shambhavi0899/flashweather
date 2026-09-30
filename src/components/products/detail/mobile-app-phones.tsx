@@ -5,26 +5,35 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
 
 import { BOLT_PATH } from '@/components/bolt-path';
 
-const SCREENS = '/images/products/mobile-app/screens';
+/** The app's own screens, one per phone (public/app). `width`/`height` are each file's. */
+const SCREENS = '/app';
 
 const PHONES = [
   {
     key: 'lightning-probability',
+    width: 430,
+    height: 956,
     label: 'Lightning Probability',
     alt: 'The Flash mobile app showing 1-hour lightning probability around San Antonio, Texas, from 1–20% to 80–100%',
   },
   {
     key: 'future-radar',
+    width: 424,
+    height: 956,
     label: 'Future Radar',
     alt: 'The Flash mobile app showing 18-hour future radar over Louisiana and Mississippi with a timeline slider',
   },
   {
     key: 'live-radar',
+    width: 424,
+    height: 956,
     label: 'Live Radar',
     alt: 'The Flash mobile app showing current radar over Louisiana with a heavy storm cell near the coast',
   },
   {
     key: '7-day-forecast',
+    width: 426,
+    height: 938,
     label: '7-Day Forecast',
     alt: 'The Flash mobile app showing the hourly forecast and a 7-day daily forecast with highs, lows, rain chance and wind',
   },
@@ -35,9 +44,9 @@ const HOVER_MS = 140;
 /** After a person picks a phone, the cycle waits this long before it plays on. */
 const IDLE_MS = 5000;
 /** The fan-in and the labels are done (styles/mobile-app-hero.css): selection takes over. */
-const INTRO_MS = 2300;
+const INTRO_MS = 1450;
 /** The push notification lands this long after the intro, once. */
-const NOTICE_MS = 1000;
+const NOTICE_MS = 500;
 /** A swipe on the one-phone layout moves on past this many pixels. */
 const SWIPE_PX = 40;
 
@@ -57,23 +66,26 @@ const ONE_UP = '(width < 640px)';
  * Live Radar and the 7-Day Forecast, cut from the app's product lineup.
  *
  * The motion is CSS (styles/mobile-app-hero.css) on the hero's timings:
- *   intro   after the headline, the phones fan out from a tilted stack in
- *           the centre to their places and settle straight; the labels
- *           rise under them
+ *   intro   right after the headline, in 600ms, the phones fan out from a
+ *           tilted stack in the centre to their places and settle
+ *           straight; the labels rise under them
  *   select  the labels are tabs. The selected phone scales up and comes
  *           forward, the others dim and sit back. Hover (mouse) or click a
  *           label or a phone to bring it forward
- *   cycle   the selected label's bar fills over 4s and the next phone takes
+ *   cycle   the selected label's bar fills over 2.5s and the next phone takes
  *           over. It holds while the pointer is on the lineup, while a key
  *           has focus in it, while the hero is off screen, while the
  *           notification is up, and for 5s after a person picks
- *   notice  once, 1s after the intro: a push notification drops onto the
- *           front phone, holds 3s, and leaves
+ *   notice  once, 500ms after the intro: a push notification drops onto the
+ *           front phone, holds 2.5s, and leaves
  *   float   each phone drifts 3px, out of step with the others
  *
  * Below sm it is one phone at a time: swipe, or tap the dots. With reduced
  * motion the lineup is still, Lightning Probability forward, and there is no
  * notification. Without JavaScript the phones fan in and stay level.
+ *
+ * A screenshot that fails to load is hidden (`data-failed`), so the phone
+ * shows its dark display and never a broken-image icon.
  */
 export function MobileAppPhones() {
   const motion = useSyncExternalStore(subscribe, matches, () => false);
@@ -94,7 +106,7 @@ export function MobileAppPhones() {
     activeRef.current = active;
   }, [active]);
 
-  // With motion, the selection waits for the fan-in, and the notification comes 1s after it.
+  // With motion, the selection waits for the fan-in, and the notification comes 500ms after it.
   useEffect(() => {
     if (!motion) return;
     const done = window.setTimeout(() => setReady(true), INTRO_MS);
@@ -104,6 +116,13 @@ export function MobileAppPhones() {
       clearTimeout(drop);
     };
   }, [motion]);
+
+  // A screenshot that failed before React was listening: hide it now.
+  useEffect(() => {
+    root.current?.querySelectorAll<HTMLImageElement>('.mph-shot').forEach((img) => {
+      if (img.complete && img.naturalWidth === 0) img.setAttribute('data-failed', '');
+    });
+  }, []);
 
   useEffect(
     () => () => {
@@ -234,15 +253,17 @@ export function MobileAppPhones() {
               <div className="mph-phone">
                 <div className="mph-screen">
                   <Image
-                    src={`${SCREENS}/flash-mobile-app-screen-${phone.key}.webp`}
+                    src={`${SCREENS}/app-screen-${phone.key}.png`}
                     alt={phone.alt}
-                    width={320}
-                    height={692}
+                    width={phone.width}
+                    height={phone.height}
+                    quality={90}
                     preload={i === 0}
                     loading={i === 0 ? undefined : 'eager'}
                     sizes="(min-width: 1280px) 200px, (min-width: 640px) 30vw, 60vw"
                     draggable={false}
                     className="mph-shot"
+                    onError={(event) => event.currentTarget.setAttribute('data-failed', '')}
                   />
                 </div>
                 {notice === i && (

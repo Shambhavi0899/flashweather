@@ -5,28 +5,35 @@ import { BOLT_PATH } from '@/components/bolt-path';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ButtonLink } from '@/components/button';
 import { HeroSection } from '@/components/hero/hero';
+import { Logo } from '@/components/logo';
+import { Motion } from '@/components/motion';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { AlertClock } from '@/components/why-flash/alert-clock';
 import { ComparisonTable } from '@/components/why-flash/comparison-table';
+import { DetectionFitProvider, FitCases, FitSummary } from '@/components/why-flash/detection-fit';
 import { FaqList } from '@/components/why-flash/faq-list';
+import { OptionCards } from '@/components/why-flash/option-cards';
 import { IllustrativeChip, Kicker, SectionHeading } from '@/components/why-flash/section-heading';
 import { WhyFlashLinks } from '@/components/why-flash/why-flash-links';
 import { DEMO_HREF } from '@/content/navigation';
 import {
+  agenticSteps,
   clockCards,
-  detectionFits,
   everyoneElseFaqs,
   links,
-  options,
   summaryStrip,
   WHY_FLASH_HOME,
   whyFlashPages,
 } from '@/content/why-flash';
 import { JsonLd, faqSchema } from '@/lib/seo/jsonld';
 import { buildMetadata } from '@/lib/seo/metadata';
+import { site } from '@/lib/seo/site';
 
 const page = whyFlashPages.everyoneElse;
+
+/** "Report an error" in the method note: a correction email with its subject filled in. */
+const REPORT_ERROR_HREF = `mailto:${site.email}?subject=${encodeURIComponent('Comparison correction: Everyone else vs Flash')}`;
 
 export const metadata = buildMetadata({
   title: page.title,
@@ -98,11 +105,9 @@ export default function EveryoneElseVsFlashPage() {
                   </span>
                   <span
                     aria-hidden
-                    className="hero-support hidden rotate-3 items-center gap-2 rounded-[8px] bg-brand-navy px-[14px] py-[10px] text-micro font-extrabold tracking-[0.13em] text-viz-gold shadow-[0_12px_28px_#070D2647] after:content-['FLASH'] sm:inline-flex"
+                    className="hero-support hidden rotate-3 items-center rounded-[8px] bg-brand-navy px-[18px] py-3 shadow-[0_12px_28px_#070D2647] sm:inline-flex"
                   >
-                    <svg width="10" height="14" viewBox="0 0 26 34" className="shrink-0">
-                      <path d={BOLT_PATH} fill="var(--color-viz-gold)" />
-                    </svg>
+                    <Logo variant="dark" size="tag" link={false} alt="" />
                   </span>
                 </span>
               </h1>
@@ -238,11 +243,17 @@ export default function EveryoneElseVsFlashPage() {
               </p>
             </div>
 
-            <ul className="grid gap-6 lg:grid-cols-2">
+            {/* The dial sits between the cards from xl (Detection left, Flash right, each beside its
+                markers) and above them below xl. One Motion block, so the sweep can light the cards. */}
+            <Motion className="motion eec flex flex-wrap gap-6 xl:flex-nowrap xl:items-center xl:gap-10" replay={false}>
+              <AlertClock className="w-full xl:order-2 xl:w-auto xl:shrink-0" />
               {clockCards.map((card) => (
-                <li
-                  key={card.label}
-                  className="flex flex-col gap-4 rounded-[20px] border border-white/10 bg-[#040818B8] p-6 md:p-7"
+                <div
+                  key={card.key}
+                  data-kind={card.key}
+                  className={`eec-card flex w-full flex-col gap-4 rounded-[20px] border border-white/10 bg-[#040818B8] p-6 md:p-7 lg:w-[calc(50%-12px)] xl:w-auto xl:min-w-0 xl:flex-1 ${
+                    card.key === 'flash' ? 'xl:order-3' : 'xl:order-1'
+                  }`}
                 >
                   <h3 className="text-[11px] leading-[14px] font-bold tracking-[0.13em] text-text-on-dark-muted uppercase">
                     {card.label}
@@ -253,142 +264,114 @@ export default function EveryoneElseVsFlashPage() {
                     On site, that means
                   </p>
                   <p className="text-body text-text-on-dark">{card.onSite}</p>
-                </li>
+                </div>
               ))}
-            </ul>
-
-            <AlertClock />
+            </Motion>
           </div>
         </section>
 
-        {/* When detection fits */}
-        <section aria-labelledby="detection-fit" className="bg-neutral-0">
-          <div className="container-page flex flex-col gap-12 py-20 lg:flex-row lg:items-start lg:gap-20 lg:py-28">
-            <div className="flex flex-col gap-3 lg:w-[408px] lg:shrink xl:shrink-0">
-              <SectionHeading id="detection-fit" kicker="Honest answer" size="lg">
-                When is a detection-based tool the better fit?
-              </SectionHeading>
-              <p className="text-[15px] leading-body-s text-text-muted">
-                Three cases where we would tell you to keep the sensor, and what Flash does beside it.
-              </p>
-            </div>
-            <ol className="flex flex-col lg:w-narrow lg:shrink xl:shrink-0">
-              {detectionFits.map((fit, i) => (
-                <li
-                  key={fit.title}
-                  className={`flex flex-col gap-5 py-[22px] sm:flex-row ${i === 0 ? 'pt-0' : ''} ${
-                    i < detectionFits.length - 1 ? 'border-b border-border' : 'pb-0'
-                  }`}
-                >
-                  <div className="relative h-[180px] shrink-0 overflow-hidden rounded-[12px] bg-neutral-900 sm:h-[92px] sm:w-[132px]">
-                    <Image
-                      src={fit.image.src}
-                      alt={fit.image.alt}
-                      fill
-                      sizes="(min-width: 480px) 132px, 100vw"
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-[6px]">
-                    <p aria-hidden className="text-micro font-bold tracking-[0.1em] text-text-subtle">
-                      {String(i + 1).padStart(2, '0')}
-                    </p>
-                    <h3 className="text-body-l leading-body font-bold text-text">{fit.title}</h3>
-                    <p className="text-[15px] leading-body-s text-text-muted">
-                      {fit.link ? (
-                        <>
-                          {fit.body.split(fit.link.label)[0]}
-                          <Link href={fit.link.href} className="font-semibold text-brand-blue hover:underline">
-                            {fit.link.label}
-                          </Link>
-                          {fit.body.split(fit.link.label)[1]}
-                        </>
-                      ) : (
-                        fit.body
-                      )}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        {/* Alternatives */}
-        <section aria-labelledby="your-options" className="border-t border-border bg-surface-sunken">
-          <div className="container-page flex flex-col gap-8 py-20 lg:py-28">
-            <SectionHeading id="your-options" kicker="Your options" size="lg" className="max-w-[900px]">
-              Detection, prediction or do it yourself: which one fits your site?
-            </SectionHeading>
-
-            <ul className="grid gap-6 lg:grid-cols-3">
-              {options.map((option) => (
-                <li
-                  key={option.name}
-                  className="flex flex-col gap-4 rounded-[20px] border border-border bg-neutral-0 p-6 shadow-[0_1px_2px_#0B13220D,0_12px_32px_#0B13220F] md:p-7"
-                >
-                  <h3 className="text-h4 leading-h4 font-extrabold tracking-heading text-text">{option.name}</h3>
-                  <p className="text-[10px] leading-3 font-bold tracking-[0.13em] text-brand-blue">FITS WHEN</p>
-                  <p className="text-[15px] leading-body-s text-text">{option.fits}</p>
-                  <p className="text-[10px] leading-3 font-bold tracking-[0.13em] text-text-muted">WATCH FOR</p>
-                  <p className="text-[15px] leading-body-s text-text-muted">{option.watch}</p>
-                </li>
-              ))}
-            </ul>
-
-            <div className="flex flex-col gap-6 border-t border-border pt-10 lg:flex-row lg:items-start lg:gap-20">
-              <div className="flex flex-col gap-[10px] lg:w-[408px] lg:shrink xl:shrink-0">
-                <Kicker>The agentic approach</Kicker>
-                <h3 className="text-h3 leading-h3 font-extrabold tracking-display text-text">
-                  Everyone else vs the agentic approach
-                </h3>
+        {/* When detection fits, then the options: the self-check's selection carries into the next section. */}
+        <DetectionFitProvider>
+          <section aria-labelledby="detection-fit" className="bg-neutral-0">
+            <div className="container-page flex flex-col gap-12 py-20 lg:flex-row lg:items-start lg:gap-20 lg:py-28">
+              <div className="fit-intro flex flex-col gap-3 lg:w-[408px] lg:shrink xl:shrink-0">
+                <SectionHeading id="detection-fit" kicker="Honest answer" size="lg">
+                  When is a detection-based tool the better fit?
+                </SectionHeading>
+                <p className="text-[15px] leading-body-s text-text-muted">
+                  Three cases where we would tell you to keep the sensor, and what Flash does beside it.
+                </p>
+                <FitSummary optionsHref="#your-options" />
               </div>
-              <div className="flex flex-col gap-4 lg:w-narrow lg:shrink xl:shrink-0">
-                <p className="text-[17px] leading-h4 text-text-muted">
-                  A dashboard, whoever makes it, still needs someone to open it, read the alert and make the call. Flash
-                  Agent removes that step. You ask in plain language — “Which of my sites has a lightning Watch before
-                  Sunday&rsquo;s tee times?” — and it answers from the same 1×1 km cells, then acts in the tools you
-                  already run: moves the practice in your calendar, flags the tee sheet, reschedules the lift in
-                  Procore, pushes the canvass list to your CRM. Every action is permissioned per connector, logged, and
-                  confirmed by a human before a schedule or record changes.
-                </p>
-                <p className="text-body-s text-text-muted">
-                  Flash provides the harness: the prediction engine, your sites and your data, connected to the tools
-                  you already run. Ask in plain language; get an answer or an action.
-                </p>
-                <div className="flex flex-wrap gap-x-7">
-                  <Link
-                    href={links.agent.href}
-                    className="inline-flex min-h-11 items-center text-body-s leading-caption font-bold text-brand-blue hover:underline"
-                  >
-                    See Flash Agent&nbsp;<span aria-hidden>→</span>
-                  </Link>
-                  <Link
-                    href={links.integrations.href}
-                    className="inline-flex min-h-11 items-center text-body-s leading-caption font-bold text-brand-blue hover:underline"
-                  >
-                    Integrations&nbsp;<span aria-hidden>→</span>
-                  </Link>
+              <div className="flex flex-col lg:-mt-5 lg:w-narrow lg:shrink xl:shrink-0">
+                <FitCases />
+              </div>
+            </div>
+          </section>
+
+          {/* Alternatives */}
+          <section aria-labelledby="your-options" className="border-t border-border bg-surface-sunken">
+            <div className="container-page flex flex-col gap-8 py-20 lg:py-28">
+              <SectionHeading id="your-options" kicker="Your options" size="lg" className="max-w-[900px]">
+                Detection, prediction or do it yourself: which one fits your site?
+              </SectionHeading>
+
+              <OptionCards />
+
+              <div className="flex flex-col gap-8 border-t border-border pt-10 lg:flex-row lg:items-start lg:gap-20">
+                <div className="flex flex-col gap-[10px] lg:w-[408px] lg:shrink xl:shrink-0">
+                  <Kicker>The agentic approach</Kicker>
+                  <h3 className="text-h3 leading-h3 font-extrabold tracking-display text-text">
+                    Everyone else vs the agentic approach
+                  </h3>
+                  <p className="text-[17px] leading-h4 text-text-muted">
+                    A dashboard, whoever makes it, still needs someone to open it, read the alert and make the call.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-6 lg:w-narrow lg:shrink xl:shrink-0">
+                  <Motion as="ol" className="motion agf" label="How Flash Agent works" replay={false} threshold={0.5}>
+                    {agenticSteps.map((step, i) => (
+                      <li key={step.label} className="agf-step" style={{ '--agf-i': i } as React.CSSProperties}>
+                        <div aria-hidden className="agf-rail">
+                          <span className="agf-dot" />
+                          <span className="agf-line" />
+                        </div>
+                        <div className="agf-copy">
+                          <p className="text-micro font-bold tracking-[0.13em] text-brand-blue uppercase">
+                            {step.label}
+                          </p>
+                          <p
+                            className={`text-body leading-body ${i === 0 ? 'font-semibold text-text' : 'text-text-muted'}`}
+                          >
+                            {step.body}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </Motion>
+                  <div className="flex flex-wrap gap-x-7">
+                    <Link
+                      href={links.agent.href}
+                      className="inline-flex min-h-11 items-center text-body-s leading-caption font-bold text-brand-blue hover:underline"
+                    >
+                      See Flash Agent&nbsp;<span aria-hidden>→</span>
+                    </Link>
+                    <Link
+                      href={links.integrations.href}
+                      className="inline-flex min-h-11 items-center text-body-s leading-caption font-bold text-brand-blue hover:underline"
+                    >
+                      Integrations&nbsp;<span aria-hidden>→</span>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </DetectionFitProvider>
 
         {/* Method note */}
         <section aria-labelledby="honest-comparison" className="bg-neutral-0">
-          <div className="container-page flex flex-col gap-10 py-20 lg:flex-row lg:items-start lg:gap-20 lg:py-28">
-            <SectionHeading id="honest-comparison" kicker="How this page is written" size="lg" className="lg:w-[408px] lg:shrink xl:shrink-0">
+          <Motion
+            className="motion container-page flex flex-col gap-10 py-20 lg:flex-row lg:items-start lg:gap-20 lg:py-28"
+            replay={false}
+            threshold={0.2}
+          >
+            <SectionHeading
+              id="honest-comparison"
+              kicker="How this page is written"
+              size="lg"
+              className="wfh-rise lg:w-[408px] lg:shrink xl:shrink-0"
+            >
               How we keep this comparison honest
             </SectionHeading>
             <div className="flex flex-col gap-5 text-body text-text lg:w-narrow lg:shrink xl:shrink-0">
-              <p>
+              <p className="wfh-rise" data-step="1">
                 No vendor is named on this page. “Everyone else” means the two things most operations run today: a
                 detection-based lightning tool that alerts on strikes already located, and an hourly forecast issued
                 for a county or a city. The left column describes what those do by design, not what any one product
                 promises.
               </p>
-              <p>
+              <p className="wfh-rise" data-step="1">
                 Every Flash figure on this page comes from flashweather.ai and is defined on the{' '}
                 <Link href={whyFlashPages.accuracyMethod.path} className="font-semibold text-brand-blue hover:underline">
                   Accuracy Method
@@ -396,45 +379,65 @@ export default function EveryoneElseVsFlashPage() {
                 page: what is scored, on what window and against what ground truth. The clock times in the table are
                 illustrative, not live weather.
               </p>
-              <p>
+              <p className="wfh-rise" data-step="1">
                 If you build a detection tool and think a row is unfair, write to{' '}
                 <a href="mailto:support@flashweather.ai" className="font-semibold text-brand-blue hover:underline">
                   support@flashweather.ai
                 </a>
                 . We will read it, and change the row if it is wrong.
               </p>
-              <dl className="flex flex-col pt-1">
+              <dl className="wfh-rise flex flex-col pt-1" data-step="2">
                 <div className="flex flex-col gap-1 border-y border-border py-[14px] sm:flex-row sm:gap-4">
                   <dt className="w-32 shrink-0 text-micro leading-body-s font-bold tracking-[0.08em] text-text">
                     FLASH FIGURES
                   </dt>
-                  <dd className="text-[15px] leading-body-s text-text-muted">
-                    Defined and scored in the{' '}
-                    <Link href={whyFlashPages.accuracyMethod.path} className="font-semibold text-brand-blue hover:underline">
-                      accuracy method
-                    </Link>{' '}
-                    · product specifications on{' '}
-                    <Link href={links.lightning.href} className="font-semibold text-brand-blue hover:underline">
-                      {links.lightning.label}
-                    </Link>{' '}
-                    and{' '}
-                    <Link href={links.hail.href} className="font-semibold text-brand-blue hover:underline">
-                      {links.hail.label}
-                    </Link>
+                  <dd className="wfh-cell text-[15px] leading-body-s text-text-muted">
+                    <span className="min-w-0 grow">
+                      Defined and scored in the{' '}
+                      <Link
+                        href={whyFlashPages.accuracyMethod.path}
+                        className="font-semibold text-brand-blue hover:underline"
+                      >
+                        accuracy method
+                      </Link>{' '}
+                      · product specifications on{' '}
+                      <Link href={links.lightning.href} className="font-semibold text-brand-blue hover:underline">
+                        {links.lightning.label}
+                      </Link>{' '}
+                      and{' '}
+                      <Link href={links.hail.href} className="font-semibold text-brand-blue hover:underline">
+                        {links.hail.label}
+                      </Link>
+                    </span>
+                    <span className="wfh-badge-slot">
+                      <Link href={whyFlashPages.accuracyMethod.path} className="wfh-badge" data-tone="scored">
+                        Scored · see method
+                      </Link>
+                    </span>
                   </dd>
                 </div>
                 <div className="flex flex-col gap-1 border-b border-border py-[14px] sm:flex-row sm:gap-4">
                   <dt className="w-32 shrink-0 text-micro leading-body-s font-bold tracking-[0.08em] text-text">
                     EVERYONE ELSE
                   </dt>
-                  <dd className="text-[15px] leading-body-s text-text-muted">
-                    Described by category only: detection-based tools and hourly forecasts. No vendor&rsquo;s page is
-                    quoted.
+                  <dd className="wfh-cell text-[15px] leading-body-s text-text-muted">
+                    <span className="min-w-0 grow">
+                      Described by category only: detection-based tools and hourly forecasts. No vendor&rsquo;s page is
+                      quoted.
+                    </span>
+                    <span className="wfh-badge-slot">
+                      <span className="wfh-badge">No vendor named</span>
+                    </span>
                   </dd>
                 </div>
               </dl>
+              <div className="wfh-rise" data-step="3">
+                <ButtonLink href={REPORT_ERROR_HREF} variant="outline-light" size="sm" className="wfh-report">
+                  Report an error
+                </ButtonLink>
+              </div>
             </div>
-          </div>
+          </Motion>
         </section>
 
         {/* FAQ */}
@@ -448,7 +451,6 @@ export default function EveryoneElseVsFlashPage() {
         </section>
 
         <WhyFlashLinks current="everyoneElse" extra={[links.lightning, links.hail, links.pricing]} />
-
       </main>
       <SiteFooter eyebrow="Book a demo · No sensors to install" />
     </>

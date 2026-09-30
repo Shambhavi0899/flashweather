@@ -1,0 +1,74 @@
+/*
+ * case-study-testimonials — Case study: Troon's "What golf operators say
+ * about running Flash" (the photo and the two quote cards, cst-*,
+ * app/case-studies/troon/page.tsx).
+ *
+ * The photo and each card are their own <Motion> block, so each plays once as
+ * it scrolls in; blocks that arrive together follow each other 150ms apart.
+ *   photo   pulls into focus: 10px of blur and a 5% overscale settle, 1100ms
+ *   card    fades up 16px, 600ms
+ *   line    the thin gold line beside the quote draws top to bottom, 600ms,
+ *           starting 150ms into the card's fade
+ * A card lifts 3px on hover, on a deeper shadow. The fade-up moves `translate`
+ * and the lift moves `transform`, so neither waits on the other. The card's
+ * resting shadow (the page's card shadow) is set here, not as a utility, so
+ * the hover can deepen it.
+ * Reduced motion: the section is simply there, and nothing lifts.
+ */
+
+@layer components {
+  .cst-photo,
+  .cst-card {
+    --motion-stagger: 150ms;
+  }
+  .cst-quote {
+    box-shadow:
+      0 1px 2px #0b13220d,
+      0 12px 32px #0b13220f;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .motion[data-anim]:not([data-anim='reset']) .cst-photo-image {
+      animation: cst-focus 1100ms ease-out var(--motion-delay) backwards;
+    }
+
+    .motion[data-anim]:not([data-anim='reset']) .cst-quote {
+      animation: cst-rise 600ms var(--motion-ease) var(--motion-delay) backwards;
+    }
+    .cst-line {
+      transform-origin: top;
+    }
+    .motion[data-anim]:not([data-anim='reset']) .cst-line {
+      animation: motion-grow-y 600ms var(--motion-ease) calc(var(--motion-delay) + 150ms) backwards;
+    }
+
+    .cst-quote {
+      transition:
+        transform 200ms ease-out,
+        box-shadow 200ms ease-out;
+    }
+    @media (hover: hover) {
+      .cst-quote:hover {
+        transform: translateY(-3px);
+        box-shadow:
+          0 2px 4px #0b13220f,
+          0 18px 40px #0b132224;
+      }
+    }
+  }
+}
+
+/* The photo pulling into focus. */
+@keyframes cst-focus {
+  from {
+    filter: blur(10px);
+    scale: 1.05;
+  }
+}
+
+@keyframes cst-rise {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+}

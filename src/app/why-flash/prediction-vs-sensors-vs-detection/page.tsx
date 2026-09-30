@@ -5,11 +5,15 @@ import { BOLT_PATH } from '@/components/bolt-path';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ButtonLink } from '@/components/button';
 import { HeroBackground, HeroSection, HeroWords } from '@/components/hero/hero';
+import { Motion } from '@/components/motion';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { FaqList } from '@/components/why-flash/faq-list';
-import { LinkifiedText } from '@/components/why-flash/linkified-text';
+import { Glossary } from '@/components/why-flash/glossary';
+import { MeasureLabel, MeasureMarks } from '@/components/why-flash/measure-overlay';
+import { SafetyStack } from '@/components/why-flash/safety-stack';
 import { Kicker, SectionHeading } from '@/components/why-flash/section-heading';
+import { TechCompare } from '@/components/why-flash/tech-compare';
 import { TechnologyFigure } from '@/components/why-flash/technology-figure';
 import { WhyFlashLinks } from '@/components/why-flash/why-flash-links';
 import { DEMO_HREF } from '@/content/navigation';
@@ -19,9 +23,6 @@ import {
   guidanceParagraphs,
   links,
   predictionFaqs,
-  safetyStack,
-  techColumns,
-  techRows,
   technologies,
   whyFlashPages,
 } from '@/content/why-flash';
@@ -106,23 +107,33 @@ export default function PredictionVsSensorsPage() {
             </SectionHeading>
             <ul className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
               {technologies.map((tech) => (
-                <li key={tech.name} className="flex flex-col gap-3">
-                  <div className="relative aspect-[384/216] overflow-hidden rounded-[12px] bg-neutral-900">
-                    <Image
-                      src={tech.image.src}
-                      alt={tech.image.alt}
-                      fill
-                      sizes="(min-width: 1440px) 384px, (min-width: 1024px) 30vw, (min-width: 768px) 45vw, 100vw"
-                      className="object-cover"
-                    />
-                    <div aria-hidden className="why-flash-photo-grade absolute inset-0" />
-                    <p className="absolute bottom-4 left-4 text-micro font-bold tracking-[0.13em] text-viz-gold uppercase">
-                      {tech.tag}
-                    </p>
-                  </div>
-                  <h3 className="text-h3 leading-h3 font-bold text-text">{tech.name}</h3>
-                  <p className="text-body text-text-muted">{tech.body}</p>
-                </li>
+                // The site's wave reveal (styles/parameter-card.css); hovering a
+                // card draws what it sees over its image (styles/why-flash-measures.css).
+                <Motion as="li" key={tech.name} replay={false} threshold={0.2} className="motion scroll-flow-card flex">
+                  <article className="pc wfm flex w-full flex-col gap-3">
+                    <div className="relative flex flex-col gap-2">
+                      <div className="relative aspect-[384/216] overflow-hidden rounded-[12px] bg-neutral-900">
+                        <div className="pc-photo absolute inset-0">
+                          <Image
+                            src={tech.image.src}
+                            alt={tech.image.alt}
+                            fill
+                            sizes="(min-width: 1440px) 384px, (min-width: 1024px) 30vw, (min-width: 768px) 45vw, 100vw"
+                            className="object-cover"
+                          />
+                        </div>
+                        <div aria-hidden className="why-flash-photo-grade absolute inset-0" />
+                        <MeasureMarks kind={tech.sees.kind} />
+                        <p className="absolute bottom-4 left-4 text-micro font-bold tracking-[0.13em] text-viz-gold uppercase">
+                          {tech.tag}
+                        </p>
+                      </div>
+                      <MeasureLabel kind={tech.sees.kind} label={tech.sees.label} />
+                    </div>
+                    <h3 className="text-h3 leading-h3 font-bold text-text">{tech.name}</h3>
+                    <p className="text-body text-text-muted">{tech.body}</p>
+                  </article>
+                </Motion>
               ))}
             </ul>
           </div>
@@ -134,46 +145,7 @@ export default function PredictionVsSensorsPage() {
             <SectionHeading id="compare" kicker="Side by side" className="max-w-[1100px]">
               How do they compare on lead time, false alarms and cost?
             </SectionHeading>
-            <div className="relative overflow-x-auto rounded-md border border-border bg-neutral-0">
-              <table className="w-full min-w-[860px] border-collapse text-left">
-                <caption className="sr-only">
-                  Detection network, electrostatic sensor and AI prediction (Flash) compared on what each measures, lead
-                  time, where it works, false-alarm behaviour, cost and install, and what each is best for.
-                </caption>
-                <thead className="bg-surface-raised">
-                  <tr className="border-b border-border">
-                    <th scope="col" className="w-[19%] px-5 py-[14px] text-micro font-semibold tracking-label text-text-muted uppercase">
-                      Criterion
-                    </th>
-                    {techColumns.map((col, i) => (
-                      <th
-                        key={col}
-                        scope="col"
-                        className={`w-[27%] px-5 py-[14px] text-micro font-semibold tracking-label uppercase ${
-                          i === 2 ? 'text-brand-blue' : 'text-text-muted'
-                        }`}
-                      >
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {techRows.map((row, r) => (
-                    <tr key={row.criterion} className={r < techRows.length - 1 ? 'border-b border-border' : ''}>
-                      <th scope="row" className="px-5 py-4 align-top text-[15px] leading-body-s font-semibold text-text">
-                        {row.criterion}
-                      </th>
-                      {row.cells.map((cell, c) => (
-                        <td key={c} className="px-5 py-4 align-top text-[15px] leading-body-s text-text">
-                          <LinkifiedText text={cell} links={row.links} />
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <TechCompare />
           </div>
         </section>
 
@@ -222,28 +194,7 @@ export default function PredictionVsSensorsPage() {
                 Not one or the other. Each does one job well, and a written policy can name all three.
               </p>
             </div>
-            <figure
-              aria-label="Three-step diagram of the recommended stack: Flash prediction for the 60 minutes before a storm, a detection feed to confirm strikes, and a sideline WBGT sensor for policy readings"
-            >
-              <ol className="grid gap-10 lg:grid-cols-3 lg:gap-6">
-                {safetyStack.map((item) => (
-                  <li key={item.step} className="flex flex-col gap-[14px] border-t border-border-on-dark pt-6">
-                    <p aria-hidden className="text-display-m leading-display-m font-bold tracking-[-0.03em] text-neutral-600">
-                      {item.step}
-                    </p>
-                    <p
-                      className={`text-[11px] leading-[14px] font-semibold tracking-label uppercase ${
-                        item.gold ? 'text-viz-gold' : 'text-text-on-dark-muted'
-                      }`}
-                    >
-                      {item.when}
-                    </p>
-                    <h3 className="text-h4 leading-h4 font-bold text-text-on-dark">{item.name}</h3>
-                    <p className="text-[15px] leading-body-s text-text-on-dark-muted">{item.body}</p>
-                  </li>
-                ))}
-              </ol>
-            </figure>
+            <SafetyStack />
             <div className="flex flex-col gap-3 border-t border-white/10 pt-7 sm:flex-row sm:items-center sm:gap-[14px]">
               <span aria-hidden className="bg-gold-metallic flex size-7 shrink-0 items-center justify-center rounded-full">
                 <svg width="12" height="16" viewBox="0 0 26 34">
@@ -269,25 +220,7 @@ export default function PredictionVsSensorsPage() {
             <SectionHeading id="glossary" kicker="Glossary" className="max-w-[900px]">
               Terms you will meet in every lightning-safety policy
             </SectionHeading>
-            <dl className="grid gap-x-12 lg:grid-cols-2">
-              {[glossary.slice(0, 4), glossary.slice(4)].map((column, c) => (
-                <div key={c} className="flex flex-col">
-                  {column.map((item, i) => (
-                    <div
-                      key={item.term}
-                      className={`flex flex-col gap-1 border-b border-border py-4 sm:flex-row sm:gap-5 ${
-                        i === column.length - 1 ? (c === 1 ? 'border-b-0' : 'lg:border-b-0') : ''
-                      }`}
-                    >
-                      <dt className="text-body leading-body-s font-semibold text-text sm:w-[180px] sm:shrink-0">
-                        {item.term}
-                      </dt>
-                      <dd className="text-[15px] leading-body-s text-text-muted">{item.definition}</dd>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </dl>
+            <Glossary terms={glossary} />
           </div>
         </section>
 

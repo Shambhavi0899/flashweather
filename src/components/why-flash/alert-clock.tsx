@@ -1,69 +1,100 @@
-import { clockMarks } from '@/content/why-flash';
+import { clockDial } from '@/content/why-flash';
 
 /**
- * "Where each alert sits on the clock": the design's timeline figure
- * (flash-prediction-vs-detection-alert-timeline.svg), rebuilt as an ordered
- * list so every label is text. Horizontal at xl (the design's 1248px track),
- * a vertical list below it.
+ * "Where each alert sits on the clock": a clock dial for the hour before a
+ * first strike, drawn between the two cards (Detection left, Flash right).
+ *
+ * The hour runs clockwise from –60 min at 12 o'clock to the first strike at
+ * 330°, so the last 30° holds what comes after it: the detection alert. The
+ * dial is one image to assistive tech (`clockDial.alt`); its labels are text
+ * for sighted readers. The sweep, the card highlights, the hover pulses and
+ * the replay button live in styles/why-flash-clock.css, played by the
+ * surrounding Motion block. The markup is the finished dial.
  */
 
-const ALT =
-  "Timeline showing Flash's prediction window opening up to 60 minutes before a first cloud-to-ground strike, the strike itself, and a detection alert that can only follow it";
+const C = 200; // centre of the 400 × 400 viewBox
+const R = 124; // the ring
+const HOUR = 330; // degrees the hour covers
+const DETECTION_AT = 345; // just after the strike
 
-// Label placement on the 1248px track (marks at x = 48, 460, 1100, 1160):
-// above or below the line, as in the design.
-const label = [
-  'xl:left-[3.85%] xl:bottom-[60px] xl:pb-5',
-  'xl:left-[36.86%] xl:top-[70px] xl:pt-5',
-  'xl:left-[88.14%] xl:bottom-[60px] xl:pb-5 xl:-translate-x-1/2 xl:text-center',
-  'xl:right-0 xl:top-[70px] xl:pt-5 xl:text-right',
-];
-const markX = ['left-[3.85%]', 'left-[36.86%]', 'left-[88.14%]', 'left-[92.95%]'];
-
-function Dot({ tone, className = '' }: { tone: (typeof clockMarks)[number]['tone']; className?: string }) {
-  const look =
-    tone === 'strike'
-      ? 'size-[18px] border-2 border-white bg-alert-warning'
-      : tone === 'after'
-        ? 'size-[14px] bg-white'
-        : 'size-[14px] border-2 border-brand-navy bg-viz-gold';
-  return <span aria-hidden className={`absolute block rounded-full ${look} ${className}`} />;
+/** A point on a circle of radius `r`, `deg` clockwise from 12 o'clock. */
+function at(deg: number, r: number) {
+  const rad = (deg * Math.PI) / 180;
+  return { x: +(C + r * Math.sin(rad)).toFixed(2), y: +(C - r * Math.cos(rad)).toFixed(2) };
 }
 
-export function AlertClock() {
+// One tick a minute; longer every 5 and every 15.
+const ticks = Array.from({ length: 61 }, (_, minute) => {
+  const deg = (minute / 60) * HOUR;
+  const size = minute % 15 === 0 ? 'l' : minute % 5 === 0 ? 'm' : 's';
+  const outer = size === 'l' ? 141 : size === 'm' ? 137 : 134;
+  return { minute, size, from: at(deg, 130), to: at(deg, outer) };
+});
+
+const start = at(0, R);
+const strike = at(HOUR, R);
+const detection = at(DETECTION_AT, R);
+const arc = `M${start.x} ${start.y} A${R} ${R} 0 1 1 ${strike.x} ${strike.y}`;
+
+export function AlertClock({ className = '' }: { className?: string }) {
   return (
-    <figure aria-label={ALT} className="flex flex-col gap-4">
-      <figcaption className="text-[11px] leading-[14px] font-bold tracking-[0.13em] text-text-on-dark-muted uppercase">
-        Figure · Where each alert sits on the clock · Illustrative example · Not live weather
-      </figcaption>
-      <div className="relative xl:h-[130px]">
-        {/* The track, then the dashed gold prediction window over it. */}
-        <div
-          aria-hidden
-          className="absolute top-2 bottom-2 left-[6px] w-0.5 bg-border-on-dark xl:inset-x-[3.85%] xl:top-[69px] xl:bottom-auto xl:h-0.5 xl:w-auto"
-        />
-        <div
-          aria-hidden
-          className="why-flash-clock-window absolute top-2 left-[6px] h-[62%] w-0.5 xl:top-[69px] xl:left-[3.85%] xl:h-0.5 xl:w-[84.3%]"
-        />
-        {/* Marks on the horizontal track (xl only; the list carries its own below xl). */}
-        <div aria-hidden className="hidden xl:block">
-          {clockMarks.map((mark, i) => (
-            <Dot key={mark.when} tone={mark.tone} className={`top-[70px] -translate-1/2 ${markX[i]}`} />
+    <figure className={`flex flex-col items-center gap-4 ${className}`}>
+      <div role="img" aria-label={clockDial.alt} className="eec-dial">
+        <svg viewBox="0 0 400 400" aria-hidden className="absolute inset-0 size-full overflow-visible">
+          <circle cx={C} cy={C} r={R} className="eec-ring" />
+          {ticks.map((tick) => (
+            <line
+              key={tick.minute}
+              x1={tick.from.x}
+              y1={tick.from.y}
+              x2={tick.to.x}
+              y2={tick.to.y}
+              className="eec-tick"
+              data-size={tick.size}
+            />
           ))}
-        </div>
-        <ol className="relative flex flex-col gap-6 pl-8 xl:block xl:h-full xl:pl-0">
-          {clockMarks.map((mark, i) => (
-            <li key={mark.when} className={`relative xl:absolute ${label[i]}`}>
-              <Dot tone={mark.tone} className="top-0 -left-8 xl:hidden" />
-              <p className="text-[11px] leading-[14px] font-bold tracking-[0.08em] text-text-on-dark uppercase">
-                {mark.when}
-              </p>
-              <p className="mt-1 text-caption text-text-on-dark-muted xl:whitespace-nowrap">{mark.what}</p>
-            </li>
-          ))}
-        </ol>
+          <path d={arc} pathLength={1} className="eec-arc" />
+
+          {/* Pulse rings sit under their markers; a card hover sets them going. */}
+          <circle cx={start.x} cy={start.y} r={7} className="eec-ping" data-kind="flash" data-mark="flash" />
+          <circle cx={strike.x} cy={strike.y} r={8} className="eec-ping" data-kind="detection" data-mark="strike" />
+          <circle cx={detection.x} cy={detection.y} r={6} className="eec-ping" data-kind="detection" data-mark="detection" />
+
+          <g className="eec-hand">
+            <line x1={C} y1={C + 14} x2={C} y2={C - 104} />
+            <circle cx={C} cy={C} r={5} />
+          </g>
+
+          <circle cx={start.x} cy={start.y} r={7} className="eec-mark" data-mark="flash" />
+          <circle cx={strike.x} cy={strike.y} r={8} className="eec-mark" data-mark="strike" />
+          <circle cx={detection.x} cy={detection.y} r={6} className="eec-mark" data-mark="detection" />
+        </svg>
+
+        <p aria-hidden className="eec-label" data-label="flash">
+          <span className="eec-start">{clockDial.start}</span>
+          <span className="eec-flash">{clockDial.flash}</span>
+        </p>
+        <p aria-hidden className="eec-label" data-label="strike">
+          {clockDial.strike}
+        </p>
+        <p aria-hidden className="eec-label" data-label="detection">
+          {clockDial.detection}
+        </p>
+        <p aria-hidden className="eec-label" data-label="window">
+          {clockDial.window}
+        </p>
+        {clockDial.ticks.map((tick, i) => (
+          <p key={tick} aria-hidden className="eec-label" data-label={`tick-${i}`}>
+            {tick}
+          </p>
+        ))}
       </div>
+      <button type="button" data-motion-replay className="eec-replay">
+        <span aria-hidden>↻</span> {clockDial.replay}
+      </button>
+      <figcaption className="max-w-[400px] text-center text-[11px] leading-[16px] font-bold tracking-[0.13em] text-text-on-dark-muted uppercase">
+        {clockDial.caption}
+      </figcaption>
     </figure>
   );
 }

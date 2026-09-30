@@ -46,9 +46,194 @@
     box-shadow: 0 0 0 1px oklab(76.7% 0.004 0.15 / 10%), 0 24px 48px #04081880;
   }
 
+  /*
+   * "Go deeper" (components/why-flash/deeper-path.tsx): four steps on one
+   * thin line. Stacked with the line down the left edge, then left to right
+   * from lg. Each step carries a node and the segment to the next node, so
+   * the segment "leading to" step n belongs to step n-1.
+   */
+  .wfp {
+    --wfp-gap: 32px;
+    --wfp-node: 12px;
+    --wfp-line: var(--color-border-strong);
+    --wfp-lit: var(--color-gold-metallic-mid);
+    --wfp-step: 280ms;
+    display: flex;
+    flex-direction: column;
+    gap: var(--wfp-gap);
+  }
+  .wfp-step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-left: 36px;
+  }
+  .wfp-node {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    z-index: 1;
+    width: var(--wfp-node);
+    height: var(--wfp-node);
+    border: 2px solid var(--wfp-line);
+    border-radius: 999px;
+    background-color: var(--color-neutral-0);
+  }
+  .wfp-seg {
+    position: absolute;
+    top: calc(4px + var(--wfp-node) / 2);
+    left: calc(var(--wfp-node) / 2 - 1px);
+    width: 2px;
+    height: calc(100% + var(--wfp-gap));
+    transform-origin: top;
+    background-color: var(--wfp-line);
+  }
+  /* The highlight: a gold fill over the segment, run from its start. */
+  .wfp-seg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+    background-color: var(--wfp-lit);
+  }
+  .wfp-label {
+    min-height: 20px;
+    line-height: 20px;
+  }
+  .wfp-num {
+    font-variant-numeric: tabular-nums;
+  }
+  .wfp-card {
+    box-shadow: 0 1px 2px #0b13220d;
+  }
+  .wfp-arrow {
+    display: inline-block;
+  }
+
+  @media (width >= 1024px) {
+    .wfp {
+      --wfp-gap: 24px;
+      flex-direction: row;
+    }
+    .wfp-step {
+      flex: 1 1 0;
+      min-width: 0;
+      padding-top: 28px;
+      padding-left: 0;
+    }
+    .wfp-node {
+      top: 0;
+    }
+    .wfp-seg {
+      top: calc(var(--wfp-node) / 2 - 1px);
+      left: calc(var(--wfp-node) / 2);
+      width: calc(100% + var(--wfp-gap));
+      height: 2px;
+      transform-origin: left;
+    }
+    .wfp-seg::after {
+      transform: scaleX(0);
+      transform-origin: left;
+    }
+  }
+
+  /* Hover or keyboard focus on a card: lift, gold number and node, lit segment. */
+  .wfp-step:has(.wfp-card:is(:hover, :focus-visible)) {
+    .wfp-card {
+      border-color: var(--color-brand-blue);
+      box-shadow: 0 1px 2px #0b13220d, 0 16px 32px #0b13221f;
+    }
+    .wfp-title {
+      color: var(--color-brand-blue);
+    }
+    .wfp-num {
+      color: var(--color-gold-on-light);
+    }
+    .wfp-node {
+      border-color: var(--wfp-lit);
+      background-color: var(--wfp-lit);
+    }
+  }
+  .wfp-step:has(+ .wfp-step .wfp-card:is(:hover, :focus-visible)) .wfp-seg::after {
+    transform: none;
+  }
+
+  /* Motion only when it is wanted: reduced motion keeps the finished, static path. */
+  @media (prefers-reduced-motion: no-preference) {
+    .wfp-card,
+    .wfp-title,
+    .wfp-num,
+    .wfp-node,
+    .wfp-arrow {
+      transition:
+        transform 300ms var(--motion-ease),
+        box-shadow 300ms var(--motion-ease),
+        border-color 200ms ease,
+        background-color 200ms ease,
+        color 200ms ease;
+    }
+    .wfp-seg::after {
+      transition: transform 360ms var(--motion-ease);
+    }
+    .wfp-step:has(.wfp-card:is(:hover, :focus-visible)) {
+      .wfp-card {
+        transform: translateY(-6px);
+      }
+      .wfp-arrow {
+        transform: translateX(6px);
+      }
+    }
+
+    /* Scroll-in, once: each card arrives as the line reaches it. */
+    .wfp[data-anim]:not([data-anim='reset']) {
+      .wfp-node {
+        animation: wfp-node 320ms var(--motion-ease) calc(var(--wfp-at) + 40ms) backwards;
+      }
+      .wfp-label,
+      .wfp-card {
+        animation: wfp-rise 600ms var(--motion-ease) var(--wfp-at) backwards;
+      }
+      .wfp-seg {
+        animation: motion-grow-y var(--wfp-step) linear calc(var(--wfp-at) + 120ms) backwards;
+      }
+    }
+    @media (width >= 1024px) {
+      .wfp[data-anim]:not([data-anim='reset']) .wfp-seg {
+        animation-name: motion-grow-x;
+      }
+    }
+    .wfp-step {
+      --wfp-at: 0ms;
+    }
+    .wfp-step:nth-child(2) {
+      --wfp-at: calc(var(--wfp-step) + 120ms);
+    }
+    .wfp-step:nth-child(3) {
+      --wfp-at: calc((var(--wfp-step) + 120ms) * 2);
+    }
+    .wfp-step:nth-child(4) {
+      --wfp-at: calc((var(--wfp-step) + 120ms) * 3);
+    }
+  }
+
   /* "For everyday life" band: blue into navy. */
   .why-flash-hub-everyday {
     background-color: var(--color-brand-navy);
     background-image: linear-gradient(in oklab 135deg, var(--color-brand-blue) 0%, var(--color-brand-navy) 70%);
+  }
+}
+
+@keyframes wfp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+@keyframes wfp-node {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
   }
 }

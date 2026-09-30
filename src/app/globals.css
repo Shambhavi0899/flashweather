@@ -15,6 +15,11 @@
 /* Flash Agent conversations, shared by every agent interface (components/agent-conversation/). */
 @import "../styles/agent-conversation.css";
 @import "../styles/home.css";
+/* The home hero's product deck: three glass cards in a stack, one open at a time, and their tabs. */
+@import "../styles/home-hero-deck.css";
+@import "../styles/home-customers.css";
+/* The home hero's lightning: a bolt drawn new for each strike, and the clouds lighting up. */
+@import "../styles/home-hero-lightning.css";
 /* The home page's closing sections, and the footer's scroll-in. */
 @import "../styles/finale.css";
 @import "../styles/products.css";
@@ -68,8 +73,11 @@
 /* The Flash API page's "What are the rate limits and SLAs?" icons and banner caption. */
 @import "../styles/api-limits.css";
 @import "../styles/agent.css";
-/* The Flash Agent page's question chips under "Ask the question your crew actually asks". */
-@import "../styles/agent-questions.css";
+/* "Ask the question your crew actually asks" on its light stage: the dark app window. */
+@import "../styles/agent-window.css";
+/* The same section's question list beside the window, and the tour's line under the open tab. */
+@import "../styles/agent-tour.css";
+@import "../styles/agent-flow.css";
 /* The Flash Agent guardrails, one proposed action passing the four in turn. */
 @import "../styles/agent-guardrails.css";
 /* The Flash Agent page's "How does the harness work?" loop. */
@@ -86,6 +94,16 @@
 @import "../styles/api-integrations.css";
 @import "../styles/about.css";
 @import "../styles/pricing.css";
+/* Pricing's "Which plan fits…": the Best fit for control, the badge that moves between the plan cards, card fade-up. */
+@import "../styles/pricing-plans.css";
+/* Pricing's "What does a sensor-based system cost you": the stacked bars beside the table. */
+@import "../styles/pricing-sensor-cost.css";
+/* Pricing's "Every surface, one subscription.": chips zoom the devices photo, the included items fade up, the catalogue arrow. */
+@import "../styles/pricing-surfaces.css";
+/* The Pricing hero's portfolio card: rows fade in after the headline, "Add a site +" opens a row. */
+@import "../styles/pricing-portfolio.css";
+/* Pricing's "How is your quote calculated?": factor rows fade up, the steppers' number fields. */
+@import "../styles/pricing-quote.css";
 @import "../styles/contact.css";
 @import "../styles/faq.css";
 @import "../styles/press.css";
@@ -119,11 +137,47 @@
 /* Roofing's "The swath report": live cells, legend filters, ranked canvassing list. */
 @import "../styles/industry-swath.css";
 @import "../styles/why-flash.css";
+@import "../styles/why-flash-clock.css";
+/* Everyone else vs Flash's "How we keep this comparison honest": row badges, Report an error, fade-up. */
+@import "../styles/why-flash-honest.css";
+/* Everyone else vs Flash's "Your options" (Start here badge, card actions) and the Ask, Answer, Act flow. */
+@import "../styles/why-flash-options.css";
 @import "../styles/case-study.css";
+/* Troon's "One forecast, two screens": the same alert chip on both cards, the line between them, card hover. */
+@import "../styles/case-study-screens.css";
+/* Case study: Troon's hero quote card: enters after the buttons, quote mark, lines, then the name. */
+@import "../styles/case-study-quote.css";
+/* Case study: Troon's "What golf operators say": photo focus-in, quote cards fade up, gold line draws. */
+@import "../styles/case-study-testimonials.css";
+/* Case study: Troon's story: sticky At a glance card, chapter markers that fill with the scroll, fade-up. */
+@import "../styles/case-study-story.css";
+/* Case study: Troon's "What is running today": the figures' fade-up, the proof bar's "This case study" tag. */
+@import "../styles/case-study-numbers.css";
+/* Case study: Troon's portfolio map: log entries in time order, pin pulses, entry and pin highlights. */
+@import "../styles/case-study-portfolio-map.css";
 @import "../styles/blog.css";
 @import "../styles/heat-policy.css";
 @import "../styles/legal.css";
 @import "../styles/resources.css";
+/* The Why Flash hub's "Everyone else reacts. Flash predicts.": paired rows that check in, mini cards on a phone. */
+@import "../styles/why-flash-hub-compare.css";
+/* Why Flash hub's "For your operation": industry chips, range bars, product rows. */
+@import "../styles/why-flash-operation.css";
+/* Why Flash hub's "The receipts.": the figures print on a till slip, line by line. */
+@import "../styles/why-flash-receipt.css";
+@import "../styles/why-flash-kinds.css";
+/* Prediction vs sensors' glossary: Find a term, copy-link anchors, arrival highlight. */
+@import "../styles/why-flash-glossary.css";
+/* Accuracy method: the On this page scrollspy and the sections' shared fade-up. */
+@import "../styles/why-flash-accuracy.css";
+/* Prediction vs sensors vs detection hero figure: Before / During / After, each panel plays its mechanism. */
+@import "../styles/why-flash-tech-figure.css";
+/* Prediction vs sensors vs detection "What does each technology actually measure?": wave reveal, what each sees on hover. */
+@import "../styles/why-flash-measures.css";
+/* Prediction vs sensors vs detection's "What should a safety officer actually run?": the three items add up. */
+@import "../styles/why-flash-stack.css";
+/* Prediction vs sensors vs detection's "How do they compare…?": column spotlight toggles, lead bars, sticky head, phone tabs. */
+@import "../styles/why-flash-compare.css";
 
 /*
  * Design tokens, from the Paper file's token sheet ("00 · Token Sheet").
@@ -401,6 +455,10 @@
      specific rule and would otherwise set the loop running again. */
   .motion:not([data-inview]) .motion-loop {
     animation-play-state: paused !important;
+  }
+  /* A replay button (data-motion-replay) only makes sense once the block can play. */
+  .motion:not([data-anim]) [data-motion-replay] {
+    display: none;
   }
   @media (prefers-reduced-motion: reduce) {
     .motion * {

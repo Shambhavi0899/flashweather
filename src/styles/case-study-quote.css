@@ -1,0 +1,71 @@
+/*
+ * case-study-quote — Case study: Troon's hero quote card (the Ryan Coll
+ * quote beside the copy, app/case-studies/troon/page.tsx).
+ *
+ * It is a hero-visual on the shared hero motion (styles/hero.css), moved to
+ * enter after the buttons, and then it plays its own short intro:
+ *   1100ms  the buttons (shared)
+ *   1400ms  the card slides in (rises in below lg), 700ms
+ *   1750ms  the opening quote mark draws in, left to right, 450ms
+ *   1950ms  the quote fades in a line at a time, 80ms apart (<Lines> marks
+ *           each word's line as data-line)
+ *   then    the name and title, 150ms after the last line starts
+ * Without JavaScript every word is on line 0, so the quote fades in as one.
+ * Reduced motion: the card is simply there.
+ */
+
+@layer components {
+  .csq {
+    --hero-visual-at: 1400ms;
+    --csq-mark-at: 1750ms;
+    --csq-lines-at: 1950ms;
+    --csq-line-gap: 80ms;
+    --csq-lines: 1;
+  }
+  .csq:has(.csq-word[data-line='1']) { --csq-lines: 2; }
+  .csq:has(.csq-word[data-line='2']) { --csq-lines: 3; }
+  .csq:has(.csq-word[data-line='3']) { --csq-lines: 4; }
+  .csq:has(.csq-word[data-line='4']) { --csq-lines: 5; }
+  .csq:has(.csq-word[data-line='5']) { --csq-lines: 6; }
+  .csq:has(.csq-word[data-line='6']) { --csq-lines: 7; }
+  .csq:has(.csq-word[data-line='7']) { --csq-lines: 8; }
+  .csq:has(.csq-word[data-line='8']) { --csq-lines: 9; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .csq-mark,
+    .csq-word {
+      display: inline-block;
+    }
+    .csq-mark {
+      animation: csq-draw 450ms var(--hero-ease) var(--csq-mark-at) backwards;
+    }
+
+    .csq-word {
+      animation: hero-fade 500ms ease-out calc(var(--csq-lines-at) + var(--line, 0) * var(--csq-line-gap)) backwards;
+    }
+    .csq-word[data-line='1'] { --line: 1; }
+    .csq-word[data-line='2'] { --line: 2; }
+    .csq-word[data-line='3'] { --line: 3; }
+    .csq-word[data-line='4'] { --line: 4; }
+    .csq-word[data-line='5'] { --line: 5; }
+    .csq-word[data-line='6'] { --line: 6; }
+    .csq-word[data-line='7'] { --line: 7; }
+    .csq-word[data-line='8'] { --line: 8; }
+
+    .csq-cite {
+      animation: hero-fade 500ms ease-out
+        calc(var(--csq-lines-at) + (var(--csq-lines) - 1) * var(--csq-line-gap) + 150ms) backwards;
+    }
+  }
+}
+
+/* The opening quote mark, drawn in: a wipe from its left edge. */
+@keyframes csq-draw {
+  from {
+    opacity: 0.01;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}

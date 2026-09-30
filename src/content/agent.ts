@@ -7,7 +7,7 @@
  *
  * The conversations the page plays are not here: its "Ask the question your
  * crew actually asks" section is the home page's, with the home page's data
- * (content/home.ts `agentTabs` and `agentHarness`).
+ * (content/home.ts `agentTabs` and `agentFlow`).
  */
 
 export type AgentIndustry = {

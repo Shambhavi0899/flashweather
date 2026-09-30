@@ -7,33 +7,48 @@
  */
 
 @layer components {
-  /* Hero: navy wash from the copy side (left) across the photo. */
+  /* Hero: the navy the copy reads on, and nowhere else, so the photo shows.
+     Beside the cards (from lg) it runs from the left and is gone by the
+     middle; stacked, the copy is the full width, so it runs down. */
   .home-hero-grade-left {
     background-image: linear-gradient(
-      in oklab 90deg,
-      oklab(17.1% -0.0005 -0.052 / 96%) 0%,
-      oklab(17.1% -0.0005 -0.052 / 82%) 48%,
+      in oklab 180deg,
+      oklab(17.1% -0.0005 -0.052 / 86%) 0%,
+      oklab(17.1% -0.0005 -0.052 / 84%) 50%,
       oklab(17.1% -0.0005 -0.052 / 30%) 100%
     );
   }
+  @media (width >= 1024px) {
+    /* One even fade, gone by 60%. The stops trace an ease-in-out, so
+       neither end of it shows as a line. */
+    .home-hero-grade-left {
+      background-image: linear-gradient(
+        in oklab 90deg,
+        oklab(17.1% -0.0005 -0.052 / 70%) 0%,
+        oklab(17.1% -0.0005 -0.052 / 69%) 12%,
+        oklab(17.1% -0.0005 -0.052 / 64%) 22%,
+        oklab(17.1% -0.0005 -0.052 / 53%) 32%,
+        oklab(17.1% -0.0005 -0.052 / 36%) 41%,
+        oklab(17.1% -0.0005 -0.052 / 18%) 49%,
+        oklab(17.1% -0.0005 -0.052 / 6%) 55%,
+        oklab(17.1% -0.0005 -0.052 / 0%) 60%
+      );
+    }
+    /* The headline's gold words run past that, over the sky: a shadow that
+       hugs the letters keeps the gold's dark stops readable there. */
+    #hero-heading .text-gold-metallic {
+      filter: drop-shadow(0 0 2px oklab(17.1% -0.0005 -0.052 / 95%))
+        drop-shadow(0 0 8px oklab(17.1% -0.0005 -0.052 / 90%))
+        drop-shadow(0 0 18px oklab(17.1% -0.0005 -0.052 / 70%));
+    }
+  }
 
-  /* Hero: top-to-bottom grade that darkens into the baseline strip. */
+  /* Hero: a light fade into the hero's bottom edge. */
   .home-hero-grade-bottom {
     background-image: linear-gradient(
       in oklab 180deg,
-      oklab(17.1% -0.0005 -0.052 / 15%) 0%,
-      oklab(17.1% -0.0005 -0.052 / 0%) 40%,
-      oklab(17.1% -0.0005 -0.052 / 92%) 100%
-    );
-  }
-
-  /* Hero "one engine · every surface" product cards. */
-  .home-hero-card-grade {
-    background-image: linear-gradient(
-      in oklab 180deg,
-      oklab(14% -0.002 -0.036 / 35%) 0%,
-      oklab(14% -0.002 -0.036 / 10%) 38%,
-      oklab(14% -0.002 -0.036 / 96%) 100%
+      oklab(17.1% -0.0005 -0.052 / 0%) 62%,
+      oklab(17.1% -0.0005 -0.052 / 55%) 100%
     );
   }
 
@@ -108,6 +123,28 @@
    */
   .stat-card {
     --stat-ease: var(--motion-ease);
+    /* The diagrams' palette (components/stats/stat-tile.tsx), on a light ground. */
+    --stat-blue: #003399;
+    --stat-ink: #0b1322;
+    --stat-muted: #5f6b85;
+    --stat-track: #eef1f7;
+    --stat-rule: #cbd2de;
+    --stat-cell: #eef1f7;
+    --stat-tint-1: #dce4f5;
+    --stat-tint-2: #b9c8ec;
+    --stat-tint-3: #7f98d8;
+  }
+  /* The same diagrams on navy: the home page's strip. */
+  .stats-dark .stat-card {
+    --stat-blue: #6f9bff;
+    --stat-ink: #e2e5ea;
+    --stat-muted: #aeb8c7;
+    --stat-track: #1f2850;
+    --stat-rule: #3a4460;
+    --stat-cell: #121a3c;
+    --stat-tint-1: #1a2654;
+    --stat-tint-2: #2a3d7d;
+    --stat-tint-3: #4a6ac4;
   }
 
   /* Overlays that only exist mid-animation; hidden in the final frame. */
@@ -375,9 +412,9 @@
   }
 
   /*
-   * Flash Agent harness (the three flow cards), on the shared .motion system:
-   * once on scroll-in, cards rise 150ms apart and each arrow draws after its
-   * card.
+   * The platform band's flow steps (components/home/products.tsx), on the
+   * shared .motion system: once on scroll-in, cards rise 150ms apart and each
+   * arrow draws after its card.
    */
   .flow-step:nth-child(2) {
     --flow-i: 1;
@@ -393,23 +430,25 @@
   }
 
   /*
-   * The platform (components/home/products.tsx, platform-flow.tsx).
+   * The platform (components/home/products.tsx, platform-spotlight.tsx).
    *
-   * The markup is the finished section. Nothing here changes a box: the
-   * line and the nodes are laid over or under the layout, and every
-   * movement is a transform or an opacity.
+   * The markup is the finished section. Nothing here changes a box: every
+   * movement is a transform, an opacity or a filter.
    *
-   *   reveal  once, on the shared .motion system: the eyebrow and the
-   *           heading rise a line at a time, the link fades in after; the
-   *           band fades up and its steps run the harness's .flow-* motion
-   *   line    from 1024px: one gold line from the band's last step down the
-   *           grid's gutter, filled by the scroll (--platform-fill). A row
-   *           it has reached is `data-on`: its runs draw, its nodes light
-   *           and its cards reveal 70ms apart, left to right
-   *   stack   below 1024px there is no line; a card is `data-on` when it
-   *           scrolls in
+   *   reveal     once, on the shared .motion system: the eyebrow and the
+   *              heading rise a line at a time, the link fades in after; the
+   *              band fades up and its steps run the harness's .flow-*
+   *              motion; the cards ride the shared wave (.scroll-flow-card,
+   *              styles/parameter-card.css), so a row rises 70ms apart, left
+   *              to right, and stacked cards come one by one
+   *   spotlight  with a mouse, from 1024px: a soft light follows the cursor
+   *              across the grid (--spot-x / --spot-y, from
+   *              <PlatformSpotlight>) and each card's border brightens the
+   *              nearer the cursor is to it
+   *   hover      the shared .pc card: up 4px, photo to 1.04, arrow right
+   *
+   * Reduced motion: no reveal and no spotlight; the cards are simply there.
    */
-  /* 3% white on the navy, as one opaque colour, so the line stays behind. */
   .platform-card {
     background-color: color-mix(in srgb, var(--color-neutral-0) 3%, var(--color-brand-navy));
     transition:
@@ -423,76 +462,22 @@
   .platform-steps {
     --motion-delay: 250ms;
   }
-  .platform-cell[data-col='1'] {
-    --col: 1;
-  }
-  .platform-cell[data-col='2'] {
-    --col: 2;
-  }
 
-  .platform-line,
-  .platform-node {
-    display: none;
-    pointer-events: none;
-  }
-  .platform-line {
+  /* The spotlight's two layers, both off until the mouse is on the grid. */
+  .platform-spot-light,
+  .platform-cell::after {
     position: absolute;
     inset: 0;
-    z-index: -1;
-    overflow: visible;
-  }
-  .platform-line path {
-    stroke-width: 1.5;
-    stroke-dasharray: 1 2;
-  }
-  .platform-gold-a {
-    stop-color: var(--color-gold-metallic-highlight);
-  }
-  .platform-gold-b {
-    stop-color: var(--color-gold-100);
-  }
-  .platform-gold-c {
-    stop-color: var(--color-gold-metallic-mid);
-  }
-  .platform-gold-d {
-    stop-color: var(--color-gold-metallic-glint);
-  }
-  /* On the card's top edge, where its run of the line lands. */
-  .platform-node {
-    position: absolute;
-    top: -4px;
-    left: calc(50% - 4px);
-    z-index: 1;
-    width: 8px;
-    height: 8px;
-    border-radius: var(--radius-pill);
-    box-shadow:
-      0 0 0 3px color-mix(in srgb, var(--color-viz-gold) 18%, transparent),
-      0 0 14px 1px color-mix(in srgb, var(--color-viz-gold) 55%, transparent);
     opacity: 0;
+    pointer-events: none;
+    transition: opacity 400ms var(--motion-ease);
   }
-
-  @media (width >= 1024px) {
-    .platform-flow[data-flow] :is(.platform-line, .platform-node) {
-      display: block;
-    }
-    /* The line fades as the section leaves (--flow-out, from <ScrollFlow>). */
-    .platform-line {
-      opacity: calc(0.85 * (1 - var(--flow-out, 0)));
-    }
-    .platform-trunk {
-      stroke-dashoffset: calc(1 - var(--platform-fill, 0));
-    }
-    .platform-run {
-      stroke-dashoffset: 1;
-    }
-    .platform-flow[data-flow='still'] .platform-trunk,
-    .platform-run[data-on] {
-      stroke-dashoffset: 0;
-    }
-    .platform-cell[data-on] > .platform-node {
-      opacity: calc(1 - var(--flow-out, 0));
-    }
+  .platform-spot-light {
+    z-index: 1;
+    display: none;
+  }
+  .platform-cell::after {
+    content: none;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -506,153 +491,97 @@
       animation: motion-rise 0.7s var(--motion-ease) var(--motion-delay) both;
     }
 
-    /* A card waits, out of sight, for its row (or for itself, stacked). */
-    .platform-flow[data-flow='line'] {
-      --platform-wait: 150ms;
-    }
-    .platform-flow[data-flow] .platform-cell:not([data-on]) > .platform-card {
-      opacity: 0;
-    }
-    .platform-flow[data-flow] .platform-cell[data-on] > .platform-card {
-      animation: scroll-flow-card 700ms var(--motion-ease) calc(var(--platform-wait, 0ms) + var(--col, 0) * 70ms)
-        backwards;
-    }
-    .platform-flow[data-flow] .platform-cell[data-on] .pc-photo > img {
-      animation: platform-photo 900ms var(--motion-ease) calc(var(--platform-wait, 0ms) + var(--col, 0) * 70ms)
-        backwards;
-    }
-    .platform-run[data-on] {
-      transition: stroke-dashoffset 500ms var(--motion-ease);
-    }
-    .platform-cell[data-on] > .platform-node {
-      animation: motion-pop-in 500ms var(--motion-ease) calc(350ms + var(--col, 0) * 70ms) backwards;
+    @media (hover: hover) and (pointer: fine) and (width >= 1024px) {
+      /* The light: a wide, faint pool of warm white, gone well before its
+         own edge, over the cards. */
+      .platform-spot-light {
+        display: block;
+        background-image: radial-gradient(
+          520px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+          rgb(255 238 190 / 11%) 0%,
+          rgb(255 255 255 / 4%) 40%,
+          transparent 72%
+        );
+      }
+      /* The border: a 1px ring over the card's own, lit from where the
+         cursor is in that card's box, so it falls off with distance and a
+         card the cursor is far from stays as it was. It rides up with the
+         card's hover lift. */
+      .platform-cell::after {
+        content: '';
+        z-index: 1;
+        padding: 1px;
+        border-radius: var(--radius-lg);
+        background-image: radial-gradient(
+          340px circle at var(--spot-x, -999px) var(--spot-y, -999px),
+          rgb(255 232 165 / 80%) 0%,
+          rgb(255 255 255 / 24%) 45%,
+          transparent 78%
+        );
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask:
+          linear-gradient(#000 0 0) content-box exclude,
+          linear-gradient(#000 0 0);
+        transition:
+          opacity 400ms var(--motion-ease),
+          transform 350ms var(--motion-ease);
+      }
+      .platform-cell:has(> .pc:hover)::after {
+        transform: translateY(-4px);
+      }
+      .platform-spot[data-spot] .platform-spot-light,
+      .platform-spot[data-spot] .platform-cell::after {
+        opacity: 1;
+      }
     }
   }
 }
 
 /*
- * Home hero (components/home/hero.tsx, hero-counter.tsx). The load
- * choreography, the parallax and the lightning flash are the shared hero
- * motion (styles/hero.css). This is what only the home hero has: the three
- * product cards and their live layers, whose loops are `motion-loop`s on the
- * shared .motion system, and the 01—03 counter.
+ * Home hero (components/home/hero.tsx). The load choreography, the parallax
+ * and the lightning flash are the shared hero motion (styles/hero.css). This
+ * is what only the home hero's copy has; its product deck is
+ * styles/home-hero-deck.css.
  */
 @layer components {
-  /* Each image card lays its live layer out in the image's own frame: the
-     image is object-cover at 50% 12%, and always width-bound here, so the
-     frame is the card's width at 16:9, shifted up by 12% of the overflow. */
-  .hero-card-0,
-  .hero-card-1 {
-    container-type: size;
-  }
-  .hero-media {
-    position: absolute;
-    left: 0;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    top: calc((100cqh - 56.25cqw) * 0.12);
-    container-type: inline-size;
-    pointer-events: none;
-  }
-
-  /* Card 01 · radar hotspots over the map's red cells (% of 1600×900). */
-  .hero-hot {
-    position: absolute;
-    width: 5%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    translate: -50% -50%;
-    background-image: radial-gradient(circle, rgb(255 120 60 / 85%) 0%, rgb(255 90 40 / 0%) 70%);
-    mix-blend-mode: screen;
-    opacity: 0;
-    animation: hero-hot 2.8s ease-in-out infinite;
-  }
-  .hero-hot-1 { left: 33.3%; top: 29.2%; }
-  .hero-hot-2 { left: 43.6%; top: 27.7%; animation-delay: -0.9s; }
-  .hero-hot-3 { left: 26.7%; top: 57.3%; animation-delay: -1.6s; }
-  .hero-hot-4 { left: 14.4%; top: 56.9%; animation-delay: -0.5s; }
-  .hero-hot-5 { left: 5.1%; top: 60.9%; animation-delay: -2.1s; }
-
-  /* Card 01 · the count: a clean plate over the image's "99.6%" (its box in
-     the 1600×900 frame is 893,322 202×80) with the live number on it. It
-     shows only while counting, then fades back to the image's own. */
-  .hero-plate {
-    position: absolute;
-    left: 55.8125%;
-    top: 35.7778%;
-    width: 12.625%;
-    height: 8.8889%;
-    background: url('/images/home/hero/command-center-accuracy-plate.webp') center / 100% 100% no-repeat;
-    opacity: 0;
-  }
-  .hero-plate-number {
-    position: absolute;
-    left: 4%;
-    top: 50%;
-    translate: 0 -50%;
-    color: #e5b92d;
-    font-size: 3.95cqw;
-    line-height: 1;
-    font-weight: 800;
-    /* Condensed to the width of the image's own "99.6%". */
-    letter-spacing: -0.045em;
+  /* The paragraph's linked words (<LedeLink>): white over a 2px gold
+     underline of their own, a line box wide, that never breaks. On hover and
+     focus it thickens to 3px and brightens. */
+  .hero-lede-link {
+    position: relative;
+    display: inline-block;
     white-space: nowrap;
   }
-  .motion.hero-count[data-anim] {
-    --motion-delay: 900ms;
-  }
-  .motion[data-anim='run'] .hero-plate {
-    animation: hero-plate 2.5s linear both;
-  }
-
-  /* Card 02 · each phone screen scrolls: the screen, its mirror, the screen,
-     so the loop has no seam. At rest it is the image's own screen. */
-  .hero-screen {
+  .hero-lede-link::after {
+    content: '';
     position: absolute;
-    overflow: hidden;
+    left: 0;
+    right: 0;
+    bottom: 0.02em;
+    height: 2px;
+    border-radius: 1px;
+    background-color: var(--color-gold-300);
+    transform-origin: left;
+    transition:
+      height 150ms var(--motion-ease),
+      background-color 150ms var(--motion-ease);
+    pointer-events: none;
   }
-  .hero-screen-lightning-probability { left: 6.25%; top: 31.4815%; width: 16.25%; height: 29.6296%; }
-  .hero-screen-future-radar { left: 31.0417%; top: 30.9259%; width: 16.0417%; height: 30%; }
-  .hero-screen-current-radar { left: 55.625%; top: 30.1852%; width: 16.0417%; height: 30.7407%; }
-  .hero-screen-daily-forecast { left: 80.625%; top: 44.2593%; width: 15.2083%; height: 24.2593%; }
-  .hero-screen-strip {
-    position: absolute;
-    inset: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    height: 300%;
-    animation: hero-screen 28s linear infinite;
+  .hero-lede-link:hover::after,
+  .hero-lede-link:focus-visible::after {
+    height: 3px;
+    background-color: var(--color-gold-100);
   }
-  .hero-screen-strip > span {
-    flex: 1;
-    background-size: 100% 100%;
-  }
-  .hero-screen-mirror {
-    scale: 1 -1;
-  }
-  .hero-screen-lightning-probability span { background-image: url('/images/home/hero/mobile-app-screen-lightning-probability.webp'); }
-  .hero-screen-future-radar span { background-image: url('/images/home/hero/mobile-app-screen-future-radar.webp'); }
-  .hero-screen-current-radar span { background-image: url('/images/home/hero/mobile-app-screen-current-radar.webp'); }
-  .hero-screen-daily-forecast span { background-image: url('/images/home/hero/mobile-app-screen-daily-forecast.webp'); }
-  .hero-screen-future-radar .hero-screen-strip { animation-duration: 32s; animation-delay: -9s; }
-  .hero-screen-current-radar .hero-screen-strip { animation-duration: 26s; animation-delay: -17s; }
-  .hero-screen-daily-forecast .hero-screen-strip { animation-duration: 36s; animation-delay: -4s; }
-
-  /* The 01—03 counter's card: a soft gold ring. */
-  [data-hero-card] {
-    transition: box-shadow 0.6s var(--motion-ease);
-  }
-  [data-hero-card][data-active] {
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--color-viz-gold) 70%, transparent),
-      0 0 28px -4px color-mix(in srgb, var(--color-viz-gold) 35%, transparent);
+  .hero-lede-link:focus-visible {
+    outline-color: var(--color-gold-100);
+    outline-offset: 3px;
+    border-radius: 2px;
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    /* With the eyebrow, its + turns a quarter. */
-    .hero-plus {
-      animation: hero-plus 0.8s var(--hero-ease) var(--hero-eyebrow-at) backwards;
-    }
     /* After the buttons, the demo arrow nudges; the bolt glints with the
        supporting line. */
     .hero-demo > span[aria-hidden] {
@@ -662,45 +591,38 @@
     .hero-bolt {
       animation: hero-bolt 0.6s ease-out 1500ms;
     }
-    /* Right: the label at 600ms, then the cards from the right, 150ms apart. */
+    /* The underlines are hidden until <HeroLede> sets data-drawn (the first
+       30px of scroll, or 2.5s after the hero lands), then draw left to
+       right: "lightning" over 500ms, "hail" 150ms after it ends. Once. */
+    .hero-lede-link::after {
+      transform: scaleX(0);
+      transition:
+        transform 500ms var(--motion-ease),
+        height 150ms var(--motion-ease),
+        background-color 150ms var(--motion-ease);
+    }
+    .hero-lede-link ~ .hero-lede-link::after {
+      transition-delay: 650ms, 0ms, 0ms;
+    }
+    .hero-lede[data-drawn] .hero-lede-link::after {
+      transform: none;
+    }
+    /* Right: the label at 600ms; the deck follows (styles/home-hero-deck.css). */
     .hero-surfaces-label {
       animation: motion-fade 0.5s ease-out 600ms backwards;
     }
-    .hero-card {
-      animation: hero-slide 0.7s var(--hero-ease) calc(var(--hero-visual-at) + var(--c, 0) * 150ms) backwards;
-    }
-    .hero-card-1 { --c: 1; }
-    .hero-card-2 { --c: 2; }
     .hero-caption {
       animation: motion-fade 0.6s ease-out var(--hero-support-at) backwards;
     }
 
-    /* The ↓ bounces, gently, until the first scroll. */
-    .hero-fx:not([data-scrolled-once]) .hero-diff > span[aria-hidden] {
-      display: inline-block;
-      animation: hero-bounce 1.6s ease-in-out 2200ms infinite;
-    }
-    .hero-fx[data-offscreen] .hero-diff > span[aria-hidden] {
-      animation-play-state: paused;
-    }
-
-    /* Mouse: the cards move the shared 10px, and lean up to 4°. */
+    /* Mouse: the deck moves the shared 10px; its front card does the leaning. */
     .hero-surfaces {
       translate: calc(var(--tilt-x, 0) * 10px) calc(var(--tilt-y, 0) * 10px);
-      transform: perspective(1200px) rotateY(calc(var(--tilt-x, 0) * 4deg)) rotateX(calc(var(--tilt-y, 0) * -4deg));
-      transition:
-        translate 0.8s var(--hero-ease),
-        transform 0.8s var(--hero-ease);
+      transition: translate 0.8s var(--hero-ease);
     }
   }
 }
 
-@keyframes hero-plus {
-  from {
-    opacity: 0;
-    rotate: -90deg;
-  }
-}
 @keyframes hero-nudge {
   45% {
     transform: translate(4px, -4px);
@@ -711,41 +633,6 @@
     filter: brightness(1.9);
   }
 }
-@keyframes hero-bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(4px);
-  }
-}
-@keyframes hero-hot {
-  0%,
-  100% {
-    opacity: 0.15;
-    scale: 0.7;
-  }
-  50% {
-    opacity: 0.85;
-    scale: 1.25;
-  }
-}
-@keyframes hero-plate {
-  0%,
-  84% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes hero-screen {
-  to {
-    translate: 0 -66.6667%;
-  }
-}
-
 @keyframes stat-ring {
   from {
     stroke-dashoffset: 181.5;
@@ -794,11 +681,6 @@
   }
 }
 
-@keyframes platform-photo {
-  from {
-    transform: scale(1.05);
-  }
-}
 @keyframes motion-rise {
   from {
     opacity: 0;
@@ -1592,31 +1474,51 @@
     inset: 0;
     cursor: pointer;
   }
-  .ind-panel:has(.ind-radio:checked) > .ind-hit {
-    cursor: default;
-  }
 
   /*
-   * The copy, pinned to the panel's foot at the open width. Closed, it is out
-   * of the tab order and the accessibility tree (visibility), and leaves at
-   * once; open, its four pieces fade up 80ms apart once the panel is moving.
-   * Clicks fall through it to the label, except on the link.
+   * The copy, pinned to the panel's foot at the open width, with room left
+   * under it for the link's line (24px and the gap). Closed, it is out of the
+   * accessibility tree (visibility), and leaves at once; open, its pieces
+   * fade up 80ms apart once the panel is moving.
    */
   .ind-body {
+    --ind-body-gap: 14px;
     position: absolute;
     bottom: 0;
     left: 0;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--ind-body-gap);
     width: 100%;
     padding: var(--ind-pad);
+    padding-bottom: calc(var(--ind-pad) + 24px + var(--ind-body-gap));
     visibility: hidden;
     pointer-events: none;
     transition: visibility 0s 0.15s;
     @media (width >= 1024px) {
-      gap: 16px;
+      --ind-body-gap: 16px;
       width: var(--ind-open-w);
+    }
+  }
+
+  /*
+   * The panel's link: it covers the whole open panel, over the copy, so the
+   * panel is one link and a click anywhere on it goes to the industry page.
+   * Its words sit at the foot, in the room the copy leaves. Closed, it is out
+   * of the tab order and takes no clicks, so the label under it opens the panel.
+   */
+  .ind-go {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    padding: var(--ind-pad);
+    visibility: hidden;
+    pointer-events: none;
+    transition: visibility 0s 0.15s;
+    &:focus-visible {
+      outline: 2px solid var(--color-alert-info);
+      outline-offset: -2px;
     }
   }
   .ind-rise {
@@ -1638,10 +1540,10 @@
       --ind-step: 4;
     }
   }
-  .ind-link {
+  .ind-panel:has(.ind-radio:checked) > .ind-go {
     pointer-events: auto;
   }
-  .ind-panel:has(.ind-radio:checked) > .ind-body {
+  .ind-panel:has(.ind-radio:checked) > :is(.ind-body, .ind-go) {
     visibility: visible;
     transition-delay: 0s;
     & > .ind-rise {

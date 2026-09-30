@@ -1,0 +1,94 @@
+/*
+ * why-flash-measures — "What does each technology actually measure?" on
+ * /why-flash/prediction-vs-sensors-vs-detection/ (wfm-*). The drawing itself
+ * is components/why-flash/measure-overlay.tsx.
+ *
+ * The cards take the site's wave reveal as it is (styles/parameter-card.css):
+ * each is a `.motion.scroll-flow-card`, fading up 70ms after the one before
+ * while its photo comes into focus. Hovering a card lifts it 4px and fades in
+ * what that technology sees over its image in 250ms. The cards are open, with
+ * no box to cast a shadow.
+ *
+ * A phone or a touch screen has no hover, so there the drawing is simply
+ * there, and on a phone its label drops under the image. Reduced motion: the
+ * drawing still appears on hover, with no fade and no lift.
+ */
+@layer components {
+  .wfm-overlay {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .wfm:hover .wfm-overlay {
+    opacity: 1;
+  }
+
+  /* On the image: small caps, placed beside its marks. */
+  .wfm-label {
+    position: absolute;
+    max-width: 44%;
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+  .wfm-label-strikes {
+    top: 56%;
+    left: 55%;
+    color: rgb(255 255 255 / 62%);
+  }
+  .wfm-label-radius {
+    top: 40%;
+    left: 52%;
+    max-width: 27%;
+    color: var(--color-neutral-0);
+  }
+  .wfm-label-cell {
+    top: 44%;
+    left: 12.5%;
+    max-width: none;
+    color: var(--color-viz-gold);
+  }
+
+  @media (hover: none) {
+    .wfm-overlay {
+      opacity: 1;
+    }
+  }
+
+  /* A phone: the label sits under the image, in the card's own colours. */
+  @media (width < 48rem) {
+    .wfm-overlay {
+      opacity: 1;
+    }
+    .wfm-label {
+      position: static;
+      max-width: none;
+      font-size: 12px;
+      line-height: 16px;
+    }
+    .wfm-label-strikes {
+      color: var(--color-text-muted);
+    }
+    .wfm-label-radius {
+      color: var(--color-text);
+    }
+    .wfm-label-cell {
+      color: var(--color-gold-on-light);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .wfm-overlay {
+      transition: opacity 250ms var(--motion-ease);
+    }
+    @media (hover: hover) {
+      .pc.wfm:hover {
+        box-shadow: none;
+      }
+      .pc.wfm:hover .pc-photo > img {
+        scale: 1.03;
+      }
+    }
+  }
+}

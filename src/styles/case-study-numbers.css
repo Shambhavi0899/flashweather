@@ -1,0 +1,41 @@
+/*
+ * case-study-numbers — Case study: Troon's "What is running today, in numbers
+ * we can stand behind" and the "Trusted on the field" bar under it
+ * (app/case-studies/troon/page.tsx, csn-*).
+ *
+ * Figures (csn-rise, under <Motion>): the four cards take the site's fade-up,
+ * the shared motion-rise, together and once as the row scrolls in. The
+ * numbers are text from the start; nothing counts up. Reduced motion: none of
+ * it (the shared .motion rule), the cards are simply there.
+ *
+ * Proof bar: the customer this page is about carries a small "This case
+ * study" tag beside its name and stays at full strength. The other names sit
+ * back at 60%, which still reads at 5:1 on white; their one-line uses keep
+ * the muted text colour, so nothing drops below AA. The tag wraps under the
+ * name where a column is too narrow, and the cells align to the top so the
+ * names keep one line across the bar.
+ */
+
+@layer components {
+  .motion[data-anim]:not([data-anim='reset']) .csn-rise {
+    animation: motion-rise 0.6s var(--motion-ease) var(--motion-delay) both;
+  }
+
+  .csn-proof:not([data-current]) .csn-proof-name {
+    opacity: 0.6;
+  }
+
+  .csn-tag {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 0 8px;
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--color-brand-blue) 8%, transparent);
+    color: var(--color-brand-blue);
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}

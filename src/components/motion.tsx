@@ -21,7 +21,9 @@ const COUNT_MS = 1200;
  * `count` names the finished text of a `[data-count]` element inside the
  * block, which then counts up from zero with the diagrams, or later by the
  * block's `--motion-count-delay` if CSS sets one. `replay={false}`
- * plays the block once, with no hover replay. `label` names the block for
+ * plays the block once, with no hover replay. A `[data-motion-replay]`
+ * button inside the block replays it on click either way (CSS keeps such a
+ * button hidden until the block has `data-anim`). `label` names the block for
  * assistive tech (a list's aria-label). `threshold` is how much of the block
  * must be in view before it plays (0.35 unless given).
  */
@@ -109,9 +111,15 @@ export function Motion({
     };
     block.addEventListener('pointerenter', replay);
 
+    const replayClick = (event: MouseEvent) => {
+      if (played && (event.target as Element).closest('[data-motion-replay]')) play(0);
+    };
+    block.addEventListener('click', replayClick);
+
     return () => {
       observer.disconnect();
       block.removeEventListener('pointerenter', replay);
+      block.removeEventListener('click', replayClick);
       cancelAnimationFrame(frame);
       clearTimeout(timer);
       if (number && count) number.textContent = count;

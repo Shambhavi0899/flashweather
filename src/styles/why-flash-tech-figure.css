@@ -1,0 +1,307 @@
+/*
+ * Prediction vs sensors vs detection, hero Figure 1
+ * (components/why-flash/technology-figure.tsx, technology-figure-motion.tsx).
+ *
+ * Each card plays its mechanism, ~1.4s from its own --tech-at:
+ *   Before  AI prediction   the parameters flow into the cell, the cell
+ *                           fills gold, "Next 60 min · before the strike"
+ *   During  field meter     the charge rings build, the needle climbs past
+ *                           the threshold, "Field alarm · one point" pulses
+ *   After   detection       a strike flashes, pings spread from the three
+ *                           sensors, the lines triangulate, STRIKE LOCATED
+ * Its Before / During / After tag comes in as it starts.
+ *
+ * The markup is the final frame. Layers that exist only for the motion
+ * (tf-flow, tf-cell-ring, tf-alarm-pulse, tf-bolt, tf-burst, tf-ping) rest
+ * at opacity 0 and fill `forwards`, so they stay off while a card waits its
+ * turn; everything else animates from a start frame back to itself
+ * (`backwards`), so a card that has yet to play shows its empty start.
+ * No data-anim (no JavaScript, reduced motion): nothing moves.
+ */
+
+@layer components {
+  /* The timing tag in each card's header. */
+  .tech-tag {
+    flex-shrink: 0;
+    border: 1px solid currentColor;
+    border-radius: 9999px;
+    padding: 3px 9px;
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+  .tech-tag[data-when='before'] {
+    color: var(--color-viz-gold);
+  }
+  .tech-tag[data-when='during'] {
+    color: #eb8c4a;
+  }
+  .tech-tag[data-when='after'] {
+    color: #f07a6e;
+  }
+
+  /* The motion-only layers, off at rest. */
+  .tech-card :is(.tf-flow, .tf-cell-ring, .tf-alarm-pulse, .tf-bolt, .tf-burst, .tf-ping) {
+    opacity: 0;
+  }
+  .tech-card .tf-flow {
+    stroke-dasharray: 0.32 1.4;
+  }
+  .tech-card :is(.tf-cell, .tf-cell-ring, .tf-burst, .tf-strike, .tf-ping, .tf-alarm-pulse) {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .tech-card .tf-needle {
+    transform-origin: 272px 130px;
+  }
+  .tech-card .tf-charge {
+    transform-origin: 110px 150px;
+  }
+  .tech-card .tf-ping {
+    vector-effect: non-scaling-stroke;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .tech-card {
+      --tech-at: 0ms;
+      --tech-ease: var(--motion-ease);
+    }
+    .tech-card[data-anim='idle'] *,
+    .tech-card[data-anim='idle'] {
+      animation-play-state: paused !important;
+    }
+    .tech-card[data-anim='reset'] * {
+      animation: none !important;
+    }
+
+    .tech-card[data-anim] .tech-tag {
+      animation: tf-tag 0.4s var(--tech-ease) var(--tech-at) backwards;
+    }
+
+    /* Before: AI prediction. */
+    .tech-card[data-anim] .tf-param {
+      animation: tf-param 0.5s ease-out var(--tech-at) backwards;
+    }
+    .tech-card[data-anim] .tf-param:nth-of-type(3) {
+      animation-delay: calc(var(--tech-at) + 80ms);
+    }
+    .tech-card[data-anim] .tf-param:nth-of-type(4) {
+      animation-delay: calc(var(--tech-at) + 160ms);
+    }
+    .tech-card[data-anim] .tf-flow {
+      animation: tf-flow 0.7s ease-in-out calc(var(--tech-at) + 60ms) forwards;
+    }
+    .tech-card[data-anim] .tf-flow:nth-child(2) {
+      animation-delay: calc(var(--tech-at) + 140ms);
+    }
+    .tech-card[data-anim] .tf-flow:nth-child(3) {
+      animation-delay: calc(var(--tech-at) + 220ms);
+    }
+    .tech-card[data-anim] .tf-cell {
+      animation: tf-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--tech-at) + 620ms) backwards;
+    }
+    .tech-card[data-anim] .tf-cell-text {
+      animation: tf-fade 0.3s ease-out calc(var(--tech-at) + 760ms) backwards;
+    }
+    .tech-card[data-anim] .tf-cell-ring {
+      animation: tf-ring 0.6s ease-out calc(var(--tech-at) + 760ms) forwards;
+    }
+    .tech-card[data-anim] .tf-halo {
+      animation: tf-fade 0.4s ease-out calc(var(--tech-at) + 820ms) backwards;
+    }
+    .tech-card[data-anim] .tf-next {
+      animation: tf-rise 0.4s var(--tech-ease) calc(var(--tech-at) + 980ms) backwards;
+    }
+
+    /* During: electrostatic field meter. */
+    .tech-card[data-anim] .tf-charge {
+      animation: tf-charge 0.7s var(--tech-ease) var(--tech-at) backwards;
+    }
+    .tech-card[data-anim] .tf-charge:nth-of-type(2) {
+      animation-delay: calc(var(--tech-at) + 150ms);
+    }
+    .tech-card[data-anim] .tf-charge:nth-of-type(3) {
+      animation-delay: calc(var(--tech-at) + 300ms);
+    }
+    .tech-card[data-anim] .tf-needle {
+      animation: tf-needle 1s linear calc(var(--tech-at) + 100ms) backwards;
+    }
+    .tech-card[data-anim] .tf-alarm {
+      animation: tf-alarm 0.3s ease-out calc(var(--tech-at) + 820ms) backwards;
+    }
+    .tech-card[data-anim] .tf-alarm-pulse {
+      animation: tf-pulse 0.5s ease-out calc(var(--tech-at) + 880ms) 2 forwards;
+    }
+
+    /* After: detection network. The pings are the panel's 2nd-4th circles
+       (the burst is the 1st). */
+    .tech-card[data-anim] .tf-bolt {
+      animation: tf-bolt 0.35s linear var(--tech-at) forwards;
+    }
+    .tech-card[data-anim] .tf-burst {
+      animation: tf-burst 0.5s ease-out calc(var(--tech-at) + 40ms) forwards;
+    }
+    .tech-card[data-anim] .tf-strike {
+      animation: tf-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--tech-at) + 60ms) backwards;
+    }
+    .tech-card[data-anim] .tf-ping {
+      animation: tf-ping 0.7s ease-out calc(var(--tech-at) + 280ms) forwards;
+    }
+    .tech-card[data-anim] .tf-ping:nth-of-type(3) {
+      animation-delay: calc(var(--tech-at) + 340ms);
+    }
+    .tech-card[data-anim] .tf-ping:nth-of-type(4) {
+      animation-delay: calc(var(--tech-at) + 400ms);
+    }
+    .tech-card[data-anim] .tf-tri {
+      stroke-dasharray: 1;
+      animation: tf-draw 0.45s var(--tech-ease) calc(var(--tech-at) + 560ms) backwards;
+    }
+    .tech-card[data-anim] .tf-located {
+      animation: tf-slide 0.4s var(--tech-ease) calc(var(--tech-at) + 980ms) backwards;
+    }
+  }
+}
+
+@keyframes tf-tag {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes tf-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes tf-param {
+  from {
+    opacity: 0.25;
+  }
+}
+@keyframes tf-flow {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 0.32;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    stroke-dashoffset: -1;
+  }
+}
+@keyframes tf-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+@keyframes tf-ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+@keyframes tf-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes tf-slide {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+@keyframes tf-charge {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+/* Charge builds slowly, then the needle swings past the threshold (at
+   -30deg, ~72% in) and settles in the watch band. */
+@keyframes tf-needle {
+  0% {
+    transform: rotate(-105deg);
+    animation-timing-function: cubic-bezier(0.5, 0, 0.9, 0.6);
+  }
+  78% {
+    transform: rotate(6deg);
+    animation-timing-function: ease-in-out;
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+@keyframes tf-alarm {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+@keyframes tf-pulse {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.18, 1.6);
+  }
+}
+@keyframes tf-bolt {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.1;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes tf-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  15% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+@keyframes tf-ping {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(7);
+  }
+}
+@keyframes tf-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
