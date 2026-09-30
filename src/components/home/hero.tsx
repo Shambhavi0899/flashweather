@@ -27,7 +27,7 @@ export function Hero() {
     <HeroSection
       theme="dark"
       labelledBy="hero-heading"
-      className="relative isolate flex min-h-[calc(100svh-var(--site-header-h))] flex-col justify-center overflow-hidden bg-brand-navy"
+      className="relative isolate flex min-h-svh flex-col justify-center overflow-hidden bg-brand-navy"
     >
       <HeroBackground layer="-z-10">
         {/* LCP image: the only preloaded image on the page. It fades in

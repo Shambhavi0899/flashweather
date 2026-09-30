@@ -31,7 +31,7 @@
   @media (width < 1024px) {
     .ha-time {
       position: sticky;
-      top: calc(var(--site-header-h) + 8px);
+      top: calc(var(--site-header-stick) + 8px);
       z-index: 5;
       margin-inline: -10px;
       padding: 6px 10px 8px;

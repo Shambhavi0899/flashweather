@@ -349,7 +349,7 @@
     .lc-clock {
       position: sticky;
       z-index: 2;
-      top: calc(var(--site-header-h) + 12px);
+      top: calc(var(--site-header-stick) + 12px);
       padding: 10px 18px 10px 14px;
       border-radius: var(--radius-pill);
       background-color: color-mix(in srgb, var(--color-neutral-0) 90%, transparent);

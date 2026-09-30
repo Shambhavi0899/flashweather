@@ -9,21 +9,22 @@ import { site } from '@/lib/seo/site';
 
 import { Logo } from './logo';
 
-/** Past this much scroll the bar compacts (76 -> 64px). */
-const SCROLLED = 40;
-/**
- * Past this much the bar takes its ground: the spacer under it no longer
- * covers its text, so a first section of the other tone would show through.
- */
-const GROUNDED = 24;
+/** This close to the top of the page the nav always shows. */
+const TOP = 100;
+/** Past this share of the page's scroll, scrolling down slides the nav away. */
+const HIDE_PAST = 0.5;
+/** Scroll movement smaller than this is ignored, so the nav does not jitter. */
+const JITTER = 10;
 
 /**
- * The global nav (C01 dark, C02 light), fixed to the top of every page.
+ * The global nav (C01 dark, C02 light): a floating bar, detached from the
+ * screen's edges, the width of the page's content, over the top of every
+ * page. Nothing is reserved for it: the page's first section starts behind
+ * it and is padded clear of it (styles/header.css).
  *
- * `tone` is the page's header as its Paper design draws it -- dark on pages
- * that open on a hero, light on reading pages -- and it holds for the whole
- * page, whatever section scrolls under the bar. It is also the colour of the
- * spacer that keeps the page's first section out from under the bar.
+ * `tone` is the page's header as its Paper design draws it -- dark glass on
+ * pages that open on a hero, light glass on reading pages -- and it holds for
+ * the whole page, whatever section scrolls under the bar.
  *
  * The one exception is the page's ending, the closing band and the footer
  * (<SiteFooter>), which is the same dark ground on every page: while that is
@@ -31,10 +32,12 @@ const GROUNDED = 24;
  * page's bar turns dark over it and back above it. No section inside a page
  * changes the bar.
  *
- * Past 40px the bar compacts (76 -> 64px, logo 56 -> 48px). It takes a
- * translucent, blurred ground of its tone a little earlier, past 24px, where
- * its text starts to leave the spacer, so the text stays readable over
- * anything. The styles are in styles/header.css.
+ * Scrolling: the nav stays for the first half of the page. Past that,
+ * scrolling down slides it up out of view and scrolling up brings it back;
+ * within 100px of the top it always shows. It also shows while the mobile
+ * menu is open and when keyboard focus moves into it. The state is
+ * `data-nav-hidden` on <html>, which sticky bars under the nav follow too
+ * (`--site-header-stick`).
  *
  * Every link is in the HTML, which is what lets a crawler reach every page
  * from every page. Dropdowns open on hover and keyboard focus; the mobile
@@ -49,15 +52,37 @@ export function SiteHeader({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
     const menu = header?.querySelector('details');
     if (!header || !menu) return;
 
-    // Scrolled: a ground, then a compact bar. Over the page's ending: its tone.
+    const root = document.documentElement;
+    const show = (on: boolean) => root.toggleAttribute('data-nav-hidden', !on);
+    /** Where the page was when the nav last answered a scroll. */
+    let mark = window.scrollY;
+
     const stopReading = onScrollFrame(() => {
-      header.toggleAttribute('data-grounded', window.scrollY > GROUNDED);
-      header.toggleAttribute('data-scrolled', window.scrollY > SCROLLED);
+      // Over the page's ending: its tone. The bar's own place, not where a slide has it.
       const ending = document.querySelector<HTMLElement>('[data-header-tone]');
-      const over = ending && ending.getBoundingClientRect().top <= header.offsetHeight / 2;
+      const over = ending && ending.getBoundingClientRect().top <= header.offsetTop + header.offsetHeight / 2;
       const theme = (over && ending.dataset.headerTone) || tone;
       if (header.dataset.theme !== theme) header.dataset.theme = theme;
+
+      // Away past half the page on the way down, back on the way up.
+      const range = root.scrollHeight - window.innerHeight;
+      const y = Math.min(Math.max(window.scrollY, 0), range);
+      if (y <= TOP || menu.open) {
+        show(true);
+        mark = y;
+        return;
+      }
+      const moved = y - mark;
+      if (Math.abs(moved) < JITTER) return;
+      mark = y;
+      if (moved < 0) show(true);
+      else if (y > range * HIDE_PAST) show(false);
     });
+    // Tabbing into a nav that has slid away brings it back.
+    const onFocus = () => {
+      show(true);
+      mark = window.scrollY;
+    };
 
     // Mobile menu: lock the page while it is open.
     const lock = () => document.documentElement.classList.toggle('site-menu-open', menu.open);
@@ -74,6 +99,7 @@ export function SiteHeader({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
       if ((event.target as HTMLElement).closest('nav a')) close();
     };
     const wide = window.matchMedia('(min-width: 1024px)');
+    header.addEventListener('focusin', onFocus);
     menu.addEventListener('toggle', lock);
     menu.addEventListener('click', onClick);
     document.addEventListener('keydown', onKey);
@@ -81,6 +107,8 @@ export function SiteHeader({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
 
     return () => {
       stopReading();
+      show(true);
+      header.removeEventListener('focusin', onFocus);
       menu.removeEventListener('toggle', lock);
       menu.removeEventListener('click', onClick);
       document.removeEventListener('keydown', onKey);
@@ -91,19 +119,10 @@ export function SiteHeader({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
   }, [tone]);
 
   return (
-    <>
-      {/* The bar's height, in the page's top ground: what the fixed bar sits
-          over at the top of the page, and what keeps the first section clear. */}
-      <div
-        aria-hidden
-        className={`site-header-spacer border-b ${
-          tone === 'dark' ? 'border-border-on-dark bg-brand-navy' : 'border-border bg-neutral-0'
-        }`}
-      />
-      {/* Its own layer in a page transition: the page fades under it. */}
-      <ViewTransition name="site-header" share="site-header" default="none">
-      <header ref={ref} data-theme={tone} className="site-header">
-        <div className="site-header-bar container-page flex items-center justify-between gap-6 xl:!px-24">
+    /* Its own layer in a page transition: the page fades under it. */
+    <ViewTransition name="site-header" share="site-header" default="none">
+      <header ref={ref} data-theme={tone} className="site-header container-page">
+        <div className="site-header-bar flex items-center justify-between gap-6 pr-2.5 pl-4 sm:pr-2 md:pl-5">
           <Logo variant={tone} size="header" priority themed={tone === 'light'} />
 
           <nav aria-label="Primary" className="hidden h-full lg:block">
@@ -117,7 +136,7 @@ export function SiteHeader({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
                     {group.label}
                   </Link>
                   {group.links.length > 0 && (
-                    <ul className="site-header-panel invisible absolute top-full left-1/2 min-w-[240px] -translate-x-1/2 rounded-md border p-2 opacity-0 shadow-xl transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+                    <ul className="site-header-panel invisible absolute top-[calc(100%+10px)] left-1/2 min-w-[240px] -translate-x-1/2 rounded-[14px] border p-2 opacity-0 shadow-xl transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
                       {group.links.map((item) => (
                         <li key={item.href}>
                           <Link href={item.href} className="block rounded-sm px-3 py-2 text-body-s">
@@ -132,20 +151,20 @@ export function SiteHeader({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
             </ul>
           </nav>
 
-          <div className="flex items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-3 sm:gap-5">
             <a href={site.appUrl} className="site-header-muted hidden text-[15px] leading-caption font-medium sm:block">
               Log in
             </a>
             <Link
               href={DEMO_HREF}
-              className="site-header-demo hidden h-[44px] items-center px-6 text-body-s leading-caption tracking-[0.02em] sm:flex"
+              className="site-header-demo hidden h-10 items-center px-5 text-body-s leading-caption tracking-[0.02em] sm:flex"
             >
               Book a demo
             </Link>
 
             <details className="group/menu lg:hidden">
               <summary
-                className="site-header-toggle flex size-11 cursor-pointer list-none items-center justify-center rounded-xs border [&::-webkit-details-marker]:hidden"
+                className="site-header-toggle flex size-11 cursor-pointer list-none items-center justify-center rounded-[12px] border [&::-webkit-details-marker]:hidden"
                 aria-label="Menu"
               >
                 <svg width="20" height="14" viewBox="0 0 20 14" aria-hidden className="group-open/menu:hidden">
@@ -155,7 +174,11 @@ export function SiteHeader({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
                   <path d="M1 1l14 14M15 1L1 15" stroke="currentColor" strokeWidth="2" />
                 </svg>
               </summary>
-              <nav aria-label="Mobile" data-lenis-prevent className="site-header-menu overflow-y-auto px-4 pb-8">
+              <nav
+                aria-label="Mobile"
+                data-lenis-prevent
+                className="site-header-menu overflow-y-auto px-8 pb-8 md:px-[60px]"
+              >
                 <ul className="flex flex-col">
                   {primaryNav.map((group) => (
                     <li key={group.label} className="site-header-rule border-b py-3">
@@ -192,7 +215,6 @@ export function SiteHeader({ tone = 'dark' }: { tone?: 'dark' | 'light' }) {
           </div>
         </div>
       </header>
-      </ViewTransition>
-    </>
+    </ViewTransition>
   );
 }

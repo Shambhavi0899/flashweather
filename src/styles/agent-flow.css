@@ -2,14 +2,15 @@
  * agent-flow — the converging diagram above the Flash Agent tabs
  * (components/home/agent-flow.tsx), prefix aflow-.
  *
- *   your tools and data ─╮   ╭─ prediction engine
- *                        Flash Agent
- *                             │
- *                      you and your crew
+ *   your tools and data ─╮
+ *                         ├─ Flash Agent ── you and your crew
+ *   prediction engine ───╯
  *
- * From lg the diagram is 920px wide, so the curved links are drawn in real
- * pixels (`.aflow-links-wide`); below it the two inputs sit side by side and
- * the links are straight (`.aflow-links-narrow`, stretched sideways only).
+ * From lg it is one compact row across the section: the sources stacked on
+ * the left, links running left to right, drawn for the row's set height and
+ * scaled with it. Below lg it reads top to bottom: 460px wide from 520px, with
+ * curved links drawn in real pixels; below that it takes the page's width
+ * and the links are straight (stretched sideways only).
  * A link is a line and, over it, a pulse: one short dash that runs the
  * line's length (both paths have pathLength 100).
  *
@@ -51,7 +52,8 @@
   }
 
   /* Two soft glows behind the diagram, one per source, meeting behind the
-     agent. Gradients that fade to nothing, so there is no edge to see. */
+     agent. Gradients that fade to nothing, so there is no edge to see. In
+     the row (from lg) they are shallower, so they stay behind the diagram. */
   .aflow::before,
   .aflow::after {
     content: '';
@@ -71,6 +73,14 @@
     left: 50%;
     margin-left: -120px;
     background-image: radial-gradient(closest-side, rgb(230 186 45 / 22%), rgb(230 186 45 / 8%) 55%, transparent);
+  }
+
+  @media (width >= 1024px) {
+    .aflow::before,
+    .aflow::after {
+      top: -90px;
+      height: 420px;
+    }
   }
 
   /* A source's colour: bar, label, icons. */
@@ -141,9 +151,15 @@
     background-color: #e0f5fa;
     color: #1390b5;
   }
-  @media (width >= 768px) {
+  @media (width >= 520px) {
     .aflow-icon {
-      max-width: 30px;
+      max-width: 27px;
+    }
+  }
+  /* In the row they sit beside the label. */
+  @media (width >= 1024px) {
+    .aflow-icon {
+      max-width: 22px;
     }
   }
 

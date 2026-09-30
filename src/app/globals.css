@@ -16,7 +16,7 @@
 @import "../styles/agent-conversation.css";
 @import "../styles/home.css";
 /* The home hero's product deck: three glass cards in a stack, one open at a time, and their tabs. */
-@import "../styles/home-hero-deck.css";
+@import "../styles/./home-hero-deck.css";
 @import "../styles/home-customers.css";
 /* The home hero's lightning: a bolt drawn new for each strike, and the clouds lighting up. */
 @import "../styles/home-hero-lightning.css";

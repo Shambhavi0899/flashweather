@@ -46,7 +46,7 @@
 
   .tc-colhead {
     position: sticky;
-    top: var(--site-header-h-compact);
+    top: var(--site-header-stick);
     z-index: 1;
     width: 27%;
     padding: 0;

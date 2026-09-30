@@ -9,8 +9,10 @@
  *            blue glow
  *   sweep    while the agent thinks (the typing-dots step, `data-steps`
  *            from <AgentChat>), a light runs once round the gold frame
- *   list     the question list beside the window and the tour's line are
+ *   list     the question list inside the window and the tour's line are
  *            styles/agent-tour.css
+ *   trace    while a conversation plays, the pieces still to come show as
+ *            a faint blurred trace, so the window is never an empty panel
  *
  * Reduced motion: no sweep and no pulse; the glow is still anyway.
  */
@@ -146,6 +148,34 @@
       radial-gradient(closest-side at 72% 60%, rgb(0 51 153 / 14%), transparent);
     filter: blur(36px);
     pointer-events: none;
+  }
+
+  /* The ask note's line is there from the start (hidden), so a question typed
+     into the composer does not make the window taller. */
+  .agent-window .chat-ask-note {
+    display: flex;
+    visibility: hidden;
+  }
+  .agent-window .chat[data-asked] .chat-ask-note {
+    visibility: visible;
+  }
+
+  /* No empty window while a conversation plays: each piece still to come
+     shows as a faint, blurred trace in its place, and clears as its step
+     arrives (the steps are <AgentChat>'s `data-steps`; the words clear one
+     by one). Only a playing panel has `data-chat`, so with reduced motion
+     or no JavaScript there is nothing to trace. */
+  .agent-window .chat[data-chat]:not([data-steps~='sent']) .chat-bubble,
+  .agent-window .chat[data-chat]:not([data-steps~='thinking']) .chat-agent,
+  .agent-window .chat[data-chat]:not([data-steps~='chart']) .chat-chart,
+  .agent-window .chat[data-chat]:not([data-steps~='chips']) .chat-chip,
+  .agent-window .chat[data-chat]:not([data-steps~='actions']) .chat-actions {
+    opacity: 0.26;
+    filter: blur(5px) saturate(0);
+  }
+  .agent-window .chat[data-chat] .chat-word:not(.is-in) {
+    opacity: 0.26;
+    filter: blur(5px);
   }
 
   @media (prefers-reduced-motion: no-preference) {

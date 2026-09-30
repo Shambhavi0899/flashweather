@@ -2,7 +2,8 @@ import { Logo } from '@/components/logo';
 import { Motion } from '@/components/motion';
 import { agentFlow } from '@/content/home';
 
-const TAG = 'text-[10px] leading-3 font-bold tracking-[0.13em] uppercase md:text-[11px] md:leading-[14px]';
+const TAG =
+  'text-[10px] leading-3 font-bold tracking-[0.13em] uppercase min-[520px]:text-[11px] min-[520px]:leading-[14px]';
 
 const ICON = {
   viewBox: '0 0 16 16',
@@ -44,36 +45,39 @@ const OUTCOMES = [
 ];
 
 /**
- * One input: a white card whose link runs down into the agent. Each has its
- * own colour, which its accent bar, label, icons, link and pulse all carry:
- * blue for your tools and data, gold for the prediction engine.
+ * One input: a white card whose link runs into the agent. Each has its own
+ * colour, which its accent bar, label, icons, link and pulse all carry: blue
+ * for your tools and data, gold for the prediction engine. From lg it is
+ * compact: the label and the icons share a line.
  */
 function Input({ id, tag, title, body }: { id: 'tools' | 'engine'; tag: string; title: string; body: string }) {
   return (
     <li
-      className={`aflow-input aflow-${id} relative flex w-[calc(50%-6px)] flex-col gap-2 overflow-clip rounded-lg border border-border bg-neutral-0 px-4 pt-[21px] pb-[18px] md:px-[26px] md:pt-[27px] md:pb-6 lg:w-[380px]`}
+      className={`aflow-input aflow-${id} relative flex w-[calc(50%-6px)] flex-col gap-2 overflow-clip rounded-lg border border-border bg-neutral-0 px-4 pt-[21px] pb-[18px] lg:w-full lg:flex-1 lg:justify-center lg:gap-1 lg:pt-[15px] lg:pb-3`}
     >
       <span aria-hidden className="aflow-bar" />
-      <p className={`${TAG} aflow-tag`}>{tag}</p>
-      <span aria-hidden className="flex gap-1 py-0.5 md:gap-1.5">
-        {id === 'tools'
-          ? TOOL_ICONS.map((d) => (
-              <span key={d} className="aflow-icon aflow-icon-tool">
-                <svg {...ICON}>
-                  <path d={d} />
-                </svg>
-              </span>
-            ))
-          : HAZARDS.map((hazard) => (
-              <span key={hazard.id} className={`aflow-icon aflow-hazard aflow-hazard-${hazard.id}`}>
-                <svg {...ICON}>
-                  <path d={hazard.d} />
-                </svg>
-              </span>
-            ))}
-      </span>
-      <h3 className="text-caption font-bold text-brand-navy md:text-[17px] md:leading-6">{title}</h3>
-      <p className="text-[11px] leading-4 text-text-muted md:text-caption md:leading-5">{body}</p>
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-3 lg:pb-1">
+        <p className={`${TAG} aflow-tag`}>{tag}</p>
+        <span aria-hidden className="flex gap-1 py-0.5 lg:w-[152px] lg:shrink-0 lg:justify-end lg:py-0">
+          {id === 'tools'
+            ? TOOL_ICONS.map((d) => (
+                <span key={d} className="aflow-icon aflow-icon-tool">
+                  <svg {...ICON}>
+                    <path d={d} />
+                  </svg>
+                </span>
+              ))
+            : HAZARDS.map((hazard) => (
+                <span key={hazard.id} className={`aflow-icon aflow-hazard aflow-hazard-${hazard.id}`}>
+                  <svg {...ICON}>
+                    <path d={hazard.d} />
+                  </svg>
+                </span>
+              ))}
+        </span>
+      </div>
+      <h3 className="text-caption font-bold text-brand-navy min-[520px]:text-body-s min-[520px]:leading-5">{title}</h3>
+      <p className="text-[11px] leading-4 text-text-muted min-[520px]:text-micro min-[520px]:leading-[18px]">{body}</p>
     </li>
   );
 }
@@ -89,54 +93,81 @@ const Link = ({ d, name }: { d: string; name: 'tools' | 'engine' | 'out' }) => (
 /**
  * How Flash Agent works, as a diagram: your tools and data, and the
  * prediction engine, run into Flash Agent; its answer goes to you and your
- * crew. A list of four in that order, which is how it reads without the
- * drawing. The links, the colours and all the motion are
- * styles/agent-flow.css, played once by <Motion> as the diagram scrolls in.
- * Every icon is decoration: the cards' text says the same.
+ * crew. A list of three in that order (the first holds the two sources),
+ * which is how it reads without the drawing. The links, the colours and all
+ * the motion are styles/agent-flow.css, played once by <Motion> as the
+ * diagram scrolls in.
+ *
+ * From lg it is one compact row across the section, above the demo
+ * (agent-section.tsx): the two sources stacked on the left, Flash Agent in the
+ * middle, the crew on the right, and the links running left to right. The
+ * row has a set height (214px from 1280px, 282px from lg, where the sources'
+ * text takes more lines), every card fills it, and the links are drawn for
+ * the 214px row and scale with it, so they leave each source at its centre.
+ * Below lg it reads top to bottom: the sources side by side,
+ * then the agent, then the crew; 460px wide from 520px, with curved links,
+ * and the page's width with straight ones below that. The cue under it
+ * points down at the demo. Every icon is decoration: the cards' text says
+ * the same.
  */
 export function AgentFlow() {
   const { tools, engine, agent, crew, cue } = agentFlow;
   return (
-    <Motion replay={false} threshold={0.3} className="motion aflow flex flex-col items-center gap-5">
-      <ol className="flex w-full flex-wrap justify-between lg:w-[920px]">
-        <Input id="tools" {...tools} />
-        <Input id="engine" {...engine} />
+    <Motion replay={false} threshold={0.3} className="motion aflow flex flex-col items-center gap-4">
+      <ol className="flex w-full flex-col min-[520px]:w-[460px] lg:h-[282px] lg:w-full lg:flex-row lg:items-stretch min-[1280px]:h-[214px]">
+        <li className="flex lg:w-[42%] lg:shrink-0 min-[1280px]:w-[40%]">
+          <ul className="flex w-full justify-between lg:flex-col lg:justify-start lg:gap-3">
+            <Input id="tools" {...tools} />
+            <Input id="engine" {...engine} />
+          </ul>
+        </li>
 
-        <li className="flex w-full flex-col items-center">
-          {/* From lg: each input's bottom centre, curving in to the agent's top edge. */}
-          <svg aria-hidden viewBox="0 0 920 88" className="hidden h-[88px] w-[920px] lg:block">
-            <Link name="tools" d="M190 0C190 54 420 34 420 88" />
-            <Link name="engine" d="M730 0C730 54 500 34 500 88" />
+        <li className="flex flex-col items-center lg:min-w-0 lg:flex-1 lg:flex-row lg:items-stretch">
+          {/* From lg: each source's right edge, curving in to the agent's left edge. */}
+          <svg aria-hidden viewBox="0 0 56 214" className="hidden h-full w-auto shrink-0 lg:block">
+            <Link name="tools" d="M0 51C34 51 22 93 56 93" />
+            <Link name="engine" d="M0 163C34 163 22 121 56 121" />
           </svg>
-          <svg aria-hidden viewBox="0 0 100 32" preserveAspectRatio="none" className="h-8 w-full lg:hidden">
+          {/* From 520px to lg: each source's bottom centre, curving in to the agent's top edge. */}
+          <svg aria-hidden viewBox="0 0 460 56" className="hidden h-14 w-[460px] min-[520px]:block lg:hidden">
+            <Link name="tools" d="M112 0C112 36 200 20 200 56" />
+            <Link name="engine" d="M348 0C348 36 260 20 260 56" />
+          </svg>
+          <svg aria-hidden viewBox="0 0 100 32" preserveAspectRatio="none" className="h-8 w-full min-[520px]:hidden">
             <Link name="tools" d="M25 0V32" />
             <Link name="engine" d="M75 0V32" />
           </svg>
           {/* The centre of the diagram: a white card like the others, with the gold border and a deeper shadow. */}
-          <div className="aflow-agent relative flex w-full flex-col items-center gap-3 rounded-lg bg-neutral-0 px-6 py-6 text-center md:px-8 md:py-7 lg:w-[440px]">
+          <div className="aflow-agent relative flex w-full flex-col items-center gap-3 rounded-lg bg-neutral-0 px-6 py-6 text-center lg:w-auto lg:min-w-0 lg:flex-1 lg:justify-center lg:gap-2.5 lg:px-5 lg:py-5">
             <span aria-hidden className="aflow-sweep" />
             <Logo variant="light" size="window" link={false} alt="" />
             <h3 className={`${TAG} text-gold-on-light`}>{agent.tag}</h3>
-            <p className="text-body-s leading-[22px] font-bold text-pretty text-brand-navy md:text-[17px] md:leading-[26px]">
+            <p className="text-body-s leading-[22px] font-bold text-pretty text-brand-navy min-[520px]:text-[15px] min-[520px]:leading-[23px] lg:text-body-s lg:leading-[21px]">
               {agent.body}
             </p>
           </div>
         </li>
 
-        <li className="flex w-full flex-col items-center">
-          <svg aria-hidden viewBox="0 0 8 36" className="h-9 w-2">
+        <li className="flex flex-col items-center lg:w-[30%] lg:shrink-0 lg:flex-row lg:items-stretch">
+          {/* From lg: one straight link, agent to crew. */}
+          <svg aria-hidden viewBox="0 0 44 214" className="hidden h-full w-auto shrink-0 lg:block">
+            <Link name="out" d="M0 107H44" />
+          </svg>
+          <svg aria-hidden viewBox="0 0 8 36" className="h-9 w-2 lg:hidden">
             <Link name="out" d="M4 0V36" />
           </svg>
-          <div className="aflow-crew flex w-full flex-col items-center gap-3 rounded-lg border border-border bg-neutral-0 px-6 py-[18px] text-center md:py-6 lg:w-[440px]">
+          <div className="aflow-crew flex w-full flex-col items-center gap-3 rounded-lg border border-border bg-neutral-0 px-6 py-[18px] text-center min-[520px]:py-5 lg:w-auto lg:min-w-0 lg:flex-1 lg:justify-center lg:gap-2.5 lg:px-4">
             <p className={`${TAG} text-gold-on-light`}>{crew.tag}</p>
-            <h3 className="text-caption font-bold text-brand-navy md:text-[17px] md:leading-6">{crew.title}</h3>
+            <h3 className="text-caption font-bold text-balance text-brand-navy min-[520px]:text-body-s min-[520px]:leading-5">
+              {crew.title}
+            </h3>
             <ul className="flex flex-wrap justify-center gap-2">
               {crew.outcomes.map((outcome, i) => (
                 <li
                   key={outcome}
-                  className={`aflow-chip aflow-chip-${OUTCOMES[i].tone} flex items-center gap-1.5 rounded-full border py-1 pr-3 pl-2.5 text-[11px] leading-4 font-semibold md:text-caption md:leading-5`}
+                  className={`aflow-chip aflow-chip-${OUTCOMES[i].tone} flex items-center gap-1.5 rounded-full border py-1 pr-3 pl-2.5 text-[11px] leading-4 font-semibold min-[520px]:text-micro`}
                 >
-                  <svg aria-hidden {...ICON} className="size-3 shrink-0 md:size-3.5">
+                  <svg aria-hidden {...ICON} className="size-3 shrink-0">
                     <path d={OUTCOMES[i].d} />
                   </svg>
                   {outcome}

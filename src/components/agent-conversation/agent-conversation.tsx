@@ -78,7 +78,9 @@ export function AgentConversation({
    * styles/agent-window.css): the panel drops its card and gets more room
    * (except at the sides from lg to xl, where the 886px switch needs them),
    * the agent signs with the Flash logo, and the floating launcher steps
-   * aside while the actions or composer would be under it.
+   * aside while the actions or composer would be under it. The window also
+   * keeps the ask note's line from the start (agent-window.css), so typing a
+   * question in does not change its height; the panel's foot is shorter for it.
    */
   inWindow?: boolean;
   /** Display and visibility (a tab's `group-has-[…]:flex`); `flex` by default. */
@@ -92,7 +94,9 @@ export function AgentConversation({
       data-chat-for={tabFor}
       aria-label={label}
       className={`chat min-w-0 flex-col gap-6 ${
-        inWindow ? 'p-5 sm:p-8 lg:px-7 xl:p-10' : 'rounded-[20px] border border-white/10 bg-brand-navy-deep/72 p-5 sm:p-7'
+        inWindow
+          ? 'p-5 pb-4 sm:p-8 sm:pb-5 lg:px-7 xl:p-10 xl:pb-6'
+          : 'rounded-[20px] border border-white/10 bg-brand-navy-deep/72 p-5 sm:p-7'
       } ${className}`}
     >
       <div className="chat-bubble flex justify-end">
@@ -213,7 +217,11 @@ export function AgentConversation({
 
       {/* The composer the question is typed into; an illustration, so hidden
           from assistive tech (the question itself is the bubble above). */}
-      <div data-launcher-clear={inWindow || undefined} className="flex items-center gap-3 border-t border-white/10 pt-5">
+      {/* In a window shared with taller conversations (the tabs' stack), it stays at the foot. */}
+      <div
+        data-launcher-clear={inWindow || undefined}
+        className={`flex items-center gap-3 border-t border-white/10 pt-5 ${inWindow ? 'mt-auto' : ''}`}
+      >
         <div
           aria-hidden
           className="chat-composer flex h-12 min-w-0 grow items-center gap-3 rounded-full border border-white/12 bg-white/4 pr-[6px] pl-5 text-caption md:text-body-s"

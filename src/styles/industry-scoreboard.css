@@ -70,7 +70,7 @@
     }
     .sb[data-mode='live'] .sb-bar {
       position: sticky;
-      top: var(--site-header-h-compact);
+      top: var(--site-header-stick);
     }
     .sb-steps {
       order: 3;

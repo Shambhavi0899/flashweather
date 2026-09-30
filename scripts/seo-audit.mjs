@@ -96,11 +96,11 @@ function audit(file) {
   if (h1s === 0) fail(route, 'no <h1>');
   else if (h1s > 1) fail(route, `${h1s} <h1> elements — there must be exactly one`);
 
-  // The fixed header sits over the hero, so it has to be in the hero's theme
+  // The floating header sits over the hero, so it has to be in the hero's theme
   // from the first paint: a light bar over a navy hero is unreadable until
   // something scrolls. Every page opens on exactly one hero.
   const heroes = [...html.matchAll(/<(?:section|header)\b[^>]*\bdata-hero\b[^>]*>/gi)];
-  const headerTheme = pick(html, /<header\b[^>]*\bdata-theme="([^"]*)"[^>]*class="site-header"/i);
+  const headerTheme = pick(html, /<header\b[^>]*\bdata-theme="([^"]*)"[^>]*class="site-header[ "]/i);
   if (heroes.length !== 1) {
     fail(route, `${heroes.length} hero sections (data-hero) — there must be exactly one`);
   } else {

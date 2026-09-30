@@ -496,7 +496,7 @@
     .hc-timeline {
       position: sticky;
       z-index: 2;
-      top: calc(var(--site-header-h) + 8px);
+      top: calc(var(--site-header-stick) + 8px);
       padding: 8px 30px 6px;
       border-radius: 14px;
       background-color: color-mix(in srgb, var(--color-neutral-0) 94%, transparent);

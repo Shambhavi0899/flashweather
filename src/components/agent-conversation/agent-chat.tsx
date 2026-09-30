@@ -237,7 +237,8 @@ export function AgentChat({
         follow(panelFor(radio));
         reveal(radio);
       }
-      const panel = panels.find((p) => p.checkVisibility());
+      // Stacked tab panels are hidden by `visibility`, not `display`.
+      const panel = panels.find((p) => p.checkVisibility({ visibilityProperty: true }));
       const typed = panel?.querySelector<HTMLElement>('[data-chat-typed]');
       if (!panel || !typed) return;
       cancel();

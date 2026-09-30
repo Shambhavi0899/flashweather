@@ -1,38 +1,67 @@
 /*
- * header — the fixed site header (components/site-header.tsx).
+ * header — the floating site nav (components/site-header.tsx).
  *
- * The bar's colours are variables set by its `data-theme`: the page's tone,
- * fixed for the page, except over the page's ending (the closing band and
- * the footer), where a light page's bar takes the dark theme. `data-grounded` (past 24px, where its text leaves the
- * spacer) gives it a translucent, blurred ground; `data-scrolled` (past 40px)
- * compacts it. At the very top it is transparent over the spacer. The
- * changes ease over 200ms.
+ * A bar detached from the screen's edges: 12px from the top, the width of
+ * the page's content, 64px tall, rounded, on a translucent blurred ground
+ * with a 1px edge and a soft shadow. Its colours are variables set by its
+ * `data-theme`: the page's tone, fixed for the page, except over the page's
+ * ending (the closing band and the footer), where a light page's bar takes
+ * the dark theme.
+ *
+ * Nothing is reserved for it. The page's first section starts at the top of
+ * the screen, behind the bar, and is padded clear of it here, so every page's
+ * content sits where it did.
+ *
+ * `data-nav-hidden` on <html> (past half the page, scrolling down) slides
+ * the bar up out of view over 300ms; with reduced motion it just goes.
+ *
+ *   --site-header-h      the bar's bottom edge, 76px: what a sticky panel or
+ *                        a full-height stage keeps clear of. It does not
+ *                        change, so nothing reflows when the nav hides.
+ *   --site-header-stick  the same edge for a bar that rides flush under the
+ *                        nav: 76px, easing to 0 while the nav is away, so
+ *                        the bar rides at the top of the screen instead.
  */
+@property --site-header-stick {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 76px;
+}
 
 @layer components {
   :root {
+    --site-header-top: 12px;
+    --site-header-bar: 64px;
     --site-header-h: 76px;
-    --site-header-h-compact: 64px;
-    /* Anchor targets land clear of the bar at its tallest. */
-    scroll-padding-top: var(--site-header-h);
+    --site-header-h-compact: var(--site-header-h);
+    --site-header-stick: 76px;
+    /* Anchor targets land clear of the bar. */
+    scroll-padding-top: calc(var(--site-header-h) + 12px);
+    transition: --site-header-stick 300ms ease-out;
+  }
+  :root[data-nav-hidden] {
+    --site-header-stick: 0px;
   }
 
-  .site-header-spacer {
-    height: var(--site-header-h);
+  /* The page's first section (after any JSON-LD and a screen-reader-only
+     breadcrumb trail) runs up behind the bar; its content starts below it. */
+  #main > :nth-child(1 of :not(script, .sr-only)) {
+    padding-top: var(--site-header-h);
   }
 
   .site-header {
-    --hdr-ease: 200ms var(--motion-ease);
     position: fixed;
-    inset: 0 0 auto;
+    inset: var(--site-header-top) 0 auto;
     /* Above every section and the Flash Agent launcher (z-30). */
     z-index: 50;
     color: var(--hdr-fg);
-    transition:
-      background-color var(--hdr-ease),
-      box-shadow var(--hdr-ease),
-      backdrop-filter var(--hdr-ease),
-      -webkit-backdrop-filter var(--hdr-ease);
+    /* Only the bar takes the pointer, not the margins beside it. */
+    pointer-events: none;
+    transition: translate 300ms ease-out;
+  }
+  /* Up past the top edge, with room for its shadow. */
+  :root[data-nav-hidden] .site-header {
+    translate: 0 calc(-100% - var(--site-header-top) - 32px);
   }
   .site-header[data-theme='dark'] {
     --hdr-fg: var(--color-text-on-dark);
@@ -40,6 +69,8 @@
     --hdr-ground: color-mix(in srgb, var(--color-brand-navy) 82%, transparent);
     --hdr-solid: var(--color-brand-navy-deep);
     --hdr-rule: var(--color-border-on-dark);
+    --hdr-edge: rgb(255 255 255 / 14%);
+    --hdr-shadow: 0 14px 36px -14px rgb(4 8 24 / 60%);
     --hdr-panel-hover: rgb(255 255 255 / 5%);
     --hdr-toggle: rgb(255 255 255 / 20%);
   }
@@ -50,36 +81,33 @@
     --hdr-ground: color-mix(in srgb, var(--color-neutral-0) 92%, transparent);
     --hdr-solid: var(--color-neutral-0);
     --hdr-rule: var(--color-border);
+    --hdr-edge: var(--color-border);
+    --hdr-shadow: 0 14px 36px -16px rgb(7 13 38 / 24%);
     --hdr-panel-hover: var(--color-neutral-50);
     --hdr-toggle: var(--color-border-strong);
   }
-  /* The rule is a shadow, not a border, so the bar is exactly 76 / 64px. */
-  .site-header[data-grounded] {
-    box-shadow: 0 1px 0 var(--hdr-rule);
-    background-color: var(--hdr-ground);
-    -webkit-backdrop-filter: blur(14px) saturate(1.4);
-    backdrop-filter: blur(14px) saturate(1.4);
-  }
 
   .site-header-bar {
-    height: var(--site-header-h);
-    transition: height 250ms var(--motion-ease);
-  }
-  .site-header[data-scrolled] .site-header-bar {
-    height: var(--site-header-h-compact);
+    --hdr-ease: 200ms var(--motion-ease);
+    height: var(--site-header-bar);
+    border: 1px solid var(--hdr-edge);
+    border-radius: 20px;
+    background-color: var(--hdr-ground);
+    box-shadow: var(--hdr-shadow);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    pointer-events: auto;
+    transition:
+      background-color var(--hdr-ease),
+      border-color var(--hdr-ease),
+      box-shadow var(--hdr-ease);
   }
 
-  /* Logo: 44px on phones, 56 from md, 48 once compact. */
+  /* Logo: 36px on phones, 40 from md. */
   .site-header-logo-img {
-    height: 44px;
-    transition: height 250ms var(--motion-ease);
+    height: 36px;
     @media (width >= 768px) {
-      height: 56px;
-    }
-  }
-  .site-header[data-scrolled] .site-header-logo-img {
-    @media (width >= 768px) {
-      height: 48px;
+      height: 40px;
     }
   }
   /* A light page carries both logo files; the theme in force shows its own. */
@@ -108,19 +136,26 @@
     background-color: var(--hdr-solid);
     color: var(--hdr-muted);
   }
+  /* The gap between the bar and its panel still counts as over the panel. */
+  .site-header-panel::before {
+    content: '';
+    position: absolute;
+    inset: -12px 0 auto;
+    height: 12px;
+  }
   .site-header-panel a:hover {
     background-color: var(--hdr-panel-hover);
     color: var(--hdr-fg);
   }
 
-  /* Book a demo: the gold button over dark (C01), the blue one over light (C02). */
+  /* Book a demo: a compact pill, gold over dark (C01), blue over light (C02). */
   .site-header-demo {
+    border-radius: var(--radius-pill);
     transition:
       background-color 150ms,
       filter 150ms;
   }
   .site-header[data-theme='dark'] .site-header-demo {
-    border-radius: var(--radius-pill);
     background-color: var(--color-gold-metallic-mid);
     background-image: linear-gradient(
       in oklab 160deg,
@@ -137,7 +172,6 @@
     filter: brightness(1.06);
   }
   .site-header[data-theme='light'] .site-header-demo {
-    border-radius: var(--radius-xs);
     background-color: var(--color-brand-blue);
     color: var(--color-text-on-dark);
     font-weight: 800;
@@ -155,25 +189,28 @@
   }
 
   /*
-   * The mobile menu: the whole screen below the bar, in the bar's theme.
-   * While it is open the bar is solid too, and drops its blur: a filter
-   * would make the bar, not the screen, the box a fixed menu fills.
+   * The mobile menu: the whole screen, in the bar's theme, with the bar
+   * floating over it as an outline. While it is open the bar drops its
+   * ground and its blur, and the nav its slide: a filter or a transform
+   * would make that box, not the screen, what a fixed menu fills.
    */
   .site-header-menu {
     position: fixed;
     inset: 0;
     z-index: -1;
-    padding-top: calc(var(--site-header-h) + 8px);
+    padding-top: calc(var(--site-header-h) + 12px);
     background-color: var(--hdr-solid);
     color: var(--hdr-muted);
     overscroll-behavior: contain;
-  }
-  .site-header[data-scrolled] .site-header-menu {
-    padding-top: calc(var(--site-header-h-compact) + 8px);
+    pointer-events: auto;
   }
   .site-header:has(details[open]) {
-    box-shadow: 0 1px 0 var(--hdr-rule);
-    background-color: var(--hdr-solid);
+    translate: none;
+    transition: none;
+  }
+  .site-header:has(details[open]) .site-header-bar {
+    background-color: transparent;
+    box-shadow: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
@@ -207,9 +244,9 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    :root,
     .site-header,
     .site-header *,
-    .site-header-logo-img,
     .agent-launcher {
       transition: none !important;
     }

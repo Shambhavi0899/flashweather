@@ -21,7 +21,10 @@ import { BoltIcon } from './bolt-icon';
  * The tabs are a radio group; each tab's list and panel are shown by a
  * `:has(#radio:checked)` rule on the wrapper, so every question and every
  * conversation is in the server HTML, a crawler reads all five, and the tabs
- * work without JavaScript. Each panel is the shared <AgentConversation>;
+ * work without JavaScript. The five lists, and the five panels, are laid over
+ * each other (one row, each the row's full width, pulled back over the one
+ * before it) and only the open tab's is visible, so the window is always as
+ * tall as its tallest conversation: it does not change height between tabs. Each panel is the shared <AgentConversation>;
  * <AgentChat> only adds the playback: the query types and sends, the agent
  * thinks, then the answer, chart, context and actions arrive
  * (styles/agent-conversation.css, `chat-*`). Class names are listed literally
@@ -43,12 +46,14 @@ import { BoltIcon } from './bolt-icon';
  * section scrolls in, and `seeAgentLink`, off on the Flash Agent page, where
  * the link would point at the page it is on.
  */
+/** A tab's list or panel: in the stack, visible while its tab is open. */
+const STACKED = 'invisible -mr-[100%] w-full shrink-0';
 const PANEL_VISIBLE: Record<string, string> = {
-  construction: 'group-has-[#agent-tab-construction:checked]/tabs:flex',
-  roofing: 'group-has-[#agent-tab-roofing:checked]/tabs:flex',
-  agriculture: 'group-has-[#agent-tab-agriculture:checked]/tabs:flex',
-  golf: 'group-has-[#agent-tab-golf:checked]/tabs:flex',
-  schools: 'group-has-[#agent-tab-schools:checked]/tabs:flex',
+  construction: 'group-has-[#agent-tab-construction:checked]/tabs:visible',
+  roofing: 'group-has-[#agent-tab-roofing:checked]/tabs:visible',
+  agriculture: 'group-has-[#agent-tab-agriculture:checked]/tabs:visible',
+  golf: 'group-has-[#agent-tab-golf:checked]/tabs:visible',
+  schools: 'group-has-[#agent-tab-schools:checked]/tabs:visible',
 };
 
 /** A tab's questions: the one its conversation answers, then its industry's others. */
@@ -104,24 +109,25 @@ export function AgentSection({
 
         <AgentFlow />
 
-        <AgentChat className="group/tabs flex flex-col gap-8">
+        <AgentChat className="group/tabs flex min-w-0 flex-col gap-8">
           <AgentTour>
-            {/* Five equal columns from lg; below, one snap-scrolling row that the
-              script keeps the picked tab centred in. The line under the open
-              tab spans the whole column; on the tour it fills (.agent-tab-line). */}
+            {/* Five equal columns on one line from lg; below, one snap-scrolling
+              row that the script keeps the picked tab centred in. The line
+              under the open tab spans the whole column; on the tour it fills
+              (.agent-tab-line). */}
             <fieldset className="min-w-0">
               <legend className="sr-only">Pick your industry</legend>
               <div
                 data-chat-tabs
-                className="chat-tabs flex snap-x snap-mandatory gap-1 overflow-x-auto border-b border-border-strong lg:grid lg:grid-cols-5 lg:gap-0 lg:overflow-visible"
+                className="chat-tabs flex snap-x snap-mandatory gap-1 overflow-x-auto border-b border-border-strong lg:gap-0 lg:overflow-visible"
               >
                 {/* Each label is `relative` so its visually hidden radio stays
-                  inside the scrolling row instead of widening the page. */}
+                inside the scrolling row instead of widening the page. */}
                 {agentTabs.map((tab) => (
                   <label
                     key={tab.id}
                     htmlFor={`agent-tab-${tab.id}`}
-                    className="agent-tab relative -mb-px flex shrink-0 cursor-pointer snap-center items-center justify-center border-b-2 border-transparent px-5 py-[14px] text-center text-caption leading-4 font-bold whitespace-nowrap text-text-muted transition hover:text-brand-navy has-[:checked]:font-extrabold has-[:checked]:text-brand-navy has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-alert-info lg:px-3 lg:text-body-s lg:leading-caption"
+                    className="agent-tab relative -mb-px flex shrink-0 cursor-pointer snap-center items-center justify-center border-b-2 border-transparent px-5 py-[14px] text-center text-caption leading-4 font-bold whitespace-nowrap text-text-muted transition hover:text-brand-navy has-[:checked]:font-extrabold has-[:checked]:text-brand-navy has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-alert-info lg:min-w-0 lg:flex-1 lg:basis-0 lg:px-3 lg:text-body-s lg:leading-caption"
                   >
                     <input
                       type="radio"
@@ -142,11 +148,11 @@ export function AgentSection({
 
             <div className="flex flex-col gap-3">
               {/* The app window (styles/agent-window.css): a title bar, a gold
-                  frame whose light sweeps round once while the agent thinks,
-                  and a soft glow behind it. Inside, the open tab's questions
-                  beside its conversation from lg (38 / 62), where the list
-                  stays in view while the taller conversation scrolls by;
-                  below lg, a row of chips over it that scrolls sideways. */}
+                frame whose light sweeps round once while the agent thinks,
+                and a soft glow behind it. Inside, the open tab's questions
+                and its conversation: from lg the list is a column on the
+                left (38%) and the conversation is on the right; below, the
+                list is a row of chips that scrolls sideways, over it. */}
               <div className="relative isolate">
                 <div aria-hidden className="agent-window-glow" />
                 <div className="agent-window">
@@ -164,44 +170,46 @@ export function AgentSection({
                       Live
                     </span>
                   </div>
-                  <div className="flex flex-col lg:flex-row lg:items-start">
-                    <div className="flex min-w-0 flex-col gap-3 px-5 pt-5 sm:px-8 sm:pt-8 lg:w-[38%] lg:shrink-0 lg:gap-[14px] lg:py-7 lg:pr-0 lg:pl-7 xl:py-10 xl:pl-10">
+                  <div className="flex flex-col lg:flex-row">
+                    <div className="flex min-w-0 flex-col gap-3 px-5 pt-5 sm:px-8 sm:pt-8 lg:w-[38%] lg:shrink-0 lg:border-r lg:border-white/8 lg:bg-white/[0.025] lg:p-7 xl:p-8">
                       <p className="text-[10px] leading-[14px] font-bold tracking-[0.13em] text-[#8F9AB8] uppercase md:text-[11px]">
                         Questions crews ask
                       </p>
-                      {agentTabs.map((tab) => (
-                        <ul
-                          key={tab.id}
-                          data-tour-list={tab.id}
-                          aria-label={`Questions ${tab.label} crews ask`}
-                          className={`agent-queries hidden ${PANEL_VISIBLE[tab.id]}`}
-                        >
-                          {questionsOf(tab).map((question, i) => (
-                            <li key={question} className="flex">
-                              {/* The first is the one the conversation answers; the rest are typed in, unsent. */}
-                              <button
-                                type="button"
-                                data-tour-query
-                                aria-current={i === 0 ? 'true' : undefined}
-                                {...(i > 0 && {
-                                  'data-chat-ask': question,
-                                  'data-chat-ask-tab': `agent-tab-${tab.id}`,
-                                })}
-                                className="agent-query"
-                              >
-                                <BoltIcon className="agent-query-bolt h-4 w-3" />
-                                <span>{question}</span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      ))}
+                      <div className="agent-query-lists flex">
+                        {agentTabs.map((tab) => (
+                          <ul
+                            key={tab.id}
+                            data-tour-list={tab.id}
+                            aria-label={`Questions ${tab.label} crews ask`}
+                            className={`agent-queries invisible flex ${PANEL_VISIBLE[tab.id]}`}
+                          >
+                            {questionsOf(tab).map((question, i) => (
+                              <li key={question} className="flex">
+                                {/* The first is the one the conversation answers; the rest are typed in, unsent. */}
+                                <button
+                                  type="button"
+                                  data-tour-query
+                                  aria-current={i === 0 ? 'true' : undefined}
+                                  {...(i > 0 && {
+                                    'data-chat-ask': question,
+                                    'data-chat-ask-tab': `agent-tab-${tab.id}`,
+                                  })}
+                                  className="agent-query"
+                                >
+                                  <BoltIcon className="agent-query-bolt h-4 w-3" />
+                                  <span>{question}</span>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        ))}
+                      </div>
                     </div>
 
-                    {/* The stage takes the open panel's height (measured by the
-                        script) and eases between them when the tab changes;
-                        without JS it is simply as tall as its content. */}
-                    <div data-chat-stage className="chat-stage min-w-0 lg:flex-1">
+                    {/* The stage is as tall as the tallest of the five panels,
+                      which are laid over each other; a shorter conversation
+                      keeps its composer at the foot of the window. */}
+                    <div data-chat-stage className="flex min-w-0 lg:flex-1">
                       {agentTabs.map((tab) => (
                         <AgentConversation
                           key={tab.id}
@@ -211,7 +219,7 @@ export function AgentSection({
                           label={`${tab.label}: Flash Agent answers "${tab.question}"`}
                           askNote={askNote}
                           inWindow
-                          className={`hidden ${PANEL_VISIBLE[tab.id]}`}
+                          className={`flex ${STACKED} ${PANEL_VISIBLE[tab.id]}`}
                         />
                       ))}
                     </div>
