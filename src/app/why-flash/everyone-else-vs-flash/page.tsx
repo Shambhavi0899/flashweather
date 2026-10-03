@@ -5,7 +5,7 @@ import { BOLT_PATH } from '@/components/bolt-path';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ButtonLink } from '@/components/button';
 import { HeroSection } from '@/components/hero/hero';
-import { Logo } from '@/components/logo';
+import { DifferenceHeadline } from '@/components/home/difference-headline';
 import { Motion } from '@/components/motion';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
@@ -64,53 +64,7 @@ export default function EveryoneElseVsFlashPage() {
             <div className="flex flex-col gap-8 lg:gap-10">
               <Kicker className="hero-eyebrow">Why Flash · Everyone else vs Flash · Prediction, not detection</Kicker>
 
-              <h1 className="flex flex-col gap-[2px] text-[48px] leading-[52px] font-extrabold tracking-[-0.065em] sm:text-[72px] sm:leading-[78px] lg:text-[108px] lg:leading-[112px]">
-                <span className="flex flex-wrap items-center gap-x-[30px] gap-y-2">
-                  <span className="hero-word relative text-[#B7C0CF]">
-                    Reactive.
-                    <svg
-                      viewBox="0 0 470 70"
-                      aria-hidden
-                      className="pointer-events-none absolute top-[23%] -left-[2.5%] h-auto w-[105%]"
-                    >
-                      <path
-                        d="M10 56 C 120 50, 300 36, 458 22"
-                        fill="none"
-                        stroke="var(--color-viz-gold)"
-                        strokeWidth="15"
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d="M20 66 C 150 60, 310 46, 420 38"
-                        fill="none"
-                        stroke="var(--color-viz-gold)"
-                        strokeWidth="5"
-                        strokeLinecap="round"
-                        opacity="0.5"
-                      />
-                    </svg>
-                  </span>
-                  {/* Sticker labels: decorative, their text lives in CSS so it stays out of the heading. */}
-                  <span
-                    aria-hidden
-                    className="hero-support hidden -rotate-4 items-center gap-2 rounded-[8px] border border-border-strong bg-neutral-0 px-[14px] py-[10px] text-micro font-extrabold tracking-[0.13em] text-text-muted shadow-[0_8px_20px_#0B13221A] after:content-['EVERYONE_ELSE'] sm:inline-flex"
-                  >
-                    <span className="size-[10px] rounded-full bg-neutral-400" />
-                  </span>
-                </span>
-                <span className="flex flex-wrap items-center gap-x-[30px] gap-y-2">
-                  <span>
-                    <span className="hero-word hero-word-1 text-brand-navy">We&rsquo;re</span>{' '}
-                    <span className="hero-word hero-word-2 text-brand-blue">proactive.</span>
-                  </span>
-                  <span
-                    aria-hidden
-                    className="hero-support hidden rotate-3 items-center rounded-[8px] bg-brand-navy px-[18px] py-3 shadow-[0_12px_28px_#070D2647] sm:inline-flex"
-                  >
-                    <Logo variant="dark" size="tag" link={false} alt="" />
-                  </span>
-                </span>
-              </h1>
+              <DifferenceHeadline as="h1" />
 
               <div className="hero-lede flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
                 <p className="max-w-[640px] text-body-l text-text-muted">

@@ -74,3 +74,22 @@ export function scrollToY(top: number) {
   if (smooth) smooth.scrollTo(top);
   else window.scrollTo({ top, behavior: 'smooth' });
 }
+
+/**
+ * Holds the page still while something modal is open (a lightbox), and lets
+ * it go after. `overflow: hidden` on <html> keeps the position; Lenis is
+ * stopped too, so a wheel over the lightbox moves nothing. The scrollbar's
+ * width is kept as padding, so the page does not shift sideways.
+ */
+export function lockScroll() {
+  const html = document.documentElement;
+  const bar = window.innerWidth - html.clientWidth;
+  html.style.overflow = 'hidden';
+  if (bar > 0) html.style.paddingRight = `${bar}px`;
+  smooth?.stop();
+  return () => {
+    html.style.overflow = '';
+    html.style.paddingRight = '';
+    smooth?.start();
+  };
+}

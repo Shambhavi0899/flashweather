@@ -1,10 +1,17 @@
 import Link from 'next/link';
 
+import { linksOpenInNewTab } from '@/lib/new-tab';
+
 /**
  * Buttons, per the component sheet (C04): 54px tall, 4px radius, Manrope 800
  * at 14/18 with 0.02em tracking, sentence case. `hero` is the home hero's
  * smaller 13/16 set. Always links -- every CTA on a marketing site goes somewhere,
  * and an <a> is what a crawler follows.
+ *
+ * Where it opens follows the page, the same rule as <SiteLink>: on a page that
+ * calls `openLinksInNewTab()` (the home page) a button that navigates opens in
+ * a new tab, and everywhere else it opens in place. An in-page anchor (`#…`)
+ * never turns, and `newTab` overrides the page either way.
  */
 
 const variants = {
@@ -30,7 +37,7 @@ export function ButtonLink({
   variant = 'gold',
   size = 'md',
   icon,
-  newTab = false,
+  newTab,
   className = '',
 }: {
   href: string;
@@ -39,17 +46,18 @@ export function ButtonLink({
   size?: keyof typeof sizes;
   /** A trailing glyph such as ↗ or →; hidden from screen readers. */
   icon?: string;
-  /** An external link that opens in a new tab, and says so to screen readers. */
+  /** Force the answer the page would otherwise give: opens in a new tab, or does not. */
   newTab?: boolean;
   className?: string;
 }) {
   const external = /^(https?:\/\/|mailto:)/.test(href);
+  const open = newTab ?? (linksOpenInNewTab() && !href.startsWith('#'));
   const classes = `inline-flex shrink-0 items-center justify-center gap-[14px] rounded-xs font-extrabold transition ${variants[variant]} ${sizes[size]} ${className}`;
   const content = (
     <>
       {children}
       {icon && <span aria-hidden>{icon}</span>}
-      {external && newTab && <span className="sr-only">(opens in a new tab)</span>}
+      {open && <span className="sr-only"> (opens in a new tab)</span>}
     </>
   );
 
@@ -57,13 +65,18 @@ export function ButtonLink({
     <a
       href={href}
       className={classes}
-      target={newTab ? '_blank' : undefined}
-      rel={newTab ? 'noopener noreferrer' : 'noopener'}
+      target={open ? '_blank' : undefined}
+      rel={open ? 'noopener noreferrer' : 'noopener'}
     >
       {content}
     </a>
   ) : (
-    <Link href={href} className={classes}>
+    <Link
+      href={href}
+      className={classes}
+      target={open ? '_blank' : undefined}
+      rel={open ? 'noopener noreferrer' : undefined}
+    >
       {content}
     </Link>
   );

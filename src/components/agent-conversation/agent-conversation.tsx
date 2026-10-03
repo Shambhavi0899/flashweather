@@ -46,6 +46,15 @@ const LAYOUT = {
   chips: '@max-[886px]:order-3',
   chart: '@max-[886px]:order-2',
 } as const;
+/** In the app window: one column at any width, in the order the conversation builds, and tighter. */
+const WINDOW_LAYOUT = {
+  body: 'grid grid-cols-[minmax(0,1fr)] gap-4',
+  bodyAlone: 'grid grid-cols-[minmax(0,1fr)] gap-4',
+  text: 'contents',
+  chips: 'order-3',
+  /** The chart is held to 150px tall from md, centred, so every conversation fits one screen. */
+  chart: 'order-2 md:[&_svg]:h-[140px] md:[&_svg]:w-full',
+} as const;
 
 export function AgentConversation({
   question,
@@ -87,25 +96,28 @@ export function AgentConversation({
   className?: string;
 }) {
   const hasActions = Boolean(reply.primaryAction || reply.secondaryAction || reply.followUps?.length);
+  const layout = inWindow ? WINDOW_LAYOUT : LAYOUT;
 
   return (
     <article
       data-chat-panel
       data-chat-for={tabFor}
       aria-label={label}
-      className={`chat min-w-0 flex-col gap-6 ${
+      className={`chat min-w-0 flex-col ${
         inWindow
-          ? 'p-5 pb-4 sm:p-8 sm:pb-5 lg:px-7 xl:p-10 xl:pb-6'
-          : 'rounded-[20px] border border-white/10 bg-brand-navy-deep/72 p-5 sm:p-7'
+          ? 'gap-4 p-5 pb-4 sm:p-6 sm:pb-4 lg:px-7 lg:pt-4'
+          : 'gap-6 rounded-[20px] border border-white/10 bg-brand-navy-deep/72 p-5 sm:p-7'
       } ${className}`}
     >
       <div className="chat-bubble flex justify-end">
-        <p className="max-w-[560px] rounded-[14px] rounded-br-xs bg-brand-blue px-4 py-3 text-caption leading-[19px] font-medium text-text-on-dark md:text-body-s md:leading-[21px]">
+        <p
+          className={`rounded-[14px] rounded-br-xs bg-brand-blue px-4 text-caption leading-[19px] font-medium text-text-on-dark md:text-body-s md:leading-[21px] ${inWindow ? 'max-w-[640px] py-2.5' : 'max-w-[560px] py-3'}`}
+        >
           {question}
         </p>
       </div>
 
-      <div className="@container relative flex flex-col gap-6">
+      <div className={`@container relative flex flex-col ${inWindow ? 'gap-4' : 'gap-6'}`}>
         <div className="chat-agent flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
             {/* In the window the agent signs with the Flash logo. */}
@@ -140,9 +152,11 @@ export function AgentConversation({
           <span className="size-[7px] rounded-full bg-[#8F9AB8]" />
         </span>
 
-        <div className={chart ? LAYOUT.body : LAYOUT.bodyAlone}>
-          <div className={LAYOUT.text}>
-            <p className="text-body-s leading-body-s text-text-on-dark md:text-body md:leading-body">
+        <div className={chart ? layout.body : layout.bodyAlone}>
+          <div className={layout.text}>
+            <p
+              className={`text-body-s leading-body-s text-text-on-dark ${inWindow ? 'md:text-[15px] md:leading-[22px]' : 'md:text-body md:leading-body'}`}
+            >
               {reply.answer.split(' ').map((word, i) => (
                 <span key={i}>
                   <span className="chat-word">{word}</span>{' '}
@@ -150,7 +164,7 @@ export function AgentConversation({
               ))}
             </p>
 
-            <ul className={`flex flex-wrap gap-2 ${LAYOUT.chips}`}>
+            <ul className={`flex flex-wrap gap-2 ${layout.chips}`}>
               {reply.chips.map((chip) => (
                 <li
                   key={chip.label}
@@ -164,7 +178,7 @@ export function AgentConversation({
           </div>
 
           {chart && (
-            <figure className={`chat-chart flex min-w-0 flex-col justify-center ${LAYOUT.chart}`}>
+            <figure className={`chat-chart flex min-w-0 flex-col justify-center ${layout.chart}`}>
               <div className="relative -mx-1 overflow-x-auto px-1">
                 <div className="max-md:min-w-[520px]">{chart}</div>
               </div>
@@ -179,7 +193,7 @@ export function AgentConversation({
         {hasActions && (
           <div
             data-launcher-clear={inWindow || undefined}
-            className="chat-actions flex flex-col gap-4 border-t border-white/10 pt-5"
+            className={`chat-actions flex flex-col border-t border-white/10 ${inWindow ? 'gap-2.5 pt-3.5' : 'gap-4 pt-5'}`}
           >
             {(reply.primaryAction || reply.secondaryAction) && (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
@@ -194,7 +208,10 @@ export function AgentConversation({
                     {reply.secondaryAction}
                   </span>
                 )}
-                <span className="text-[10px] leading-[14px] text-[#8F9AB8] md:text-micro md:leading-micro">
+                {/* In the window the note wraps within the row rather than taking a row of its own. */}
+                <span
+                  className={`text-[10px] leading-[14px] text-[#8F9AB8] md:text-micro md:leading-micro ${inWindow ? 'min-w-[96px] flex-1' : ''}`}
+                >
                   You confirm before anything changes.
                 </span>
               </div>
@@ -220,18 +237,20 @@ export function AgentConversation({
       {/* In a window shared with taller conversations (the tabs' stack), it stays at the foot. */}
       <div
         data-launcher-clear={inWindow || undefined}
-        className={`flex items-center gap-3 border-t border-white/10 pt-5 ${inWindow ? 'mt-auto' : ''}`}
+        className={`flex items-center gap-3 border-t border-white/10 ${inWindow ? 'mt-auto pt-3.5' : 'pt-5'}`}
       >
         <div
           aria-hidden
-          className="chat-composer flex h-12 min-w-0 grow items-center gap-3 rounded-full border border-white/12 bg-white/4 pr-[6px] pl-5 text-caption md:text-body-s"
+          className={`chat-composer flex min-w-0 grow items-center gap-3 rounded-full border border-white/12 bg-white/4 pr-[6px] pl-5 text-caption md:text-body-s ${inWindow ? 'h-11' : 'h-12'}`}
         >
           <span className="flex min-w-0 grow items-center overflow-hidden">
             <span data-chat-typed data-text={question} className="chat-typed truncate text-text-on-dark" />
             <span className="chat-caret h-4 w-px shrink-0 bg-viz-gold" />
             <span className="chat-placeholder truncate text-[#8F9AB8]">{placeholder}</span>
           </span>
-          <span className="bg-gold-button flex size-9 shrink-0 items-center justify-center rounded-full text-body-s font-extrabold text-brand-navy">
+          <span
+            className={`bg-gold-button flex shrink-0 items-center justify-center rounded-full text-body-s font-extrabold text-brand-navy ${inWindow ? 'size-8' : 'size-9'}`}
+          >
             ↑
           </span>
         </div>

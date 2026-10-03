@@ -1,13 +1,14 @@
-import Link from 'next/link';
-
 import { Logo } from '@/components/logo';
 import { Motion } from '@/components/motion';
+import { SiteLink } from '@/components/site-link';
 import { comparisonRows, type ComparisonRow } from '@/content/home';
 
 import { BoltIcon } from './bolt-icon';
+import { DifferenceHeadline } from './difference-headline';
 
 /**
- * "Reactive. We're proactive." The comparison is a real table (two columns,
+ * "Reactive detection. We're proactive." (<DifferenceHeadline>). The
+ * comparison is a real table (two columns,
  * five rows). Below md each row becomes a stacked card pair, as in the mobile
  * design, with a small column label on each cell.
  *
@@ -25,66 +26,8 @@ export function Comparison() {
             The Flash difference · prediction, not detection
           </p>
 
-          {/* Plays once as it scrolls in: "Reactive." fades, the strike draws
-              through it and its tag settles, while "We're proactive." rises
-              and its tag pops (styles/home.css, `diff-*`). */}
-          <Motion
-            as="h2"
-            replay={false}
-            id="difference-heading"
-            className="motion diff flex flex-col gap-[2px] text-[52px] leading-[54px] font-extrabold tracking-[-0.065em] sm:text-[80px] sm:leading-[86px] xl:text-[108px] xl:leading-[112px]"
-          >
-            <span className="flex flex-wrap items-center gap-x-4 gap-y-2 sm:gap-x-[30px]">
-              <span className="diff-them relative text-[#B7C0CF]">
-                Reactive.
-                <svg
-                  aria-hidden
-                  viewBox="0 0 470 70"
-                  className="absolute top-[24%] -left-[2.5%] h-auto w-[105%] overflow-visible"
-                >
-                  <path
-                    className="diff-strike"
-                    pathLength={1}
-                    d="M10 56 C 120 50, 300 36, 458 22"
-                    fill="none"
-                    stroke="var(--color-viz-gold)"
-                    strokeWidth="15"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    className="diff-strike diff-strike-2"
-                    pathLength={1}
-                    d="M20 66 C 150 60, 310 46, 420 38"
-                    fill="none"
-                    stroke="var(--color-viz-gold)"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    opacity="0.5"
-                  />
-                </svg>
-              </span>
-              {/* Sticker text comes from CSS so it stays out of the heading's text. */}
-              <span
-                aria-hidden
-                className="diff-tag-them flex -rotate-4 items-center gap-2 rounded-[8px] border border-border-strong bg-neutral-0 px-[10px] py-[7px] shadow-[0_8px_20px_rgb(11_19_34/0.1)] sm:px-[14px] sm:py-[10px]"
-              >
-                <span className="size-[10px] shrink-0 rounded-full bg-neutral-400" />
-                <span className="text-[9px] leading-3 font-extrabold tracking-[0.08em] text-text-muted before:content-['EVERYONE_ELSE'] sm:text-micro sm:leading-micro sm:tracking-[0.13em]" />
-              </span>
-            </span>
-            <span className="flex flex-wrap items-center gap-x-6 gap-y-2 sm:gap-x-[30px]">
-              <span className="diff-us">
-                <span className="text-brand-navy">We&rsquo;re</span>{' '}
-                <span className="diff-emph inline-block text-brand-blue">proactive.</span>
-              </span>
-              <span
-                aria-hidden
-                className="diff-tag-us flex rotate-3 items-center rounded-[8px] bg-brand-navy px-3 py-2 shadow-[0_12px_28px_rgb(7_13_38/0.28)] sm:px-[18px] sm:py-3"
-              >
-                <Logo variant="dark" size="tag" link={false} alt="" />
-              </span>
-            </span>
-          </Motion>
+          {/* The same heading as the Everyone else vs Flash page's H1. */}
+          <DifferenceHeadline id="difference-heading" />
 
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
             <p className="max-w-[640px] text-[15px] leading-[23px] text-pretty text-text-muted md:text-body-l md:leading-body-l">
@@ -149,14 +92,16 @@ export function Comparison() {
 
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <p className="flex flex-wrap gap-x-6 gap-y-2 text-body-s leading-5 font-bold text-brand-blue md:leading-caption">
-            <Link href="/why-flash/prediction-vs-sensors-vs-detection/" className="hover:underline">
+            <SiteLink href="/why-flash/prediction-vs-sensors-vs-detection/" className="hover:underline">
               Read the full explainer <span aria-hidden>→</span>
-            </Link>
-            <Link href="/why-flash/everyone-else-vs-flash/" className="hover:underline">
+            </SiteLink>
+            <SiteLink href="/why-flash/everyone-else-vs-flash/" className="hover:underline">
               Everyone else vs Flash <span aria-hidden>→</span>
-            </Link>
+            </SiteLink>
           </p>
-          <p className="text-caption leading-4 text-text-subtle">Generic comparison with detection-based tools. No vendor named.</p>
+          <p className="text-caption leading-4 text-text-subtle">
+            Generic comparison with detection-based tools. No vendor named.
+          </p>
         </div>
       </div>
     </section>
@@ -195,8 +140,16 @@ function Cell({
             </>
           )}
         </span>
-        <p className={`text-[15px] leading-[21px] font-bold md:text-body-l md:leading-6 ${flash ? 'text-text-on-dark' : 'text-neutral-700'}`}>{title}</p>
-        <p className={`text-caption md:text-body-s md:leading-5 ${flash ? 'text-text-on-dark-muted' : 'text-text-muted'}`}>{body}</p>
+        <p
+          className={`text-[15px] leading-[21px] font-bold md:text-body-l md:leading-6 ${flash ? 'text-text-on-dark' : 'text-neutral-700'}`}
+        >
+          {title}
+        </p>
+        <p
+          className={`text-caption md:text-body-s md:leading-5 ${flash ? 'text-text-on-dark-muted' : 'text-text-muted'}`}
+        >
+          {body}
+        </p>
       </div>
     </div>
   );
@@ -238,7 +191,15 @@ function RowIcon({ icon }: { icon: ComparisonRow['icon'] | ComparisonRow['flashI
             strokeDasharray="4 4"
             clipPath="url(#cmp-lead-line)"
           />
-          <circle className="cmp-lead-ping" cx="16" cy="46" r="7" fill="none" stroke="var(--color-viz-gold)" strokeWidth="2" />
+          <circle
+            className="cmp-lead-ping"
+            cx="16"
+            cy="46"
+            r="7"
+            fill="none"
+            stroke="var(--color-viz-gold)"
+            strokeWidth="2"
+          />
           <g className="cmp-lead-alert">
             <circle cx="16" cy="46" r="7" fill="var(--color-viz-gold)" />
             <path d="M14 42l-1.5 4h2l-1 4 3.5-5h-2l1-3z" fill="#070D26" />
@@ -293,8 +254,24 @@ function RowIcon({ icon }: { icon: ComparisonRow['icon'] | ComparisonRow['flashI
             strokeWidth="1.5"
           />
           <rect className="cmp-cell-fill" x="40" y="24" width="16" height="16" fill="var(--color-viz-gold)" />
-          <rect className="cmp-cell-fill" x="56" y="24" width="16" height="16" fill="var(--color-viz-gold)" opacity="0.45" />
-          <rect className="cmp-cell-fill" x="40" y="40" width="16" height="16" fill="var(--color-viz-gold)" opacity="0.3" />
+          <rect
+            className="cmp-cell-fill"
+            x="56"
+            y="24"
+            width="16"
+            height="16"
+            fill="var(--color-viz-gold)"
+            opacity="0.45"
+          />
+          <rect
+            className="cmp-cell-fill"
+            x="40"
+            y="40"
+            width="16"
+            height="16"
+            fill="var(--color-viz-gold)"
+            opacity="0.3"
+          />
           <circle className="cmp-cell-dot" cx="48" cy="32" r="3" fill="#070D26" />
           <text x="64" y="70" textAnchor="middle" fill="#AEB8C7" {...t10}>
             YOUR 1 KM CELL
@@ -372,10 +349,28 @@ function RowIcon({ icon }: { icon: ComparisonRow['icon'] | ComparisonRow['flashI
       return (
         <svg {...iconProps}>
           {[12, 30, 48, 66].map((y) => (
-            <line key={`h${y}`} className="cmp-pin-grid" pathLength="1" x1="8" y1={y} x2="120" y2={y} stroke="#1C2340" />
+            <line
+              key={`h${y}`}
+              className="cmp-pin-grid"
+              pathLength="1"
+              x1="8"
+              y1={y}
+              x2="120"
+              y2={y}
+              stroke="#1C2340"
+            />
           ))}
           {[26, 44, 62, 80, 98].map((x) => (
-            <line key={`v${x}`} className="cmp-pin-grid" pathLength="1" x1={x} y1="12" x2={x} y2="66" stroke="#1C2340" />
+            <line
+              key={`v${x}`}
+              className="cmp-pin-grid"
+              pathLength="1"
+              x1={x}
+              y1="12"
+              x2={x}
+              y2="66"
+              stroke="#1C2340"
+            />
           ))}
           <g className="cmp-pin-drop">
             <path d="M44 52c0-8 5-13 12-13s12 5 12 13c0 9-12 18-12 18S44 61 44 52z" fill="#FFFFFF" />
@@ -394,7 +389,13 @@ function RowIcon({ icon }: { icon: ComparisonRow['icon'] | ComparisonRow['flashI
         <svg {...iconProps}>
           <g className="cmp-hope">
             <circle cx="64" cy="34" r="22" fill="#EEF1F7" stroke="#CBD2DE" strokeWidth="1.5" />
-            <path d="M56 30a8 8 0 0116 0c0 5-8 6-8 12" fill="none" stroke="#8A93A8" strokeWidth="2.5" strokeLinecap="round" />
+            <path
+              d="M56 30a8 8 0 0116 0c0 5-8 6-8 12"
+              fill="none"
+              stroke="#8A93A8"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
             <circle cx="64" cy="48" r="1.8" fill="#8A93A8" />
           </g>
           <text x="64" y="70" textAnchor="middle" fill="#5F6B85" {...t10}>

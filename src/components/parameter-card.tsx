@@ -1,5 +1,6 @@
 import Image from 'next/image';
-import Link from 'next/link';
+
+import { SiteLink } from '@/components/site-link';
 
 export type ParameterCardData = {
   tag: string;
@@ -107,9 +108,9 @@ export function ParameterCard({
                     ·
                   </span>
                 )}
-                <Link href={link.href} className={`pc-link hover:underline ${accent}`}>
+                <SiteLink href={link.href} className={`pc-link hover:underline ${accent}`}>
                   {link.label} <span aria-hidden>→</span>
-                </Link>
+                </SiteLink>
               </span>
             ))}
           </p>

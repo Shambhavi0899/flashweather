@@ -1,166 +1,111 @@
 /*
- * agent-flow — the converging diagram above the Flash Agent tabs
+ * agent-flow — the converging diagram beside the Flash Agent window
  * (components/home/agent-flow.tsx), prefix aflow-.
  *
- *   your tools and data ─╮
- *                         ├─ Flash Agent ── you and your crew
- *   prediction engine ───╯
+ *   your tools and data   prediction engine
+ *             ╰───── power ─────╯
+ *                 Flash Agent
+ *                   answers
+ *              you and your crew
+ *                 you decide
+ *                your decision
+ *        go / no-go · reschedule · alert the crew
  *
- * From lg it is one compact row across the section: the sources stacked on
- * the left, links running left to right, drawn for the row's set height and
- * scaled with it. Below lg it reads top to bottom: 460px wide from 520px, with
- * curved links drawn in real pixels; below that it takes the page's width
- * and the links are straight (stretched sideways only).
- * A link is a line and, over it, a pulse: one short dash that runs the
- * line's length (both paths have pathLength 100).
+ * One column at every width. From lg it is the left column of the section,
+ * as tall as the window beside it (or the viewport, when the window is
+ * taller: the column sticks under the floating nav until the section ends).
+ * The three connectors are always one length: they share the column's
+ * spare height up to 72px each, and past that the cards share the rest
+ * evenly, so no connector reads as a long empty line (.aflow-gap). The
+ * merge is an SVG stretched to its gap; a vertical connector is a 2px line
+ * that draws down from the top.
  *
- * Motion, on the shared .motion system, once as the diagram scrolls in:
- *   0ms      the two inputs rise together
- *   350ms    the links draw toward the agent (600ms), a pulse along each
- *   950ms    the agent rises as the pulses land; its gold border glows once
- *   1350ms   the line to the crew draws; 1550ms the crew card rises
- *   1900ms   its three chips pop in, 120ms apart
- *   2300ms   the "See it in action" cue fades in
- * then, while it is in view, a faint pulse repeats inputs → agent → crew
- * every 4s. Hovering an input brightens its link. With reduced motion, and
- * without JavaScript, the finished diagram shows: links drawn, no pulses.
- *
- * Colour: each source has one, so the flow reads at a glance. Your tools
- * and data are brand blue, the prediction engine gold; the accent bar, the
- * label, the link and its pulse carry it, and a soft glow of it sits behind
- * the card. The two meet at the agent, whose border sweeps blue to gold
- * once as the pulses land and settles gold. The engine's hazards and the
- * crew's outcomes use the weather colours set on `.aflow` below; nothing
- * else is added to the palette.
+ * Motion, on the shared .motion system, once as the column scrolls in:
+ *   0ms      the two sources rise together
+ *   300ms    the merge draws toward the junction (500ms), a gold pulse along
+ *            each branch (the engine's a beat behind), and "Power" fades in
+ *   900ms    the agent rises as the pulses land; its gold border glows once
+ *   1400ms   the "Answers" line draws; 1650ms the crew card rises
+ *   2000ms   the "You decide" line draws; 2150ms the decision card rises
+ *   2300ms   the three chips pop in, 120ms apart
+ * then, while it is in view, the two pulses run again every 4s, faintly.
+ * With reduced motion, and without JavaScript, the finished diagram shows:
+ * lines drawn, no pulses.
  */
-@property --aflow-turn {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
-}
-
 @layer components {
   .aflow {
-    --aflow-blue: var(--color-brand-blue);
-    --aflow-blue-soft: #7f98d8;
-    --aflow-blue-tint: #e6ebf5;
     --aflow-gold: var(--color-viz-gold);
-    --aflow-gold-soft: #d9bf5c;
-    --aflow-gold-tint: #faf1d0;
-    position: relative;
-    isolation: isolate;
+    --aflow-line: var(--color-neutral-400);
+    /* Half the break each connector leaves around its word. */
+    --aflow-cut: 14px;
   }
 
-  /* Two soft glows behind the diagram, one per source, meeting behind the
-     agent. Gradients that fade to nothing, so there is no edge to see. In
-     the row (from lg) they are shallower, so they stay behind the diagram. */
-  .aflow::before,
-  .aflow::after {
-    content: '';
-    position: absolute;
-    top: -150px;
-    z-index: -1;
-    width: min(680px, 80%);
-    height: 600px;
-    pointer-events: none;
-  }
-  .aflow::before {
-    right: 50%;
-    margin-right: -120px;
-    background-image: radial-gradient(closest-side, rgb(0 51 153 / 13%), rgb(0 51 153 / 5%) 55%, transparent);
-  }
-  .aflow::after {
-    left: 50%;
-    margin-left: -120px;
-    background-image: radial-gradient(closest-side, rgb(230 186 45 / 22%), rgb(230 186 45 / 8%) 55%, transparent);
-  }
-
+  /* From lg: the column fills the section's left cell, which is as tall as
+     the window, and sticks under the nav where the window is taller than
+     the viewport (then it is the viewport's height instead). */
   @media (width >= 1024px) {
-    .aflow::before,
-    .aflow::after {
-      top: -90px;
-      height: 420px;
+    .aflow-stick {
+      position: sticky;
+      top: calc(var(--site-header-h) + 16px);
+      height: min(100%, calc(100dvh - var(--site-header-h) - 40px));
     }
   }
 
-  /* A source's colour: bar, label, icons. */
-  .aflow-tools {
-    --aflow-source: var(--aflow-blue);
-    --aflow-label: var(--aflow-blue);
+  /* A connector's length. Its huge share takes the spare height before the
+     cards do; once all three reach 72px the cards (grow: 1) share the rest. */
+  .aflow-gap {
+    flex: 1000 1 0;
+    min-height: 48px;
+    max-height: 72px;
   }
-  .aflow-engine {
-    --aflow-source: var(--aflow-gold);
-    --aflow-label: var(--color-gold-on-light);
+
+  .aflow-card {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-neutral-0);
+    box-shadow:
+      0 1px 2px rgb(7 13 38 / 4%),
+      0 6px 16px -8px rgb(7 13 38 / 10%);
   }
-  .aflow-bar {
+  /* The agent: highlighted the way a picked pricing plan is (gold border),
+     with a soft resting shadow. */
+  .aflow-agent {
+    --aflow-rest: 0 2px 4px rgb(7 13 38 / 6%), 0 14px 36px -8px rgb(7 13 38 / 14%);
+    border: 1.5px solid var(--aflow-gold);
+    box-shadow: var(--aflow-rest);
+  }
+
+  /* A connector's word sits in a break in its line, on whatever ground is
+     behind (the stage is a soft gradient, so a painted patch would show). */
+  .aflow-label {
+    white-space: nowrap;
+  }
+  .aflow-vline {
+    mask-image: linear-gradient(
+      #000 calc(50% - var(--aflow-cut)),
+      transparent 0 calc(50% + var(--aflow-cut)),
+      #000 0
+    );
+  }
+  /* The merge's curves meet behind "Power": only a box round the word is cut. */
+  .aflow-merge svg {
+    mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+    mask-size:
+      100% 100%,
+      80px calc(2 * var(--aflow-cut));
+    mask-position: center;
+    mask-repeat: no-repeat;
+    mask-composite: exclude;
+  }
+
+  /* A vertical connector: the line behind the word. */
+  .aflow-vline {
     position: absolute;
-    inset: 0 0 auto;
-    height: 3px;
-    background-color: var(--aflow-source);
-  }
-  .aflow-tag {
-    color: var(--aflow-label);
-  }
-  /* Six to a row at any width: they share the row, up to 24px (30 from md). */
-  .aflow-icon {
-    display: flex;
-    flex: 1 1 0;
-    align-items: center;
-    justify-content: center;
-    max-width: 24px;
-    aspect-ratio: 1;
-    border-radius: 30%;
-  }
-  .aflow-icon > svg {
-    width: 58%;
-    height: 58%;
-  }
-  .aflow-icon-tool {
-    background-color: var(--aflow-blue-tint);
-    color: var(--aflow-blue);
-  }
-  /* Hazards: a circle tinted with the hazard's own hue. */
-  .aflow-hazard {
-    border-radius: 9999px;
-  }
-  .aflow-hazard-lightning {
-    background-color: var(--aflow-gold-tint);
-    color: #a87f00;
-  }
-  .aflow-hazard-lightning path {
-    fill: currentColor;
-    stroke: none;
-  }
-  .aflow-hazard-hail {
-    background-color: #e4f1fc;
-    color: #3484c6;
-  }
-  .aflow-hazard-heat {
-    background-color: #fcede2;
-    color: #c9621f;
-  }
-  .aflow-hazard-wind {
-    background-color: #def3f1;
-    color: #0f8080;
-  }
-  .aflow-hazard-rain {
-    background-color: var(--aflow-blue-tint);
-    color: var(--aflow-blue);
-  }
-  .aflow-hazard-frost {
-    background-color: #e0f5fa;
-    color: #1390b5;
-  }
-  @media (width >= 520px) {
-    .aflow-icon {
-      max-width: 27px;
-    }
-  }
-  /* In the row they sit beside the label. */
-  @media (width >= 1024px) {
-    .aflow-icon {
-      max-width: 22px;
-    }
+    inset: 0 auto 0 50%;
+    width: 2px;
+    margin-left: -1px;
+    background-color: var(--aflow-line);
+    transform-origin: 50% 0;
   }
 
   /* The crew's three outcomes, in their meaning's colour (go, move, alert). */
@@ -171,33 +116,13 @@
   }
   .aflow-chip-move {
     border-color: #c5d1ec;
-    background-color: var(--aflow-blue-tint);
-    color: var(--aflow-blue);
+    background-color: #e6ebf5;
+    color: var(--color-brand-blue);
   }
   .aflow-chip-alert {
     border-color: #f1c9c5;
     background-color: #fbeae8;
     color: #a3261c;
-  }
-
-  /* The agent's border, blue to gold, shown only while it sweeps. */
-  .aflow-sweep {
-    position: absolute;
-    inset: -1.5px;
-    padding: 2px;
-    border-radius: inherit;
-    background-image: conic-gradient(
-      from var(--aflow-turn),
-      var(--aflow-blue),
-      var(--aflow-gold) 45%,
-      var(--aflow-gold) 55%,
-      var(--aflow-blue)
-    );
-    mask:
-      linear-gradient(#000 0 0) content-box exclude,
-      linear-gradient(#000 0 0);
-    opacity: 0;
-    pointer-events: none;
   }
 
   .aflow-line,
@@ -207,19 +132,11 @@
     vector-effect: non-scaling-stroke;
   }
   .aflow-line {
-    stroke: var(--color-neutral-400);
+    stroke: var(--aflow-line);
     stroke-width: 1.75;
     stroke-dasharray: 100;
-    transition:
-      stroke 0.25s,
-      stroke-width 0.25s;
   }
-  .aflow-line-tools {
-    stroke: var(--aflow-blue-soft);
-  }
-  .aflow-line-engine {
-    stroke: var(--aflow-gold-soft);
-  }
+  /* A pulse: one short gold dash that runs its branch's length. */
   .aflow-pulse {
     stroke: var(--aflow-gold);
     stroke-width: 4.5;
@@ -227,77 +144,61 @@
     stroke-dashoffset: 4;
     opacity: 0;
   }
-  .aflow-pulse-tools {
-    stroke: var(--aflow-blue);
-  }
-  .aflow:has(.aflow-tools:hover) .aflow-line-tools {
-    stroke: var(--aflow-blue);
-    stroke-width: 2.25;
-  }
-  .aflow:has(.aflow-engine:hover) .aflow-line-engine {
-    stroke: var(--aflow-gold);
-    stroke-width: 2.25;
-  }
-  .aflow-input {
-    transition:
-      border-color 0.25s,
-      box-shadow 0.25s;
-  }
-  .aflow-input:hover {
-    border-color: var(--color-border-strong);
-    box-shadow: 0 10px 28px rgb(7 13 38 / 8%);
-  }
-  /* The agent: the inputs' white card, highlighted the way a picked pricing
-     plan is (gold border), with their hover shadow a step deeper, at rest. */
-  .aflow-agent {
-    --aflow-rest: 0 2px 4px rgb(7 13 38 / 6%), 0 14px 36px -8px rgb(7 13 38 / 14%);
-    border: 1.5px solid var(--color-viz-gold);
-    box-shadow: var(--aflow-rest);
-  }
 
   @media (prefers-reduced-motion: no-preference) {
-    .motion[data-anim]:not([data-anim='reset']) :is(.aflow-input, .aflow-agent, .aflow-crew) {
+    .motion[data-anim]:not([data-anim='reset']) :is(.aflow-source, .aflow-agent, .aflow-crew, .aflow-decision) {
       animation: motion-rise 0.5s var(--motion-ease) calc(var(--motion-delay) + var(--aflow-at, 0ms)) both;
     }
     .aflow-crew {
-      --aflow-at: 1550ms;
+      --aflow-at: 1650ms;
     }
-    /* The agent "powers up" as it lands: its gold border glows once, softly,
-       over the resting shadow. */
+    .aflow-decision {
+      --aflow-at: 2150ms;
+    }
+    /* The agent "powers up" as it lands: its gold border glows once, softly, over the resting shadow. */
     .motion[data-anim]:not([data-anim='reset']) .aflow-agent {
       animation:
-        motion-rise 0.5s var(--motion-ease) calc(var(--motion-delay) + 950ms) both,
-        aflow-glow 1.3s ease-out calc(var(--motion-delay) + 1050ms) both;
-    }
-
-    /* Where the two colours meet: one turn of blue-to-gold round the border
-       as the pulses land, fading to the gold border under it. */
-    .motion[data-anim]:not([data-anim='reset']) .aflow-sweep {
-      animation: aflow-sweep 1.2s ease-out calc(var(--motion-delay) + 1000ms) both;
+        motion-rise 0.5s var(--motion-ease) calc(var(--motion-delay) + 900ms) both,
+        aflow-glow 1.3s ease-out calc(var(--motion-delay) + 1000ms) both;
     }
 
     .motion[data-anim]:not([data-anim='reset']) .aflow-line {
-      animation: aflow-draw 0.6s var(--motion-ease) calc(var(--motion-delay) + 350ms) both;
+      animation: aflow-draw 0.5s var(--motion-ease) calc(var(--motion-delay) + 300ms) both;
     }
-    .motion[data-anim]:not([data-anim='reset']) .aflow-line-out {
-      animation-duration: 0.3s;
-      animation-delay: calc(var(--motion-delay) + 1350ms);
+    .motion[data-anim]:not([data-anim='reset']) .aflow-line-stem {
+      animation-duration: 0.2s;
+      animation-delay: calc(var(--motion-delay) + 750ms);
+    }
+    .motion[data-anim]:not([data-anim='reset']) .aflow-merge .aflow-label {
+      animation: motion-fade 0.4s ease-out calc(var(--motion-delay) + 600ms) both;
     }
 
-    /* The pulses: once with the draw, then faintly every 4s. */
+    /* The pulses: once with the draw, the engine's a beat behind, then
+       faintly every 4s. */
     .motion[data-anim]:not([data-anim='reset']) .aflow-pulse {
       animation:
-        aflow-pulse 0.6s ease-in calc(var(--motion-delay) + 450ms) both,
-        aflow-pulse-loop 4s linear calc(var(--motion-delay) + 5s) infinite;
+        aflow-pulse 0.6s ease-in calc(var(--motion-delay) + 400ms + var(--aflow-lag, 0ms)) both,
+        aflow-pulse-loop 4s linear calc(var(--motion-delay) + 4500ms + var(--aflow-lag, 0ms)) infinite;
     }
-    .motion[data-anim]:not([data-anim='reset']) .aflow-pulse-out {
-      animation:
-        aflow-pulse 0.3s linear calc(var(--motion-delay) + 1350ms) both,
-        aflow-pulse-out-loop 4s linear calc(var(--motion-delay) + 5s) infinite;
+    .aflow-pulse-engine {
+      --aflow-lag: 150ms;
+    }
+
+    .motion[data-anim]:not([data-anim='reset']) .aflow-vline {
+      animation: aflow-draw-v 0.35s var(--motion-ease) calc(var(--motion-delay) + var(--aflow-at)) both;
+    }
+    .motion[data-anim]:not([data-anim='reset']) .aflow-link .aflow-label {
+      animation: motion-fade 0.4s ease-out calc(var(--motion-delay) + var(--aflow-at) + 150ms) both;
+    }
+    .aflow-link-answers {
+      --aflow-at: 1400ms;
+    }
+    .aflow-link-decide {
+      --aflow-at: 2000ms;
     }
 
     .motion[data-anim]:not([data-anim='reset']) .aflow-chip {
-      animation: motion-pop-in 0.4s var(--motion-ease) calc(var(--motion-delay) + 1900ms + var(--chip, 0) * 120ms) both;
+      animation: motion-pop-in 0.4s var(--motion-ease) calc(var(--motion-delay) + 2300ms + var(--chip, 0) * 120ms) both;
     }
     .aflow-chip:nth-child(2) {
       --chip: 1;
@@ -305,19 +206,17 @@
     .aflow-chip:nth-child(3) {
       --chip: 2;
     }
-
-    .motion[data-anim]:not([data-anim='reset']) .aflow-cue {
-      animation: motion-fade 0.5s ease-out calc(var(--motion-delay) + 2300ms) both;
-    }
-    .motion[data-anim]:not([data-anim='reset']) .aflow-cue-arrow {
-      animation: aflow-nudge 2s ease-in-out calc(var(--motion-delay) + 2800ms) infinite;
-    }
   }
 }
 
 @keyframes aflow-draw {
   from {
     stroke-dashoffset: 100;
+  }
+}
+@keyframes aflow-draw-v {
+  from {
+    transform: scaleY(0);
   }
 }
 @keyframes aflow-pulse {
@@ -334,7 +233,7 @@
     stroke-dashoffset: -100;
   }
 }
-/* Inputs to the agent in the first 0.8s of every 4s… */
+/* Sources to the junction in the first 0.8s of every 4s. */
 @keyframes aflow-pulse-loop {
   0% {
     opacity: 0;
@@ -350,23 +249,6 @@
     stroke-dashoffset: -100;
   }
 }
-/* …and on from the agent to the crew just after. */
-@keyframes aflow-pulse-out-loop {
-  0%,
-  22% {
-    opacity: 0;
-    stroke-dashoffset: 4;
-  }
-  24%,
-  30% {
-    opacity: 0.55;
-  }
-  32%,
-  100% {
-    opacity: 0;
-    stroke-dashoffset: -100;
-  }
-}
 /* From and to are the card's own resting shadow; the glow is added over it. */
 @keyframes aflow-glow {
   35% {
@@ -374,23 +256,5 @@
       var(--aflow-rest),
       0 0 0 4px rgb(230 186 45 / 22%),
       0 0 32px rgb(230 186 45 / 45%);
-  }
-}
-@keyframes aflow-sweep {
-  from {
-    opacity: 1;
-    --aflow-turn: 0deg;
-  }
-  70% {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-    --aflow-turn: 360deg;
-  }
-}
-@keyframes aflow-nudge {
-  50% {
-    translate: 0 3px;
   }
 }

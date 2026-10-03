@@ -1,0 +1,754 @@
+/*
+ * video-player — the site's inline clip (components/video-player.tsx),
+ * prefix vp-. The home page's proof section, the Command Center hero and
+ * the Why Flash hero use it.
+ *
+ * The frame is 16:9 from the first paint, with the poster over the video
+ * until the clip is playing (`.vp-poster`, faded out over 200ms once it
+ * moves) and the big gold play button over the poster: with a line under
+ * it, or a title and a note over a soft dark shade (`.vp-shade`). Over it:
+ * a tag, if the clip has one, and, for a highlight, the "Watch the full …"
+ * pill at the top right; at the bottom,
+ * on a gradient, the caption line, the name (once the clip's own lower
+ * third has gone, `data-lower`) and the control bar. Under those, covering
+ * the clip, the hit area (`.vp-hit`, a button): a click anywhere plays or
+ * pauses. The bar is plain buttons and a range input, so everything works
+ * from the keyboard. When the clip ends the end screen (`.vp-end`) covers
+ * it: Replay and the full video or the page's next step.
+ *
+ * `.vp-window` frames the clip as an app window (`.vp-shell`): a slim title
+ * bar with three muted dots and the Flash logo, a 1px gold edge, rounded
+ * corners, a deep shadow and a faint glow behind.
+ *
+ * States the script sets on `.vp`: `data-playing`, `data-muted`, `data-cc`
+ * (captions on), `data-lower`, `data-started` (the poster has gone),
+ * `data-ended`, `data-idle` (the mouse has rested during playback: the bar
+ * fades), `data-flash="play|pause"` (the big icon blinks on a toggle). The
+ * lightbox (`vp-dialog`) is the site's one <dialog>, built on first use by
+ * lib/media/lightbox.ts, with the YouTube embed made when it opens.
+ */
+@layer components {
+  .vp {
+    display: flex;
+    flex-direction: column;
+  }
+  .vp-frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 18px;
+    background-color: var(--color-brand-navy-deep);
+    box-shadow:
+      0 2px 6px rgb(7 13 38 / 10%),
+      0 28px 60px -12px rgb(7 13 38 / 42%);
+    color: var(--color-text-on-dark);
+  }
+  /* On a navy section the card also has a thin border. */
+  .vp-on-dark .vp-frame {
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 12%),
+      0 2px 6px rgb(0 0 0 / 20%),
+      0 28px 60px -12px rgb(0 0 0 / 55%);
+  }
+  .vp-video,
+  .vp-poster {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* Native captions stay off; the script draws the cue itself. */
+  .vp-video::cue {
+    visibility: hidden;
+  }
+  /* The poster, over the video until it is playing. */
+  .vp-poster {
+    z-index: 1;
+    pointer-events: none;
+  }
+  .vp[data-started] .vp-poster {
+    opacity: 0;
+  }
+
+  /* The hit area: over the clip, under the overlays. */
+  .vp-hit {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    cursor: pointer;
+  }
+  .vp-hit:focus-visible {
+    outline: 3px solid var(--color-viz-gold);
+    outline-offset: -3px;
+    border-radius: 18px;
+  }
+
+  /* The blink on a toggle: the icon comes up and goes, 400ms. */
+  .vp-flash {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 9999px;
+    background-color: rgb(4 8 24 / 55%);
+    opacity: 0;
+    translate: -50% -50%;
+    pointer-events: none;
+  }
+  .vp-flash > svg {
+    width: 30px;
+    height: 30px;
+  }
+  .vp[data-flash='play'] .vp-flash-pause,
+  .vp[data-flash='pause'] .vp-flash-play {
+    display: none;
+  }
+  .vp[data-flash] .vp-flash {
+    animation: vp-blink 0.4s ease-out both;
+  }
+
+  .vp-top {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 4;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px;
+    pointer-events: none;
+  }
+  .vp-top > * {
+    pointer-events: auto;
+  }
+  .vp-tag {
+    padding: 6px 10px;
+    border-radius: 9999px;
+    background-color: rgb(7 13 38 / 55%);
+    backdrop-filter: blur(8px);
+    font-size: 10px;
+    line-height: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .vp-cta {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid rgb(255 255 255 / 22%);
+    border-radius: 9999px;
+    background-color: rgb(7 13 38 / 55%);
+    backdrop-filter: blur(8px);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      border-color 0.2s;
+  }
+  .vp-cta:hover {
+    border-color: rgb(255 255 255 / 40%);
+    background-color: rgb(7 13 38 / 80%);
+  }
+
+  /* The bottom: gradient, caption, name, bar. */
+  .vp-bottom {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 56px 14px 10px;
+    background-image: linear-gradient(to top, rgb(4 8 24 / 88%), rgb(4 8 24 / 55%) 45%, transparent);
+    pointer-events: none;
+    transition: opacity 0.35s ease-out;
+  }
+  /* Only the bar takes the pointer: a click on the caption or the name is a
+     click on the picture. */
+  .vp-bar {
+    pointer-events: auto;
+  }
+  /* The bar fades once the mouse has rested during playback; it is back on
+     a move, a focus, or a pause. Touch keeps it. */
+  .vp[data-idle][data-playing] .vp-bottom {
+    opacity: 0;
+  }
+  .vp[data-idle][data-playing] .vp-bar {
+    pointer-events: none;
+  }
+  .vp-frame:focus-within .vp-bottom {
+    opacity: 1;
+  }
+  .vp-frame:focus-within .vp-bar {
+    pointer-events: auto;
+  }
+  @media (hover: none) {
+    .vp[data-idle][data-playing] .vp-bottom {
+      opacity: 1;
+    }
+    .vp[data-idle][data-playing] .vp-bar {
+      pointer-events: auto;
+    }
+  }
+  .vp-caption {
+    display: none;
+    max-width: 92%;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 60%);
+  }
+  .vp[data-cc] .vp-caption:not(:empty) {
+    display: block;
+  }
+  .vp-lower {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+  }
+  .vp[data-lower] .vp-lower {
+    opacity: 1;
+  }
+  .vp-lower-name {
+    font-size: 13px;
+    line-height: 16px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .vp-lower-title {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 600;
+    color: rgb(255 255 255 / 78%);
+  }
+
+  .vp-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .vp-btn {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: var(--color-text-on-dark);
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  .vp-btn:hover {
+    background-color: rgb(255 255 255 / 14%);
+  }
+  .vp-btn > svg {
+    width: 18px;
+    height: 18px;
+  }
+  .vp-btn[aria-pressed='true'] {
+    color: var(--color-viz-gold);
+  }
+  /* Play / pause, sound on / off: one icon of each pair shows. */
+  .vp[data-playing] .vp-icon-play,
+  .vp:not([data-playing]) .vp-icon-pause,
+  .vp[data-muted] .vp-icon-sound,
+  .vp:not([data-muted]) .vp-icon-muted {
+    display: none;
+  }
+  .vp-time {
+    flex-shrink: 0;
+    min-width: 76px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: rgb(255 255 255 / 85%);
+  }
+  /* The progress: a range input drawn as a thin line with a gold fill. */
+  .vp-seek {
+    --vp-at: 0%;
+    flex: 1;
+    min-width: 0;
+    height: 20px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    appearance: none;
+  }
+  .vp-seek::-webkit-slider-runnable-track {
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--color-viz-gold) var(--vp-at), rgb(255 255 255 / 28%) var(--vp-at));
+  }
+  .vp-seek::-moz-range-track {
+    height: 3px;
+    border-radius: 2px;
+    background: rgb(255 255 255 / 28%);
+  }
+  .vp-seek::-moz-range-progress {
+    height: 3px;
+    border-radius: 2px;
+    background: var(--color-viz-gold);
+  }
+  .vp-seek::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    margin-top: -4.5px;
+    border: none;
+    border-radius: 9999px;
+    background: var(--color-viz-gold);
+    appearance: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .vp-seek::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: none;
+    border-radius: 9999px;
+    background: var(--color-viz-gold);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .vp-seek:hover::-webkit-slider-thumb,
+  .vp-seek:focus-visible::-webkit-slider-thumb {
+    opacity: 1;
+  }
+  .vp-seek:hover::-moz-range-thumb,
+  .vp-seek:focus-visible::-moz-range-thumb {
+    opacity: 1;
+  }
+  .vp-seek:focus-visible {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* The big gold play button over a clip that is not playing, and its
+     line ("Watch Flash in 90 seconds") under it. */
+  .vp-big {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    translate: -50% -50%;
+    pointer-events: none;
+    transition:
+      opacity 0.25s,
+      scale 0.25s;
+  }
+  .vp-big-disc {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 9999px;
+    background-color: var(--color-viz-gold);
+    color: var(--color-brand-navy);
+    box-shadow:
+      0 0 0 8px rgb(255 255 255 / 10%),
+      0 10px 30px rgb(0 0 0 / 40%);
+    transition: scale 0.25s;
+  }
+  .vp-big-disc > svg {
+    width: 30px;
+    height: 30px;
+    margin-left: 4px;
+  }
+  .vp-big-label {
+    padding: 6px 12px;
+    border-radius: 9999px;
+    background-color: rgb(7 13 38 / 60%);
+    backdrop-filter: blur(8px);
+    font-size: 13px;
+    line-height: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 40%);
+  }
+  .vp[data-playing] .vp-big,
+  .vp[data-ended] .vp-big {
+    opacity: 0;
+    scale: 0.9;
+  }
+  /* Once the clip has started, a pause shows the plain button, not the line. */
+  .vp[data-started] .vp-big-label {
+    display: none;
+  }
+  /* A title and a note instead of the line: plain text on the shade. */
+  .vp-big-titled {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    backdrop-filter: none;
+    text-align: center;
+  }
+  .vp-big-title {
+    font-size: 17px;
+    line-height: 22px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .vp-big-note {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+    color: rgb(255 255 255 / 78%);
+  }
+  /* The shade under the title: darker at the middle and the foot, so the
+     words read on any frame. Gone once the clip starts. */
+  .vp-shade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background-image:
+      radial-gradient(ellipse 60% 55% at 50% 55%, rgb(4 8 24 / 55%), transparent 75%),
+      linear-gradient(to top, rgb(4 8 24 / 70%), rgb(4 8 24 / 25%) 45%, rgb(4 8 24 / 15%));
+    pointer-events: none;
+  }
+  .vp[data-started] .vp-shade {
+    opacity: 0;
+  }
+
+  /* ---------- The app window ---------- */
+
+  .vp-window {
+    position: relative;
+    isolation: isolate;
+  }
+  .vp-shell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid color-mix(in oklab, var(--color-viz-gold) 70%, transparent);
+    border-radius: 14px;
+    background-color: var(--color-brand-navy-deep);
+    box-shadow:
+      0 2px 8px rgb(0 0 0 / 22%),
+      0 40px 90px -24px rgb(0 0 0 / 65%);
+  }
+  /* The glow: gold and blue, soft, behind the window. */
+  .vp-window::before {
+    content: '';
+    position: absolute;
+    inset: 6% 4%;
+    z-index: -1;
+    border-radius: 40px;
+    background-image:
+      radial-gradient(ellipse 60% 70% at 70% 30%, rgb(230 186 45 / 16%), transparent 70%),
+      radial-gradient(ellipse 70% 70% at 25% 75%, rgb(60 110 230 / 18%), transparent 70%);
+    filter: blur(40px);
+    pointer-events: none;
+  }
+  .vp-shell-bar {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    padding-inline: 12px;
+    border-bottom: 1px solid rgb(255 255 255 / 8%);
+    background-color: var(--color-brand-navy);
+  }
+  .vp-shell-dots {
+    position: absolute;
+    left: 12px;
+    display: flex;
+    gap: 6px;
+  }
+  .vp-shell-dots > span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgb(255 255 255 / 16%);
+  }
+  /* Inside the window the frame is square-cornered and shadowless: the
+     shell carries both. */
+  .vp-window .vp-frame {
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .vp-window .vp-hit:focus-visible {
+    border-radius: 0;
+  }
+
+  /* The end screen: over everything but the lightbox. */
+  .vp-end {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    background-color: rgb(4 8 24 / 72%);
+    backdrop-filter: blur(6px);
+  }
+  .vp[data-ended] .vp-end {
+    display: flex;
+  }
+  .vp[data-ended] .vp-bottom,
+  .vp[data-ended] .vp-top {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .vp-end-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 44px;
+    padding: 0 20px;
+    border: 1px solid rgb(255 255 255 / 45%);
+    border-radius: var(--radius-xs, 4px);
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--color-text-on-dark);
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      filter 0.2s;
+  }
+  .vp-end-btn:hover {
+    background-color: rgb(255 255 255 / 8%);
+  }
+  .vp-end-btn > svg {
+    width: 18px;
+    height: 18px;
+  }
+  .vp-end-primary {
+    border-color: transparent;
+    background-color: var(--color-viz-gold);
+    color: var(--color-brand-navy);
+  }
+  .vp-end-primary:hover {
+    background-color: var(--color-viz-gold);
+    filter: brightness(1.06);
+  }
+  .vp-end-btn:focus-visible {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: 2px;
+  }
+
+  /* Fullscreen: the frame fills the screen, the video inside it. */
+  .vp-frame:fullscreen {
+    border-radius: 0;
+  }
+  .vp-frame:fullscreen .vp-video {
+    object-fit: contain;
+  }
+
+  /* ---------- The lightbox ---------- */
+
+  .vp-dialog {
+    margin: auto;
+    width: min(1120px, calc(100vw - 32px));
+    max-width: none;
+    max-height: none;
+    padding: 0;
+    border: none;
+    border-radius: 16px;
+    background: #000;
+    color: var(--color-text-on-dark);
+    overflow: visible;
+  }
+  .vp-dialog::backdrop {
+    background-color: rgb(4 8 24 / 82%);
+    backdrop-filter: blur(6px);
+  }
+  .vp-dialog-frame {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 16px;
+    background: #000;
+  }
+  .vp-dialog-frame > iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .vp-close {
+    position: absolute;
+    top: -44px;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9999px;
+    background-color: rgb(255 255 255 / 12%);
+    color: var(--color-text-on-dark);
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  .vp-close:hover {
+    background-color: rgb(255 255 255 / 24%);
+  }
+  .vp-close > svg {
+    width: 16px;
+    height: 16px;
+  }
+  .vp-close:focus-visible {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: 2px;
+  }
+
+  /* On a phone the bar has no room for the timer; the progress line stays. */
+  @media (width < 480px) {
+    .vp-time {
+      display: none;
+    }
+    .vp-bar {
+      gap: 4px;
+    }
+  }
+
+  @media (width >= 768px) {
+    .vp-top {
+      padding: 18px;
+    }
+    .vp-big-title {
+      font-size: 20px;
+      line-height: 26px;
+    }
+    .vp-big-note {
+      font-size: 13px;
+      line-height: 18px;
+    }
+    .vp-shell-bar {
+      height: 34px;
+      padding-inline: 14px;
+    }
+    .vp-shell-dots {
+      left: 14px;
+    }
+    .vp-bottom {
+      padding: 64px 18px 12px;
+    }
+    .vp-caption {
+      font-size: 15px;
+      line-height: 21px;
+    }
+    .vp-lower-name {
+      font-size: 14px;
+      line-height: 18px;
+    }
+    .vp-lower-title {
+      font-size: 12px;
+      line-height: 16px;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The poster gives way to the playing clip. */
+    .vp-poster,
+    .vp-shade {
+      transition: opacity 0.2s ease-out;
+    }
+    /* The gold button grows a little under the mouse. */
+    @media (hover: hover) {
+      .vp:not([data-playing]) .vp-frame:hover .vp-big-disc {
+        scale: 1.06;
+      }
+    }
+    /* The card lifts under the mouse, like the site's other cards. */
+    .vp-frame {
+      transition:
+        translate 400ms var(--motion-ease),
+        box-shadow 400ms var(--motion-ease);
+    }
+    @media (hover: hover) {
+      .vp:not(.vp-window):hover .vp-frame {
+        translate: 0 -3px;
+        box-shadow:
+          0 4px 10px rgb(7 13 38 / 12%),
+          0 36px 70px -12px rgb(7 13 38 / 50%);
+      }
+      .vp-on-dark:not(.vp-window):hover .vp-frame {
+        box-shadow:
+          inset 0 0 0 1px rgb(255 255 255 / 18%),
+          0 4px 10px rgb(0 0 0 / 24%),
+          0 36px 70px -12px rgb(0 0 0 / 60%);
+      }
+    }
+    /* The lightbox comes in: the backdrop fades, the player settles from 0.98. */
+    .vp-dialog[open] {
+      animation: vp-dialog-in 250ms var(--motion-ease) both;
+    }
+    .vp-dialog[open]::backdrop {
+      animation: motion-fade 250ms ease-out both;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vp-lower,
+    .vp-big,
+    .vp-big-disc,
+    .vp-btn,
+    .vp-cta,
+    .vp-end-btn,
+    .vp-shade,
+    .vp-poster,
+    .vp-bottom {
+      transition: none;
+    }
+    .vp[data-flash] .vp-flash {
+      animation: none;
+      opacity: 1;
+    }
+  }
+}
+
+@keyframes vp-blink {
+  0% {
+    opacity: 0;
+    scale: 0.8;
+  }
+  35% {
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.08;
+  }
+}
+@keyframes vp-dialog-in {
+  from {
+    opacity: 0;
+    scale: 0.98;
+  }
+}

@@ -24,7 +24,6 @@ const KEEP_OUT: [selector: string, pad: number][] = [
   ['h1 .hero-word', 22],
   ['.hero-lede', 24],
   ['.hero-ctas', 24],
-  ['.hero-support', 24],
   ['.hero-surfaces', 26],
 ];
 

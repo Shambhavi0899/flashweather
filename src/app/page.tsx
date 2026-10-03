@@ -13,6 +13,7 @@ import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { heroImage } from '@/content/home';
 import { JsonLd, breadcrumbSchema, productSchema } from '@/lib/seo/jsonld';
+import { openLinksInNewTab } from '@/lib/new-tab';
 import { buildMetadata } from '@/lib/seo/metadata';
 
 const title = 'AI weather intelligence platform';
@@ -27,6 +28,12 @@ const description =
 export const metadata = buildMetadata({ title, description, path: '/' });
 
 export default function Home() {
+  // Every content link below -- the sections and the closing CTA band --
+  // opens in a new tab (lib/new-tab.ts). The header, the footer's nav and the
+  // floating launcher are plain <Link>, so they are untouched, and an in-page
+  // anchor such as "See the platform" stays on this page.
+  openLinksInNewTab();
+
   return (
     <>
       <SiteHeader tone="dark" />

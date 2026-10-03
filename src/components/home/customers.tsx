@@ -1,7 +1,7 @@
 import Image from 'next/image';
-import Link from 'next/link';
 
 import { Motion } from '@/components/motion';
+import { SiteLink } from '@/components/site-link';
 import { customers } from '@/content/home';
 
 import { CustomerSlider } from './customer-slider';
@@ -94,9 +94,9 @@ export function Customers() {
           <p className="customers-rise flex flex-col items-center gap-2 text-center text-body-s leading-5 text-text-muted [--i:2] lg:flex-row lg:gap-4">
             {customers.length} partners and customers across golf, sports, schools and agriculture
             <span aria-hidden className="hidden h-4 w-px bg-border-strong lg:block" />
-            <Link href="/case-studies/troon/" className="font-bold text-brand-blue hover:underline">
+            <SiteLink href="/case-studies/troon/" className="font-bold text-brand-blue hover:underline">
               Read the Troon case study <span aria-hidden>→</span>
-            </Link>
+            </SiteLink>
           </p>
         </Motion>
       </div>

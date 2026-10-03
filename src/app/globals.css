@@ -22,6 +22,7 @@
 @import "../styles/home-hero-lightning.css";
 /* The home page's closing sections, and the footer's scroll-in. */
 @import "../styles/finale.css";
+@import "../styles/./video-player.css";
 @import "../styles/products.css";
 /* The Weather Command Center overview, a guided tour of its screenshot. */
 @import "../styles/wcc-tour.css";

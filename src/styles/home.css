@@ -38,8 +38,7 @@
        hugs the letters keeps the gold's dark stops readable there. */
     #hero-heading .text-gold-metallic {
       filter: drop-shadow(0 0 2px oklab(17.1% -0.0005 -0.052 / 95%))
-        drop-shadow(0 0 8px oklab(17.1% -0.0005 -0.052 / 90%))
-        drop-shadow(0 0 18px oklab(17.1% -0.0005 -0.052 / 70%));
+        drop-shadow(0 0 8px oklab(17.1% -0.0005 -0.052 / 90%)) drop-shadow(0 0 18px oklab(17.1% -0.0005 -0.052 / 70%));
     }
   }
 
@@ -203,15 +202,33 @@
 
   /* 3 · 2 min: dots light :00 to :20, the gold ring pulses, and the pass
      repeats every 3.2s as a quiet tick along the line. */
-  .stat-ref-dots > circle:nth-child(2) { --i: 1; }
-  .stat-ref-dots > circle:nth-child(3) { --i: 2; }
-  .stat-ref-dots > circle:nth-child(4) { --i: 3; }
-  .stat-ref-dots > circle:nth-child(5) { --i: 4; }
-  .stat-ref-dots > circle:nth-child(6) { --i: 5; }
-  .stat-ref-dots > circle:nth-child(7) { --i: 6; }
-  .stat-ref-dots > circle:nth-child(8) { --i: 7; }
-  .stat-ref-dots > circle:nth-child(9) { --i: 8; }
-  .stat-ref-dots > circle:nth-child(10) { --i: 9; }
+  .stat-ref-dots > circle:nth-child(2) {
+    --i: 1;
+  }
+  .stat-ref-dots > circle:nth-child(3) {
+    --i: 2;
+  }
+  .stat-ref-dots > circle:nth-child(4) {
+    --i: 3;
+  }
+  .stat-ref-dots > circle:nth-child(5) {
+    --i: 4;
+  }
+  .stat-ref-dots > circle:nth-child(6) {
+    --i: 5;
+  }
+  .stat-ref-dots > circle:nth-child(7) {
+    --i: 6;
+  }
+  .stat-ref-dots > circle:nth-child(8) {
+    --i: 7;
+  }
+  .stat-ref-dots > circle:nth-child(9) {
+    --i: 8;
+  }
+  .stat-ref-dots > circle:nth-child(10) {
+    --i: 9;
+  }
   .motion[data-anim]:not([data-anim='reset']) .stat-ref-dots > circle {
     --dot-delay: calc(var(--motion-delay) + var(--i, 0) * 90ms);
     animation:
@@ -240,12 +257,24 @@
   }
 
   /* 5 · 15+: bars grow from the baseline, shortest to tallest. */
-  .stat-bars > rect:nth-child(2) { --i: 1; }
-  .stat-bars > rect:nth-child(3) { --i: 2; }
-  .stat-bars > rect:nth-child(4) { --i: 3; }
-  .stat-bars > rect:nth-child(5) { --i: 4; }
-  .stat-bars > rect:nth-child(6) { --i: 5; }
-  .stat-bars > rect:nth-child(7) { --i: 6; }
+  .stat-bars > rect:nth-child(2) {
+    --i: 1;
+  }
+  .stat-bars > rect:nth-child(3) {
+    --i: 2;
+  }
+  .stat-bars > rect:nth-child(4) {
+    --i: 3;
+  }
+  .stat-bars > rect:nth-child(5) {
+    --i: 4;
+  }
+  .stat-bars > rect:nth-child(6) {
+    --i: 5;
+  }
+  .stat-bars > rect:nth-child(7) {
+    --i: 6;
+  }
   .motion[data-anim]:not([data-anim='reset']) .stat-bars > rect {
     animation: motion-grow-y 0.75s var(--stat-ease) calc(var(--motion-delay) + var(--i, 0) * 90ms) both;
   }
@@ -373,29 +402,111 @@
   }
 
   /*
-   * "Reactive. / We're proactive." headline (components/home/comparison.tsx),
-   * on the shared .motion system: plays once on scroll-in, ~1.4s. Every piece
-   * is in its final place from the start; only opacity, transform, rotate and
-   * the strike's dash move, so nothing shifts.
+   * "Reactive detection. We're proactive." (components/home/difference-headline.tsx),
+   * the home Flash difference heading and the Everyone else vs Flash H1.
+   *
+   * Size: from 1024px one line, as large as fits the content width (the
+   * line is ~15.7em wide: 74px at 1280, 78px from 1440); below, a line per
+   * phrase. "Reactive detection." is a column with its sticker on top; the
+   * Flash sticker is pinned to the top-right corner of "proactive.". Neither
+   * widens the line.
+   *
+   * Motion, on the shared .motion system, as it scrolls in: "Reactive
+   * detection." fades and its sticker settles (700ms); "We're proactive."
+   * rises (300ms), the gold underline draws left to right (900ms) and, as
+   * it lands, the Flash sticker pops (1500ms). Then, while in view and the tab is visible
+   * (.motion-loop): the strike draws through the phrase (600ms), holds
+   * 2.5s, retracts (400ms), rests 1s, again; a light runs along the
+   * underline every 4s. Reduced motion, or no JavaScript: the strike and
+   * the underline are simply there, no loop and no sweep. Only opacity,
+   * transform, clip-path and the strike's dash move, so nothing shifts.
    */
-  .diff-strike {
-    stroke-dasharray: 1;
+  .diff {
+    font-size: clamp(36px, calc(10.5vw - 3px), 80px);
+    line-height: 1.04;
+    letter-spacing: -0.065em;
+    column-gap: 0.25em;
+    /* Wrapped (below 1024px): room for the Flash sticker under the first line. */
+    row-gap: max(0.65em, 42px);
   }
-  .diff-tag-them,
-  .diff-tag-us {
+  @media (width >= 1024px) {
+    .diff {
+      font-size: clamp(56px, calc(6.1vw - 4px), 78px);
+    }
+  }
+  .diff-part {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .diff-them,
+  .diff-us {
+    white-space: nowrap;
+  }
+
+  .diff-strike {
+    stroke-width: 0.14em;
+    stroke-dasharray: 1;
+    vector-effect: non-scaling-stroke;
+  }
+  .diff-strike-2 {
+    stroke-width: 0.046em;
+  }
+  .diff-tag-them {
     transform-origin: 50% 50%;
+  }
+  /* Pinned by its bottom-left corner 12px above the tops of "ve." (0.555em
+     over the baseline, 0.35em under the word's box top), so it overlaps the
+     word's corner but no letter or the underline; it tilts and scales about
+     that corner. From 1024px it overhangs the word by 0.15em, which keeps it
+     inside the content edge; on its own line below, it overhangs more, so
+     it stays over "e." and clear of the i. */
+  .diff-tag-us {
+    position: absolute;
+    right: -0.6em;
+    bottom: calc(100% - 0.35em + 12px);
+    transform-origin: 0 100%;
+  }
+  @media (width >= 1024px) {
+    .diff-tag-us {
+      right: -0.15em;
+    }
   }
   .diff-emph {
     transform-origin: 0 80%;
   }
+
+  /* "proactive.": metallic gold, clear of the p's descender. */
+  .diff-underline {
+    position: absolute;
+    left: 0.02em;
+    right: 0;
+    top: calc(100% + 0.04em);
+    height: 4px;
+    overflow: hidden;
+    border-radius: 999px;
+  }
+  @media (width >= 640px) {
+    .diff-underline {
+      height: 6px;
+    }
+  }
+  .diff-sheen {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 40%;
+    background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 85%), transparent);
+    transform: translateX(-100%);
+  }
+
   .motion[data-anim]:not([data-anim='reset']) .diff-them {
     animation: motion-fade 0.4s var(--motion-ease) both;
   }
   .motion[data-anim]:not([data-anim='reset']) .diff-strike {
-    animation: motion-draw 0.6s var(--motion-ease) 300ms both;
+    animation: diff-strike 4.5s linear 300ms infinite both;
   }
   .motion[data-anim]:not([data-anim='reset']) .diff-strike-2 {
-    animation-duration: 0.5s;
     animation-delay: 400ms;
   }
   .motion[data-anim]:not([data-anim='reset']) .diff-tag-them {
@@ -408,7 +519,13 @@
     animation: diff-emph 0.7s var(--motion-ease) 300ms both;
   }
   .motion[data-anim]:not([data-anim='reset']) .diff-tag-us {
-    animation: diff-settle-right 0.4s var(--motion-ease) 1000ms both;
+    animation: diff-settle-right 0.4s var(--motion-ease) 1500ms both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .diff-underline {
+    animation: motion-wipe 0.6s var(--motion-ease) 900ms both;
+  }
+  .motion[data-anim]:not([data-anim='reset']) .diff-sheen {
+    animation: diff-sheen 4s var(--motion-ease) 1700ms infinite both;
   }
 
   /*
@@ -489,6 +606,13 @@
     }
     .motion[data-anim]:not([data-anim='reset']) .platform-band {
       animation: motion-rise 0.7s var(--motion-ease) var(--motion-delay) both;
+    }
+    /* The tour: the clip, then its text one stagger later. */
+    .motion[data-anim]:not([data-anim='reset']) .platform-tour-clip {
+      animation: motion-rise 0.7s var(--motion-ease) var(--motion-delay) both;
+    }
+    .motion[data-anim]:not([data-anim='reset']) .platform-tour-text {
+      animation: motion-rise 0.7s var(--motion-ease) calc(var(--motion-delay) + var(--motion-stagger)) both;
     }
 
     @media (hover: hover) and (pointer: fine) and (width >= 1024px) {
@@ -582,14 +706,10 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    /* After the buttons, the demo arrow nudges; the bolt glints with the
-       supporting line. */
+    /* After the buttons, the demo arrow nudges. */
     .hero-demo > span[aria-hidden] {
       display: inline-block;
       animation: hero-nudge 0.7s var(--hero-ease) 1700ms;
-    }
-    .hero-bolt {
-      animation: hero-bolt 0.6s ease-out 1500ms;
     }
     /* The underlines are hidden until <HeroLede> sets data-drawn (the first
        30px of scroll, or 2.5s after the hero lands), then draw left to
@@ -626,11 +746,6 @@
 @keyframes hero-nudge {
   45% {
     transform: translate(4px, -4px);
-  }
-}
-@keyframes hero-bolt {
-  30% {
-    filter: brightness(1.9);
   }
 }
 @keyframes stat-ring {
@@ -714,6 +829,38 @@
 @keyframes diff-emph {
   from {
     transform: scale(0.98);
+  }
+}
+/* One 4.5s round of the strike: draws left to right (600ms), holds 2.5s,
+   retracts to the right as it fades (400ms), rests 1s. */
+@keyframes diff-strike {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  13.33% {
+    stroke-dashoffset: 0;
+  }
+  68.89% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    animation-timing-function: ease-in;
+  }
+  77.78%,
+  100% {
+    stroke-dashoffset: -1;
+    opacity: 0;
+  }
+}
+/* A light runs along the underline in the first 0.9s of every 4s. */
+@keyframes diff-sheen {
+  0% {
+    transform: translateX(-100%);
+  }
+  22.5%,
+  100% {
+    transform: translateX(250%);
   }
 }
 
@@ -1185,9 +1332,15 @@
     --how-drift: 7s;
     offset-path: path('M130 130C260 90 400 170 470 270S560 360 640 350');
   }
-  .how-fx-dot:nth-child(2) { --i: 1; }
-  .how-fx-dot:nth-child(3) { --i: 2; }
-  .how-fx-dot:nth-child(4) { --i: 3; }
+  .how-fx-dot:nth-child(2) {
+    --i: 1;
+  }
+  .how-fx-dot:nth-child(3) {
+    --i: 2;
+  }
+  .how-fx-dot:nth-child(4) {
+    --i: 3;
+  }
   :is(.how-shot[data-on], .how-step[data-inview]) .how-fx-dot {
     /* A negative delay spreads the particles along the stream from the start. */
     animation: how-drift var(--how-drift) linear calc(var(--i, 0) * var(--how-drift) / -4) infinite;
@@ -1224,8 +1377,12 @@
     transform-box: view-box;
     transform-origin: 581px 330px;
   }
-  .how-fx-alert:nth-child(2) { --i: 1; }
-  .how-fx-alert:nth-child(3) { --i: 2; }
+  .how-fx-alert:nth-child(2) {
+    --i: 1;
+  }
+  .how-fx-alert:nth-child(3) {
+    --i: 2;
+  }
   .how-fx-glow {
     opacity: 0.45;
     mix-blend-mode: screen;

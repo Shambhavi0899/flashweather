@@ -8,6 +8,9 @@
  * the "01 · Home — Flash Agent tab · Golf and Turf" artboard.
  */
 
+import type { VideoClip } from '@/components/video-player';
+import { DEMO_HREF } from '@/content/navigation';
+
 const IMG = '/images/home';
 
 export type Img = { src: string; alt: string };
@@ -75,8 +78,9 @@ export const heroSurfaces: readonly HeroSurface[] = [
   },
 ];
 
-/** Where "See the Flash difference" goes: the film, on YouTube, in a new tab. */
-export const heroVideoHref = 'https://www.youtube.com/watch?v=rp9dq-HIy6o';
+/** The overview row in the platform section; "See the Flash difference" scrolls to it. */
+export const OVERVIEW_ID = 'flash-in-90-seconds';
+export const heroVideoHref = `#${OVERVIEW_ID}`;
 
 // ---------------------------------------------------------------------------
 // Numbers
@@ -135,7 +139,7 @@ const SOURCE_CHIP = { label: 'Source', value: 'Flash forecast · 1×1 km · ever
 export const agentTabs: AgentTab[] = [
   {
     id: 'construction',
-    label: 'Construction and Concrete',
+    label: 'Construction',
     href: '/industries-we-serve/construction/',
     question: 'Are wind gusts low enough to safely operate cranes and work at elevated heights?',
     answer: {
@@ -158,9 +162,10 @@ export const agentTabs: AgentTab[] = [
   },
   {
     id: 'roofing',
-    label: 'Roofing and Exteriors',
+    label: 'Roofing',
     href: '/industries-we-serve/roofing/',
-    question: 'What days this week offer viable 5-hour windows to tear off a residential roof and get back to watertight?',
+    question:
+      'What days this week offer viable 5-hour windows to tear off a residential roof and get back to watertight?',
     answer: {
       site: 'Roswell re-roof · this week',
       status: { tone: 'clear', label: 'Go · Tue and Thu' },
@@ -176,7 +181,11 @@ export const agentTabs: AgentTab[] = [
       ],
       primaryAction: 'Book the tear-off in JobNimbus',
       secondaryAction: 'Text the crew lead',
-      followUps: ['Push both days to Google Calendar', 'What about the Milton repair?', 'Log this decision for the job file'],
+      followUps: [
+        'Push both days to Google Calendar',
+        'What about the Milton repair?',
+        'Log this decision for the job file',
+      ],
     },
   },
   {
@@ -227,7 +236,7 @@ export const agentTabs: AgentTab[] = [
   },
   {
     id: 'schools',
-    label: 'Schools, Parks and Sports',
+    label: 'Schools and Sports',
     href: '/industries-we-serve/schools/',
     question: 'Will our baseball fields be too saturated to play a game this Friday?',
     answer: {
@@ -245,36 +254,63 @@ export const agentTabs: AgentTab[] = [
       ],
       primaryAction: 'Move the game to Saturday in Google Calendar',
       secondaryAction: 'Notify parents via the athletics app',
-      followUps: ['What about the softball field?', 'When does the outfield drain?', 'Log this decision for the athletic director'],
+      followUps: [
+        'What about the softball field?',
+        'When does the outfield drain?',
+        'Log this decision for the athletic director',
+      ],
     },
   },
 ];
 
 /**
- * The diagram above the agent's tabs: two inputs run into Flash Agent, and
- * its answer goes to the crew (components/home/agent-flow.tsx).
+ * The diagram beside the agent window, top to bottom: two inputs power Flash
+ * Agent, it answers you and your crew, you decide (components/home/agent-flow.tsx).
+ * Every card is two short lines; the three connectors carry a word each.
  */
 export const agentFlow = {
-  tools: {
-    tag: 'Your tools and data',
-    title: 'Calendar · Procore · Slack · Teams · ERP · CRM',
-    body: 'Your sites, limits and schedules, with permissions per connector.',
-  },
-  engine: {
-    tag: 'Prediction engine',
-    title: '15+ prediction products, 1×1 km, every 2 minutes',
-    body: 'Lightning, hail, heat and WBGT, wind, rain, frost and more, scored for every cell.',
-  },
-  agent: {
-    tag: 'Flash Agent',
-    body: 'Reads your limits and the forecast, answers in plain language, proposes the action.',
-  },
-  crew: {
-    tag: 'You and your crew',
-    title: 'Ask in plain language. Decide with confidence.',
-    outcomes: ['Go / No-go', 'Reschedule', 'Alert the crew'],
-  },
-  cue: 'See it in action',
+  tools: { tag: 'Your tools and data', title: 'Sites, limits, schedules', detail: 'CRM · ERP · Procore · Slack' },
+  engine: { tag: 'Prediction engine', title: '15+ forecasts, 1×1 km', detail: 'Refreshed every 2 min' },
+  agent: { tag: 'Flash Agent', body: 'Combines both, answers in plain language, proposes the action.' },
+  crew: { tag: 'You and your crew', title: 'Ask in plain language', detail: 'Get the answer in seconds' },
+  decision: 'Your decision',
+  outcomes: ['Go / No-go', 'Reschedule', 'Alert the crew'],
+  links: { power: 'Power', answers: 'Answers', decide: 'You decide' },
+};
+
+/**
+ * The brand overview in the platform section (components/home/products.tsx
+ * `TourRow`): the whole 85-second video from Flash's channel
+ * (youtube.com/watch?v=rp9dq-HIy6o), the same files the Why Flash hero
+ * plays (content/why-flash-hub.ts `heroVideo`), so there is no fuller cut
+ * to offer; the end screen goes to the demo instead.
+ */
+export const overviewVideo: VideoClip = {
+  src: '/video/flash-product-overview.mp4',
+  webm: '/video/flash-product-overview.webm',
+  poster: '/video/flash-product-overview-poster.webp',
+  captions: '/video/flash-product-overview.vtt',
+  duration: 86,
+  tag: 'Product overview',
+  label: 'Flash Weather AI in 90 seconds: what the platform predicts and how teams use it',
+  playLabel: 'Watch Flash in 90 seconds',
+  endLink: { label: 'Book a demo', href: DEMO_HREF },
+};
+
+export const overview = {
+  eyebrow: 'Flash in 90 seconds',
+  title: 'One engine. Every hazard. Every way you work.',
+  body: 'From 60-minute lightning and hail before it lands, to agronomy, storm look-back audits and Flash Edge’s 100+ parameters out 10 days. Delivered through the API, the Weather Command Center or the mobile app.',
+  chips: [
+    'Lightning, 60 min ahead',
+    'Hail before impact',
+    'Agronomy Suite',
+    'Storm look-back audits',
+    'Flash Edge',
+    'Consulting meteorologists',
+  ],
+  highlight: 'Lightning, 60 min ahead',
+  link: { label: 'Explore the platform', href: '/products/' },
 };
 
 // ---------------------------------------------------------------------------
@@ -349,27 +385,33 @@ export const devicesImage: Img = {
 export const customers = [
   { name: 'Troon', file: 'troon', width: 351, height: 97, scale: 0.56 },
   { name: 'Portland Sea Dogs', file: 'portland-sea-dogs', width: 194, height: 192, scale: 0.89 },
-  { name: 'ANNIKA Women\'s All Pro Tour', file: 'annika-womens-all-pro-tour', width: 326, height: 106, scale: 0.61 },
+  { name: "ANNIKA Women's All Pro Tour", file: 'annika-womens-all-pro-tour', width: 326, height: 106, scale: 0.61 },
   { name: 'Syngenta', file: 'syngenta', width: 360, height: 101, scale: 0.55 },
   { name: 'NAIA', file: 'naia', width: 324, height: 192, scale: 0.74 },
-  { name: 'PGA of America, New England Section', file: 'pga-new-england', width: 240, height: 192, scale: 1.00 },
+  { name: 'PGA of America, New England Section', file: 'pga-new-england', width: 240, height: 192, scale: 1.0 },
   { name: 'K12 Sports Tech', file: 'k12-sports-tech', width: 360, height: 160, scale: 0.73 },
   { name: 'Big 12 Conference', file: 'big-12-conference', width: 318, height: 192, scale: 0.82 },
   { name: 'McClatchy Media', file: 'mcclatchy-media', width: 360, height: 51, scale: 0.31 },
-  { name: 'PGA of America, Southern Ohio Section', file: 'pga-southern-ohio', width: 151, height: 192, scale: 1.00 },
+  { name: 'PGA of America, Southern Ohio Section', file: 'pga-southern-ohio', width: 151, height: 192, scale: 1.0 },
   { name: 'Golf Genius', file: 'golf-genius', width: 360, height: 61, scale: 0.38 },
-  { name: 'PGA of America, Western New York Section', file: 'pga-western-new-york', width: 338, height: 192, scale: 1.00 },
+  {
+    name: 'PGA of America, Western New York Section',
+    file: 'pga-western-new-york',
+    width: 338,
+    height: 192,
+    scale: 1.0,
+  },
   { name: 'Kansas City Chiefs', file: 'kansas-city-chiefs', width: 303, height: 192, scale: 0.83 },
-  { name: 'PGA of America, South Florida Section', file: 'pga-south-florida', width: 256, height: 192, scale: 1.00 },
+  { name: 'PGA of America, South Florida Section', file: 'pga-south-florida', width: 256, height: 192, scale: 1.0 },
   { name: 'Turf Assistant', file: 'turf-assistant', width: 360, height: 128, scale: 0.69 },
-  { name: 'PGA of America, Northern Ohio Section', file: 'pga-northern-ohio', width: 153, height: 192, scale: 1.00 },
-  { name: 'NGCOA North Carolina', file: 'ngcoa-north-carolina', width: 153, height: 192, scale: 1.00 },
-  { name: 'PGA of America, Kentucky Section', file: 'pga-kentucky', width: 138, height: 150, scale: 1.00 },
-  { name: 'Hanse Golf Course Design', file: 'hanse-golf-course-design', width: 243, height: 188, scale: 1.00 },
+  { name: 'PGA of America, Northern Ohio Section', file: 'pga-northern-ohio', width: 153, height: 192, scale: 1.0 },
+  { name: 'NGCOA North Carolina', file: 'ngcoa-north-carolina', width: 153, height: 192, scale: 1.0 },
+  { name: 'PGA of America, Kentucky Section', file: 'pga-kentucky', width: 138, height: 150, scale: 1.0 },
+  { name: 'Hanse Golf Course Design', file: 'hanse-golf-course-design', width: 243, height: 188, scale: 1.0 },
   { name: 'Club Caddie', file: 'club-caddie', width: 360, height: 96, scale: 0.49 },
-  { name: 'Invited Clubs', file: 'invited-clubs', width: 354, height: 63, scale: 0.40 },
+  { name: 'Invited Clubs', file: 'invited-clubs', width: 354, height: 63, scale: 0.4 },
   { name: 'Philadelphia Eagles', file: 'philadelphia-eagles', width: 267, height: 181, scale: 0.85 },
-  { name: 'Chicago Cubs', file: 'chicago-cubs', width: 180, height: 180, scale: 0.90 },
+  { name: 'Chicago Cubs', file: 'chicago-cubs', width: 180, height: 180, scale: 0.9 },
 ];
 
 export type CatalogueCard = {
@@ -526,7 +568,10 @@ export const industryCards: IndustryCard[] = [
     name: 'Construction',
     body: 'Lightning and gust alerts that reach the crane operator',
     href: '/industries-we-serve/construction/',
-    image: { src: `${IMG}/construction-crane-storm.png`, alt: 'A tower crane beside an unfinished concrete building as a storm moves in' },
+    image: {
+      src: `${IMG}/construction-crane-storm.png`,
+      alt: 'A tower crane beside an unfinished concrete building as a storm moves in',
+    },
     role: 'Construction superintendent',
     question: agentTab('construction').question,
     agent: {
@@ -540,7 +585,10 @@ export const industryCards: IndustryCard[] = [
     name: 'Roofing',
     body: 'Hail cells up to 55 minutes before the storm reaches the neighborhood',
     href: '/industries-we-serve/roofing/',
-    image: { src: `${IMG}/roofing-neighborhood-shelf-cloud.png`, alt: 'Residential rooftops beneath an advancing shelf cloud' },
+    image: {
+      src: `${IMG}/roofing-neighborhood-shelf-cloud.png`,
+      alt: 'Residential rooftops beneath an advancing shelf cloud',
+    },
     role: 'Roofing owner',
     question: agentTab('roofing').question,
     agent: {
@@ -747,6 +795,30 @@ export const proofCards = [
     ambient: 'flash',
   },
 ] as const;
+
+/**
+ * The customer clip beside the proof cards: 19 seconds of Ryan Coll, cut
+ * from the full story on Flash's channel (`youtubeId`). The files are
+ * public/video; the captions are timed to his speech.
+ */
+export const proofVideo: VideoClip & { quote: string; attribution: string } = {
+  src: '/video/ryan-coll-columbus-country-club.mp4',
+  webm: '/video/ryan-coll-columbus-country-club.webm',
+  poster: '/video/ryan-coll-columbus-country-club-poster.webp',
+  captions: '/video/ryan-coll-columbus-country-club.vtt',
+  duration: 19,
+  youtubeId: 'RtMyYti2xxA',
+  tag: 'Customer story',
+  cta: 'Watch the full story',
+  label: 'Ryan Coll, Director of Golf at Columbus Country Club, on using Flash',
+  name: 'Ryan Coll',
+  title: 'Director of Golf, Columbus Country Club',
+  /** The clip's own lower third shows his name for this long; ours takes over after it. */
+  lowerThirdUntil: 7.5,
+  quote:
+    "Flash just allows us to prepare so early. It gives us a 40, 50 minute heads up. … I think it's the best weather technology in the country.",
+  attribution: "Ryan Coll, Director of Golf, Columbus Country Club · Flash's first customer",
+};
 
 export const testimonial = {
   quote:

@@ -9,8 +9,8 @@
  *            never 0: what is at 0 does not count as painted, and the
  *            largest paint would wait for the last paragraph. In order: the background
  *            fades in and settles from 1.08, the eyebrow, the headline a
- *            word at a time, its gold words' shimmer, the paragraph, the
- *            buttons, the supporting line. A visual beside the copy comes in
+ *            word at a time, its gold words' shimmer, the paragraph, a stat
+ *            row if there is one, the buttons, the supporting line. A visual beside the copy comes in
  *            after the headline starts, and then plays its own intro.
  *   ambient  while the hero is on screen: mouse parallax on the background
  *            and the visual, a soft lightning flash over a storm photo,
@@ -25,8 +25,12 @@
  *   hero-crumbs, hero-eyebrow  200ms
  *   hero-word hero-word-N      the headline's words (<HeroWords>)
  *   hero-lede, hero-ctas, hero-support
+ *   hero-stats                 a stat row between the paragraph and the
+ *                              buttons, which then wait for it
  *   hero-visual                the visual under the copy; with
  *                              hero-visual-side, beside it from lg
+ *   hero-visual-after-ctas     a visual that rises in after the buttons
+ *                              (a video card)
  *   hero-visual-still          a visual that takes no mouse parallax (a
  *                              form, an article's cover)
  */
@@ -38,9 +42,11 @@
     --hero-headline-at: 400ms;
     --hero-word-gap: 60ms;
     --hero-lede-at: 900ms;
+    --hero-stats-at: 1050ms;
     --hero-ctas-at: 1100ms;
     --hero-support-at: 1300ms;
     --hero-visual-at: 750ms;
+    --hero-visual-late-at: 1300ms;
     --hero-shimmer-at: 1450ms;
   }
 
@@ -82,9 +88,16 @@
     .hero-word-5 { --w: 5; }
     .hero-word-6 { --w: 6; }
     .hero-word-7 { --w: 7; }
-    /* 900 / 1100 / 1300ms: paragraph, buttons, supporting line. */
+    /* 900 / 1100 / 1300ms: paragraph, buttons, supporting line; with a
+       stat row, the stats at 1050ms and the buttons at 1200ms. */
     .hero-lede {
       animation: hero-lift 0.6s var(--hero-ease) var(--hero-lede-at) backwards;
+    }
+    .hero-stats {
+      animation: hero-lift 0.6s var(--hero-ease) var(--hero-stats-at) backwards;
+    }
+    .hero-copy:has(.hero-stats) {
+      --hero-ctas-at: 1200ms;
     }
     .hero-ctas {
       animation: hero-lift 0.6s var(--hero-ease) var(--hero-ctas-at) backwards;
@@ -101,6 +114,10 @@
       .hero-visual-side {
         animation-name: hero-slide;
       }
+    }
+    /* 1300ms: a visual that waits for the buttons. */
+    .hero-visual-after-ctas {
+      --hero-visual-at: var(--hero-visual-late-at);
     }
     .hero-visual.motion[data-anim],
     .hero-visual .motion[data-anim] {

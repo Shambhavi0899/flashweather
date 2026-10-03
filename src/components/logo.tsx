@@ -30,6 +30,8 @@ const sizes = {
   footer: 'h-20',
   /** The Flash Agent window's title bar (styles/agent-window.css). */
   window: 'h-[26px] md:h-8',
+  /** The slim title bar of a video framed as an app window (styles/video-player.css). */
+  bar: 'h-[18px] md:h-5',
   /** The agent's name on its messages in that window. */
   chat: 'h-[22px] md:h-[26px]',
   /** The dark "We're proactive." sticker (home Comparison, Everyone else vs Flash hero). */

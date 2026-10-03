@@ -37,7 +37,7 @@ export function Motion({
   threshold = 0.35,
   children,
 }: {
-  as?: 'div' | 'tr' | 'ol' | 'ul' | 'li' | 'h2' | 'figcaption';
+  as?: 'div' | 'tr' | 'ol' | 'ul' | 'li' | 'h1' | 'h2' | 'figcaption';
   id?: string;
   label?: string;
   className: string;
@@ -96,15 +96,20 @@ export function Motion({
     block.dataset.anim = 'idle';
     if (number && block.getBoundingClientRect().top > window.innerHeight) number.textContent = render(0);
 
+    // data-inview also pauses ambient loops while the block is off screen,
+    // or the tab is hidden.
+    let inView = false;
+    const syncInView = () => block.toggleAttribute('data-inview', inView && !document.hidden);
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // data-inview also pauses ambient loops while the block is off screen.
-        block.toggleAttribute('data-inview', entry.isIntersecting);
+        inView = entry.isIntersecting;
+        syncInView();
         if (entry.isIntersecting && !played) enqueue(block, play);
       },
       { threshold },
     );
     observer.observe(block);
+    document.addEventListener('visibilitychange', syncInView);
 
     const replay = (event: PointerEvent) => {
       if (replayOnHover && event.pointerType === 'mouse' && played) play(0);
@@ -118,6 +123,7 @@ export function Motion({
 
     return () => {
       observer.disconnect();
+      document.removeEventListener('visibilitychange', syncInView);
       block.removeEventListener('pointerenter', replay);
       block.removeEventListener('click', replayClick);
       cancelAnimationFrame(frame);

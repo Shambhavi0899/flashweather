@@ -7,6 +7,7 @@
  * Troon case study, whose titles and blurbs come from content/why-flash.ts.
  */
 
+import type { VideoClip } from '@/components/video-player';
 import { DEMO_HREF } from '@/content/navigation';
 import { productPaths } from '@/content/products';
 import { type WhyFlashKey, whyFlashPages } from '@/content/why-flash';
@@ -32,6 +33,24 @@ export const hero = {
   kicker: 'Why Flash?',
   headline: 'The world’s first AI that predicts lightning and hail before it hits.',
   body: 'Every other weather tool tells you what already happened. Flash tells you what is about to. Where and when lightning and hail will strike, down to the kilometer and the minute, up to an hour before they do. 99.6% accurate.',
+};
+
+/**
+ * The brand overview beside the hero copy: the whole 85-second video from
+ * Flash's channel (youtube.com/watch?v=rp9dq-HIy6o), so there is no fuller
+ * cut to offer; the end screen goes to the demo instead. The files are
+ * public/video; the captions are timed to the narration.
+ */
+export const heroVideo: VideoClip = {
+  src: '/video/flash-product-overview.mp4',
+  webm: '/video/flash-product-overview.webm',
+  poster: '/video/flash-product-overview-poster.webp',
+  captions: '/video/flash-product-overview.vtt',
+  duration: 86,
+  tag: 'Product overview',
+  label: 'Flash Weather AI in 90 seconds: what the platform predicts and how teams use it',
+  playLabel: 'Watch Flash in 90 seconds',
+  endLink: { label: 'Book a demo', href: DEMO_HREF },
 };
 
 export const category = {

@@ -30,6 +30,15 @@ const IDLE_MS = 10000;
  * again from the open tab: it moves on after three seconds if that tab's own
  * conversation is what is showing, and plays it first if not.
  *
+ * The questions: the rail (`data-tour-rail`) opens the panel
+ * (`data-tour-panel`) over the conversation, `data-questions="open"` on the
+ * tour, and that takes over too; the rail, the panel's close button, the dim
+ * behind it (`data-tour-dim`) or Escape closes it, and so does picking a
+ * question. The tour never opens it, and closes it when it takes over again.
+ * The panel is inert while closed, so its questions are not in the tab
+ * order; open, the question that is on takes focus, and the rail takes it
+ * back on close.
+ *
  * The list: the open tab's first question is the one its conversation
  * answers, and is marked (`aria-current`) whenever that tab opens or plays.
  * A click on it plays the conversation again. Every other question has no
@@ -51,6 +60,8 @@ export function AgentTour({ children }: { children: React.ReactNode }) {
     const panels = [...root.querySelectorAll<HTMLElement>('[data-chat-panel]')];
     const lists = [...root.querySelectorAll<HTMLElement>('[data-tour-list]')];
     const stage = root.querySelector<HTMLElement>('[data-chat-stage]') ?? root;
+    const rail = root.querySelector<HTMLButtonElement>('[data-tour-rail]');
+    const panel = root.querySelector<HTMLElement>('[data-tour-panel]');
 
     const open = () => radios.find((radio) => radio.checked) ?? radios[0];
     const panelOf = (radio: HTMLInputElement) => panels[radios.indexOf(radio)];
@@ -82,6 +93,18 @@ export function AgentTour({ children }: { children: React.ReactNode }) {
     let visible = false;
 
     const held = () => !visible || document.hidden;
+
+    /** Open or close the questions panel; `focus` moves focus with it. */
+    const setPanel = (to: boolean, focus = true) => {
+      if (!rail || !panel) return;
+      const was = root.dataset.questions === 'open';
+      root.dataset.questions = to ? 'open' : 'closed';
+      rail.setAttribute('aria-expanded', String(to));
+      panel.inert = !to;
+      if (!focus || was === to) return;
+      if (to) (listOf(open())?.querySelector<HTMLElement>('[aria-current="true"], [data-tour-query]') ?? panel).focus();
+      else if (panel.contains(document.activeElement)) rail.focus();
+    };
     const show = () => {
       root.dataset.tour = touring ? 'on' : 'off';
     };
@@ -124,6 +147,7 @@ export function AgentTour({ children }: { children: React.ReactNode }) {
 
     const resume = () => {
       touring = true;
+      setPanel(false, false);
       show();
       const radio = open();
       const first = firstOf(radio);
@@ -160,11 +184,24 @@ export function AgentTour({ children }: { children: React.ReactNode }) {
       const query = target.closest<HTMLElement>('[data-tour-query]');
       if (query) {
         takeOver();
+        setPanel(false);
         mark(query);
         // The answered question plays its conversation again; <AgentChat> types the others in.
         if (!query.hasAttribute('data-chat-ask')) root.dispatchEvent(new Event('chat:play', { bubbles: true }));
+      } else if (target.closest('[data-tour-rail]')) {
+        const opening = root.dataset.questions !== 'open';
+        if (opening) takeOver();
+        setPanel(opening);
+      } else if (target.closest('[data-tour-close], [data-tour-dim]')) {
+        setPanel(false);
       } else if (target.closest('label, [data-chat-replay]')) {
         takeOver();
+      }
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && root.dataset.questions === 'open') {
+        event.preventDefault();
+        setPanel(false);
       }
     };
     /** While the visitor is in control, any move in the section pushes the tour's return back. */
@@ -186,9 +223,11 @@ export function AgentTour({ children }: { children: React.ReactNode }) {
     observer.observe(stage);
 
     show();
+    setPanel(false, false);
     root.addEventListener('chat:playing', onPlaying);
     root.addEventListener('change', onChange);
     root.addEventListener('click', onClick);
+    root.addEventListener('keydown', onKey);
     root.addEventListener('pointermove', onMove, { passive: true });
     root.addEventListener('keydown', onMove);
     root.addEventListener('touchstart', onMove, { passive: true });
@@ -201,11 +240,13 @@ export function AgentTour({ children }: { children: React.ReactNode }) {
       root.removeEventListener('chat:playing', onPlaying);
       root.removeEventListener('change', onChange);
       root.removeEventListener('click', onClick);
+      root.removeEventListener('keydown', onKey);
       root.removeEventListener('pointermove', onMove);
       root.removeEventListener('keydown', onMove);
       root.removeEventListener('touchstart', onMove);
       document.removeEventListener('visibilitychange', sync);
       root.removeAttribute('data-tour');
+      root.removeAttribute('data-questions');
       radios.forEach((radio) => mark(firstOf(radio)));
       root.removeAttribute('data-asking');
     };

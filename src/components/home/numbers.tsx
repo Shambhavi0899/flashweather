@@ -1,5 +1,4 @@
-import Link from 'next/link';
-
+import { SiteLink } from '@/components/site-link';
 import { StatTile } from '@/components/stats/stat-tile';
 import { stats } from '@/content/home';
 
@@ -29,9 +28,9 @@ export function Numbers() {
             {/* The label is the term, the number its value; CSS puts the label last. */}
             <dt className="order-last text-caption text-text-on-dark-muted md:leading-[19px]">
               {stat.href ? (
-                <Link href={stat.href} className="underline-offset-4 hover:text-text-on-dark hover:underline">
+                <SiteLink href={stat.href} className="underline-offset-4 hover:text-text-on-dark hover:underline">
                   {stat.label}
-                </Link>
+                </SiteLink>
               ) : (
                 stat.label
               )}

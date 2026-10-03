@@ -76,6 +76,11 @@ export function SiteFooter({
                 </p>
               </div>
               <div className="fin-fade flex flex-col gap-3 sm:flex-row">
+                {/* The closing CTA is a section of the page, not the footer's
+                    nav, so it follows the page: on the home page these two
+                    open in a new tab (lib/new-tab.ts). The <footer> below is
+                    chrome and links in place everywhere, which needs nothing
+                    said here -- its links are plain <Link>, which never turns. */}
                 <Magnetic className="cta-magnet flex">
                   <ButtonLink href={DEMO_HREF} variant="gold" className="grow">
                     Book a demo

@@ -11,6 +11,7 @@ import { HubRuns } from '@/components/resources/hub-runs';
 import { ReactsPredicts } from '@/components/resources/reacts-predicts';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
+import { VideoPlayer } from '@/components/video-player';
 import { DeeperPath } from '@/components/why-flash/deeper-path';
 import { OperationPicker } from '@/components/why-flash/operation-picker';
 import { Receipt } from '@/components/why-flash/receipt';
@@ -24,6 +25,7 @@ import {
   deeper,
   everyday,
   hero,
+  heroVideo,
   operation,
   receipts,
   whyFlashCtas,
@@ -55,8 +57,14 @@ export default function WhyFlashPage() {
       <main id="main">
         <JsonLd schema={itemListSchema(deepPages.map((page) => ({ name: page.label, path: page.path })))} />
 
-        {/* Hero */}
-        <HeroSection theme="dark" className="relative overflow-hidden bg-brand-navy">
+        {/* Hero: the copy left, the brand overview video right (48% from lg,
+            under the copy on a phone). It fills the screen on load; the card
+            rises in after the buttons. */}
+        <HeroSection
+          theme="dark"
+          labelledBy="why-flash-hero-heading"
+          className="relative isolate flex min-h-svh flex-col justify-center overflow-hidden bg-brand-navy"
+        >
           <HeroBackground storm>
             <Image
               src="/images/why-flash/flash-storm-shelf-cloud-before-first-strike.jpg"
@@ -68,31 +76,41 @@ export default function WhyFlashPage() {
             />
           </HeroBackground>
           <div aria-hidden className="why-flash-hub-hero-grade absolute inset-0" />
-          <div className="hero-copy container-page relative flex flex-col gap-6 pt-10 pb-20 lg:pb-[120px]">
-            <Breadcrumbs
-              tone="dark"
-              className="hero-crumbs"
-              trail={[
-                { name: 'Home', path: '/' },
-                { name: 'Why Flash', path: WHY_FLASH_HUB_PATH },
-              ]}
-            />
-            <h1 className="flex max-w-[1100px] flex-col gap-5 pt-6 lg:pt-14">
-              <span className="hero-eyebrow text-micro font-bold tracking-label-wide text-viz-gold uppercase">
-                {hero.kicker}
-              </span>{' '}
-              <span className="text-[38px] leading-[44px] font-extrabold tracking-[-0.05em] text-text-on-dark md:text-display-l md:leading-display-l lg:text-display-xl lg:leading-display-xl">
-                <HeroWords text={hero.headline} />
-              </span>
-            </h1>
-            <p className="hero-lede max-w-[720px] text-body-l text-pretty text-[#C9D1E3] md:text-[19px]">{hero.body}</p>
-            <div className="hero-ctas flex flex-col gap-3 pt-2 sm:flex-row sm:gap-[14px]">
-              <ButtonLink href={whyFlashCtas.demo.href} variant="gold" className="px-[30px]">
-                {whyFlashCtas.demo.label}
-              </ButtonLink>
-              <ButtonLink href={whyFlashCtas.app.href} variant="outline-dark" className="px-[30px]" icon="↗">
-                {whyFlashCtas.app.label}
-              </ButtonLink>
+          <div className="container-page relative flex flex-col gap-10 pt-28 pb-16 lg:flex-row lg:items-center lg:gap-12 lg:pt-32 lg:pb-20 xl:gap-16">
+            <div className="hero-copy flex min-w-0 flex-col gap-6 lg:flex-1">
+              <Breadcrumbs
+                tone="dark"
+                className="hero-crumbs"
+                trail={[
+                  { name: 'Home', path: '/' },
+                  { name: 'Why Flash', path: WHY_FLASH_HUB_PATH },
+                ]}
+              />
+              <h1 id="why-flash-hero-heading" className="flex flex-col gap-5 pt-2">
+                <span className="hero-eyebrow text-micro font-bold tracking-label-wide text-viz-gold uppercase">
+                  {hero.kicker}
+                </span>{' '}
+                <span className="text-[38px] leading-[44px] font-extrabold tracking-[-0.05em] text-text-on-dark md:text-[52px] md:leading-[56px] lg:text-[48px] lg:leading-[52px] xl:text-[58px] xl:leading-[62px]">
+                  <HeroWords text={hero.headline} />
+                </span>
+              </h1>
+              <p className="hero-lede max-w-[620px] text-body-l text-pretty text-[#C9D1E3] md:text-[19px]">{hero.body}</p>
+              <div className="hero-ctas flex flex-col gap-3 pt-2 sm:flex-row sm:gap-[14px]">
+                <ButtonLink href={whyFlashCtas.demo.href} variant="gold" className="px-[30px]">
+                  {whyFlashCtas.demo.label}
+                </ButtonLink>
+                <ButtonLink href={whyFlashCtas.app.href} variant="outline-dark" className="px-[30px]" icon="↗">
+                  {whyFlashCtas.app.label}
+                </ButtonLink>
+              </div>
+            </div>
+            <div className="hero-visual hero-visual-after-ctas w-full min-w-0 lg:w-[48%] lg:shrink-0">
+              <VideoPlayer
+                clip={heroVideo}
+                onDark
+                preloadPoster
+                sizes="(min-width: 1440px) 600px, (min-width: 1024px) 48vw, 100vw"
+              />
             </div>
           </div>
         </HeroSection>

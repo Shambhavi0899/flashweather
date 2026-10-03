@@ -1,21 +1,25 @@
 /*
  * agent-tour — "Ask the question your crew actually asks"
  * (components/home/agent-section.tsx, agent-tour.tsx), on every page that
- * shows it: the question list inside the app window, over the
- * conversation, and the tour's line under the open tab.
+ * shows it: the tabs' line, the questions rail and panel inside the app
+ * window, and a question with no prepared answer.
  *
- *   tabs     the open tab has a gold line under it. While the tour runs
- *            (`data-tour="on"`, set by the script) that line is a pale track
- *            and a gold fill counts down to the next tab; the fill is
- *            animated from the script, which is the tour's clock
- *   list     from lg, a compact column of rows left of the conversation;
- *            below, one row of chips over it that scrolls sideways. The question
- *            that is on (`aria-current`) has a gold border and a lighter
- *            ground, the others are muted
+ *   tabs     one line under the title bar; the open tab has a gold line
+ *            under it. While the tour runs (`data-tour="on"`, set by the
+ *            script) that line is a pale track and a gold fill counts down
+ *            to the next tab; the fill is animated from the script, which
+ *            is the tour's clock
+ *   rail     a slim column (44px) left of the conversation: a list icon and
+ *            "Questions · N" set upright. It opens the panel
+ *   panel    300px, slides in over the conversation from the rail's edge
+ *            (`data-questions="open"` on the tour), the conversation dimmed
+ *            behind it; the open tab's questions, the one that is on
+ *            (`aria-current`) gold-bordered, the others muted
  *   asking   a question with no prepared answer is typed into the composer;
  *            the conversation above it is not its answer, so it steps back
  *
- * Reduced motion: no tour, so the line is always simply gold.
+ * Reduced motion: no tour, so the line is always simply gold; the panel
+ * appears and goes without the slide.
  */
 @layer components {
   /* ---------- Tabs ---------- */
@@ -41,44 +45,154 @@
     background-color: color-mix(in srgb, var(--color-viz-gold) 30%, transparent);
   }
 
-  /* ---------- The question list, inside the app window ---------- */
+  /* ---------- The rail ---------- */
+
+  .agent-rail {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    width: 44px;
+    padding-top: 14px;
+    border-right: 1px solid rgb(255 255 255 / 8%);
+    background-color: rgb(255 255 255 / 2.5%);
+    color: #8f9ab8;
+    cursor: pointer;
+    transition:
+      color 0.2s ease-out,
+      background-color 0.2s ease-out;
+  }
+  .agent-rail:hover,
+  .agent-tour[data-questions='open'] .agent-rail {
+    background-color: rgb(255 255 255 / 5%);
+    color: var(--color-text-on-dark);
+  }
+  .agent-rail:focus-visible {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: -3px;
+  }
+  /* The list icon, or a cross while the panel is open. */
+  .agent-rail-icon {
+    display: grid;
+    width: 18px;
+    height: 18px;
+  }
+  .agent-rail-icon > svg {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+    transition: opacity 0.2s ease-out;
+  }
+  .agent-rail-icon > svg:last-child,
+  .agent-tour[data-questions='open'] .agent-rail-icon > svg:first-child {
+    opacity: 0;
+  }
+  .agent-tour[data-questions='open'] .agent-rail-icon > svg:last-child {
+    opacity: 1;
+  }
+  /* Set upright, read bottom to top. */
+  .agent-rail-text {
+    font-size: 10px;
+    line-height: 14px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  /* ---------- The panel over the conversation ---------- */
+
+  .agent-dim {
+    position: absolute;
+    inset: 0 0 0 44px;
+    z-index: 1;
+    background-color: rgb(4 8 24 / 55%);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.25s ease-out,
+      visibility 0s 0.25s;
+  }
+  .agent-panel {
+    position: absolute;
+    inset: 0 auto 0 44px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    width: min(300px, calc(100% - 44px));
+    padding: 18px 16px 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-right: 1px solid rgb(255 255 255 / 10%);
+    background-color: var(--color-brand-navy-deep);
+    box-shadow: 24px 0 48px -16px rgb(4 8 24 / 70%);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-16px);
+    transition:
+      opacity 0.25s ease-out,
+      transform 0.25s var(--motion-ease),
+      visibility 0s 0.25s;
+  }
+  .agent-tour[data-questions='open'] .agent-dim,
+  .agent-tour[data-questions='open'] .agent-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    transition-delay: 0s;
+  }
+  .agent-panel-close {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    color: #8f9ab8;
+    cursor: pointer;
+    transition:
+      color 0.2s ease-out,
+      background-color 0.2s ease-out;
+  }
+  .agent-panel-close > svg {
+    width: 16px;
+    height: 16px;
+  }
+  .agent-panel-close:hover {
+    background-color: rgb(255 255 255 / 8%);
+    color: var(--color-text-on-dark);
+  }
+  .agent-panel-close:focus-visible {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: 2px;
+  }
 
   /* The five lists are laid over each other: each takes the row's full width
-     and is pulled back over it, so the row is as tall as the tallest list
-     and the open tab's list (the visible one) never changes the window's
-     height. */
+     and is pulled back over it, so only the open tab's shows. */
   .agent-query-lists {
     align-items: flex-start;
   }
-  /* Below lg: one row of chips, the list's own scroller. */
   .agent-queries {
-    position: relative;
     flex: none;
+    flex-direction: column;
     gap: 8px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
-    /* Room for the chip's focus ring. */
-    width: calc(100% + 8px);
-    margin: -4px calc(-100% - 4px) -4px -4px;
-    padding: 4px;
-  }
-  .agent-queries::-webkit-scrollbar {
-    display: none;
-  }
-  .agent-queries > li {
-    flex: none;
-    scroll-snap-align: center;
+    width: 100%;
+    margin-right: -100%;
   }
   .agent-query {
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    width: min(264px, 70vw);
-    padding: 12px 14px;
+    width: 100%;
+    padding: 11px 14px;
     border: 1px solid rgb(255 255 255 / 10%);
-    border-radius: 12px;
+    border-radius: 10px;
     background-color: rgb(255 255 255 / 4%);
     color: #d1dbe8;
     font-size: 13px;
@@ -96,6 +210,10 @@
     background-color: rgb(255 255 255 / 7%);
     color: var(--color-text-on-dark);
   }
+  .agent-query:focus-visible {
+    outline: 2px solid var(--color-viz-gold);
+    outline-offset: 2px;
+  }
   .agent-query-bolt {
     margin-top: 2px;
     color: #8f9ab8;
@@ -111,30 +229,6 @@
     color: var(--color-viz-gold);
   }
 
-  @media (width >= 1024px) {
-    /* A column of rows, beside the conversation. */
-    .agent-queries {
-      flex-direction: column;
-      gap: 8px;
-      width: 100%;
-      margin: 0 -100% 0 0;
-      padding: 0;
-      overflow: visible;
-      scroll-snap-type: none;
-    }
-    .agent-query {
-      gap: 10px;
-      width: 100%;
-      padding: 11px 14px;
-      border-radius: 10px;
-      font-size: 14px;
-      line-height: 20px;
-    }
-    .agent-query-bolt {
-      margin-top: 2px;
-    }
-  }
-
   /* ---------- A question with no prepared answer ---------- */
 
   /* The panel's first two blocks are the question bubble and the answer. */
@@ -147,6 +241,11 @@
   @media (prefers-reduced-motion: reduce) {
     .agent-query,
     .agent-query-bolt,
+    .agent-rail,
+    .agent-rail-icon > svg,
+    .agent-panel-close,
+    .agent-dim,
+    .agent-panel,
     .agent-tour .chat > :nth-child(-n + 2) {
       transition: none;
     }

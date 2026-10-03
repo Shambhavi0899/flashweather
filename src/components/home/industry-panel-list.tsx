@@ -1,6 +1,6 @@
 import Image from 'next/image';
-import Link from 'next/link';
 
+import { SiteLink } from '@/components/site-link';
 import type { AgentStatus } from '@/content/home';
 
 import { AgentBadge } from './bolt-icon';
@@ -128,7 +128,7 @@ export function IndustryPanelList({
             </div>
 
             {/* The panel's one link, over the whole open panel; its words sit where the copy leaves them room. */}
-            <Link href={panel.href} data-panel-link className="ind-go">
+            <SiteLink href={panel.href} data-panel-link className="ind-go">
               <span
                 className="ind-rise ind-link py-[2px] text-body-s leading-5 font-bold text-viz-gold hover:underline"
                 style={{ '--ind-step': panel.body ? 4 : 3 } as React.CSSProperties}
@@ -136,7 +136,7 @@ export function IndustryPanelList({
                 {panel.linkLabel}
                 <span aria-hidden>&nbsp;→</span>
               </span>
-            </Link>
+            </SiteLink>
           </li>
         ))}
       </ul>

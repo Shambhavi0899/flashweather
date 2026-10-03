@@ -9,6 +9,7 @@ import { getIndustry, industryPath } from '@/content/industries';
 import { DEMO_HREF } from '@/content/navigation';
 import { productPageHeroBackground, type ProductPage } from '@/content/product-pages';
 import { products } from '@/content/products';
+import { VideoPlayer } from '@/components/video-player';
 
 import { SectionHeader, SectionLabel } from '../section-header';
 
@@ -33,8 +34,14 @@ type Crumb = { name: string; path: string };
 /* ------------------------------------------------------------------ */
 
 export function ProductPageHero({ page, trail }: { page: ProductPage; trail: Crumb[] }) {
+  const video = page.heroVideo;
   return (
-    <HeroSection theme="dark" labelledBy="product-hero-heading" className="relative isolate overflow-clip bg-brand-navy">
+    <HeroSection
+      theme="dark"
+      labelledBy="product-hero-heading"
+      // With a video the hero fills the screen, the row centred in it below the nav.
+      className={`relative isolate overflow-clip bg-brand-navy ${video ? 'flex min-h-svh flex-col justify-center' : ''}`}
+    >
       <HeroBackground storm layer="-z-20">
         <Image
           src={productPageHeroBackground}
@@ -46,19 +53,52 @@ export function ProductPageHero({ page, trail }: { page: ProductPage; trail: Cru
       </HeroBackground>
       <div aria-hidden className="products-hero-grade absolute inset-0 -z-10" />
 
-      <div className="container-page flex flex-col gap-12 pt-10 pb-20 lg:flex-row lg:items-center lg:gap-14 lg:pt-14 lg:pb-[112px]">
-        <div className="hero-copy flex flex-col gap-6 lg:w-[500px] lg:shrink lg:gap-7 xl:w-[560px] xl:shrink-0">
+      {/* With a video: the copy ~42%, the video window ~58%, the row on the
+          standard spacing under the nav (the section is already padded clear
+          of it, styles/header.css). */}
+      <div
+        className={`container-page flex flex-col gap-12 lg:flex-row lg:items-center ${
+          video ? 'py-10 lg:gap-12 lg:py-12 xl:gap-14' : 'pt-10 pb-20 lg:gap-14 lg:pt-14 lg:pb-[112px]'
+        }`}
+      >
+        <div
+          className={`hero-copy flex flex-col gap-6 lg:gap-7 ${
+            video ? 'lg:min-w-0 lg:basis-[42%]' : 'lg:w-[500px] lg:shrink xl:w-[560px] xl:shrink-0'
+          }`}
+        >
           <Breadcrumbs trail={trail} tone="dark" className="hero-crumbs" />
           <p className="hero-eyebrow text-micro font-semibold tracking-label text-viz-gold uppercase">{page.eyebrow}</p>
-          <h1
-            id="product-hero-heading"
-            className="text-[44px] leading-[48px] font-extrabold tracking-[-0.05em] text-text-on-dark md:text-[60px] md:leading-[64px] xl:text-display-xl xl:leading-display-xl"
-          >
-            <HeroWords text={page.name} />
-          </h1>
+          {video ? (
+            /* Two lines, a step under the other heroes' size. */
+            <h1
+              id="product-hero-heading"
+              className="text-[40px] leading-[44px] font-extrabold tracking-[-0.05em] text-text-on-dark md:text-[52px] md:leading-[56px] lg:text-[44px] lg:leading-[48px] min-[1280px]:text-[56px] min-[1280px]:leading-[60px] xl:text-[62px] xl:leading-[66px]"
+            >
+              <HeroWords text={video.headline} lineClass="block" />
+            </h1>
+          ) : (
+            <h1
+              id="product-hero-heading"
+              className="text-[44px] leading-[48px] font-extrabold tracking-[-0.05em] text-text-on-dark md:text-[60px] md:leading-[64px] xl:text-display-xl xl:leading-display-xl"
+            >
+              <HeroWords text={page.name} />
+            </h1>
+          )}
           <p className="hero-lede max-w-[560px] text-[17px] leading-[28px] text-pretty text-[#C9D1E3] md:text-[19px] md:leading-body-l">
             {page.lead}
           </p>
+          {video && (
+            <dl className="hero-stats flex divide-x divide-white/15">
+              {video.stats.map((stat) => (
+                <div key={stat.label} className="flex flex-col-reverse gap-1 px-5 first:pl-0 last:pr-0 sm:px-7">
+                  <dt className="text-[12px] leading-4 font-semibold text-[#8F9AB8] md:text-[13px]">{stat.label}</dt>
+                  <dd className="text-[22px] leading-[26px] font-extrabold tracking-[-0.03em] text-text-on-dark md:text-[26px] md:leading-[30px]">
+                    {stat.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
           <div className="hero-ctas flex flex-col gap-[14px] pt-1 sm:flex-row sm:items-center">
             <ButtonLink href={DEMO_HREF} variant="gold">
               Book a demo
@@ -69,10 +109,26 @@ export function ProductPageHero({ page, trail }: { page: ProductPage; trail: Cru
           </div>
         </div>
 
-        <div className="hero-visual hero-visual-side flex min-w-0 grow basis-0 justify-center lg:justify-end">
+        {/* A video window fades up alongside the copy; an image slides in beside
+            it. The two video columns share the gap in proportion, 42 : 58. */}
+        <div
+          className={`hero-visual flex min-w-0 grow basis-0 justify-center lg:justify-end ${
+            video ? 'lg:grow-0 lg:basis-[58%]' : 'hero-visual-side'
+          }`}
+        >
           {/* The Mobile App draws its lineup as four live phones. */}
           {page.slug === 'mobile-app' ? (
             <MobileAppPhones />
+          ) : video ? (
+            /* The Command Center plays a highlight of its tour, in an app window. */
+            <div className="w-full">
+              <VideoPlayer
+                clip={video.clip}
+                appWindow
+                preloadPoster
+                sizes="(min-width: 1440px) 692px, (min-width: 1024px) 55vw, 100vw"
+              />
+            </div>
           ) : (
             <div className="relative aspect-video w-full max-w-[680px] overflow-clip rounded-[20px] border border-white/10 shadow-[0_30px_80px_#00000073]">
               <Image

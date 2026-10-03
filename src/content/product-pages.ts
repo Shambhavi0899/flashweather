@@ -10,6 +10,7 @@
  * image on /products/; the gallery image is the second image on the live page.
  */
 
+import type { VideoClip } from '@/components/video-player';
 import { site } from '@/lib/seo/site';
 
 import { productPaths } from './products';
@@ -44,7 +45,14 @@ export type ProductPage = {
   schema: { type: 'software'; category?: string; operatingSystem?: string } | { type: 'product' };
   /** The hero's secondary button; the primary is always "Book a demo". */
   secondaryCta: { label: string; href: string };
+  /** The hero's picture, and the page's schema image. */
   heroImage: Img;
+  /**
+   * A video in the hero in place of the picture (the Command Center tour),
+   * with the small stat chips under it.
+   */
+  /** A hero that plays a clip: the headline in lines, the clip, and a stat row under the paragraph. */
+  heroVideo?: { headline: string[]; clip: VideoClip; stats: { value: string; label: string }[] };
   overview: {
     heading: string;
     image: Img & { caption: string };
@@ -99,6 +107,38 @@ export const productPages: ProductPage[] = [
     heroImage: {
       src: `${IMG}/flash-weather-command-center-product.png`,
       alt: 'The Weather Command Center on a laptop, showing lightning probability across a region at 1×1 km resolution',
+    },
+    /**
+     * A 24-second highlight reel from the two-minute tour on Flash's channel
+     * (youtube.com/watch?v=puGGCLBhPA8): three cuts on whole words, joined by
+     * 300ms crossfades. 0:31.2–0:41.1, the menu open as Dave names the six
+     * tabs; 1:07.7–1:17.3, the Flash AI Lightning tab and its layers;
+     * 2:10.5–2:15.1, his sign-off to camera. Each cut's picture runs 150ms
+     * into the pause after it, so the sound crosses over in silence and stays
+     * in sync. The pill and the end screen open the whole tour in the
+     * lightbox. The poster is 1:13.5 (the Lightning tab, its menu open),
+     * cropped clear of the browser bar and Dave's picture-in-picture. Files in
+     * public/video.
+     */
+    heroVideo: {
+      headline: ['Weather', 'Command Center'],
+      clip: {
+        src: '/video/weather-command-center-reel.mp4',
+        webm: '/video/weather-command-center-reel.webm',
+        poster: '/video/weather-command-center-reel-poster.webp',
+        captions: '/video/weather-command-center-reel.vtt',
+        duration: 23.7,
+        youtubeId: 'puGGCLBhPA8',
+        cta: 'Watch the full tour',
+        label: 'Dave Downey, Lead Meteorologist, shows the Weather Command Center tabs and the Flash AI Lightning layers',
+        playLabel: 'The Command Center in 20 seconds',
+        playNote: 'with Dave Downey, Lead Meteorologist',
+      },
+      stats: [
+        { value: '99.6%', label: 'accuracy' },
+        { value: '6-hour', label: 'outlook' },
+        { value: '1×1 km', label: 'resolution' },
+      ],
     },
     overview: {
       heading: 'What is the Weather Command Center?',

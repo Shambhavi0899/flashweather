@@ -1,14 +1,14 @@
 import Image from 'next/image';
-import Link from 'next/link';
 
 import { ButtonLink } from '@/components/button';
 import { HeroBackground, HeroSection, HeroWords } from '@/components/hero/hero';
 import { Motion } from '@/components/motion';
+import { SiteLink } from '@/components/site-link';
 import { DEMO_HREF } from '@/content/navigation';
 import { type HeroSurface, heroImage, heroSurfaces, heroVideoHref } from '@/content/home';
 
 import { AgentChat } from '@/components/agent-conversation/agent-chat';
-import { AgentBadge, GoldBolt } from './bolt-icon';
+import { AgentBadge } from './bolt-icon';
 import { HeroDeck } from './hero-deck';
 import { HeroLede } from './hero-lede';
 import { HeroLightning } from './hero-lightning';
@@ -59,8 +59,9 @@ export function Hero() {
           </h1>
 
           <HeroLede className="hero-lede max-w-[520px] text-body leading-body font-medium text-pretty text-[#D1DBE8] md:text-[17px] md:leading-body-l">
-            The world&rsquo;s first AI that predicts <LedeLink href="/products/lightning-prediction/">lightning</LedeLink>{' '}
-            and <LedeLink href="/products/hail-prediction/">hail</LedeLink> before they strike, down to the kilometer and
+            The world&rsquo;s first AI that predicts{' '}
+            <LedeLink href="/products/lightning-prediction/">lightning</LedeLink> and{' '}
+            <LedeLink href="/products/hail-prediction/">hail</LedeLink> before they strike, down to the kilometer and
             the minute, up to an hour&nbsp;ahead.
           </HeroLede>
 
@@ -68,24 +69,9 @@ export function Hero() {
             <ButtonLink href={DEMO_HREF} variant="gold" size="hero" icon="↗" className="hero-demo max-md:text-body-s">
               Book a demo
             </ButtonLink>
-            <ButtonLink
-              href={heroVideoHref}
-              newTab
-              variant="outline-dark"
-              size="hero"
-              icon="↗"
-              className="max-md:text-body-s"
-            >
+            <ButtonLink href={heroVideoHref} variant="outline-dark" size="hero" icon="↓" className="max-md:text-body-s">
               See the Flash difference
             </ButtonLink>
-          </div>
-
-          <div className="hero-support mt-[6px] flex items-start gap-3">
-            <GoldBolt className="hero-bolt h-6 w-[18px]" />
-            <p className="flex flex-col gap-[2px] text-caption leading-[19px] md:leading-5">
-              <span className="font-bold text-text-on-dark">For golf, construction, sports, schools,</span>
-              <span className="text-text-on-dark-muted">and every kind of outdoor operation.</span>
-            </p>
           </div>
         </div>
 
@@ -101,9 +87,9 @@ export function Hero() {
  */
 function LedeLink({ href, children }: { href: string; children: string }) {
   return (
-    <Link href={href} className="hero-lede-link font-semibold text-text-on-dark">
+    <SiteLink href={href} className="hero-lede-link font-semibold text-text-on-dark">
       {children}
-    </Link>
+    </SiteLink>
   );
 }
 
@@ -151,15 +137,17 @@ function HeroSurfaces() {
             <div data-deck-body inert={i > 0} className="hero-deck-body">
               <SurfaceVisual card={card} />
               <div className="flex flex-col items-start px-1 pt-[14px]">
-                <p className="text-[10px] leading-3 font-extrabold tracking-[0.13em] text-viz-gold uppercase">{card.name}</p>
+                <p className="text-[10px] leading-3 font-extrabold tracking-[0.13em] text-viz-gold uppercase">
+                  {card.name}
+                </p>
                 <p className="mt-[6px] text-[15px] leading-5 font-extrabold text-text-on-dark">{card.title}</p>
                 <p className="mt-[2px] text-micro leading-micro text-text-on-dark-muted">{card.body}</p>
-                <Link
+                <SiteLink
                   href={card.href}
                   className="hero-deck-explore mt-2 flex h-6 items-center gap-[6px] text-micro leading-micro font-extrabold text-viz-gold underline-offset-4 hover:underline"
                 >
                   Explore<span className="sr-only"> {card.name}</span> <span aria-hidden>→</span>
-                </Link>
+                </SiteLink>
               </div>
             </div>
           </div>

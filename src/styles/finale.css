@@ -65,6 +65,16 @@
     animation: proof-flash 11s linear calc(var(--motion-delay) + 1.2s) infinite both;
   }
 
+  /* The gold opening mark over Ryan's pull quote. */
+  .proof-quote-mark {
+    display: block;
+    height: 28px;
+    color: var(--color-viz-gold);
+    font-size: 64px;
+    line-height: 1;
+    font-weight: 800;
+  }
+
   /* The hover every proof card shares: the card lifts, its photo comes
      closer and its arrow slides. */
   .proof-arrow {
